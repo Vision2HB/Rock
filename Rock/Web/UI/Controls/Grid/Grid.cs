@@ -32,6 +32,7 @@ using Rock.Web.Cache;
 using Rock;
 using Rock.Utility;
 using EntityFramework.Utilities;
+using System.Diagnostics;
 
 namespace Rock.Web.UI.Controls
 {
@@ -1851,7 +1852,25 @@ namespace Rock.Web.UI.Controls
                         ExcelHelper.SetExcelValue( cell, exportValue );
 
                         // Update column formatting based on data
-                        worksheet.Column( columnCounter ).Style.Numberformat.Format = ExcelHelper.FinalColumnFormat( exportValue, worksheet.Column( columnCounter ).Style.Numberformat.Format );
+                        Stopwatch stopwatch = Stopwatch.StartNew();
+                        var format = worksheet.Column( columnCounter ).Style.Numberformat.Format;
+
+                        stopwatch.Stop();
+                        Debug.WriteLine( $"[{stopwatch.Elapsed.TotalMilliseconds}ms] format" );
+                        stopwatch.Restart();
+
+                        var finalFormat = ExcelHelper.FinalColumnFormat( exportValue, format );
+
+                        stopwatch.Stop();
+                        Debug.WriteLine( $"[{stopwatch.Elapsed.TotalMilliseconds}ms] getFormat" );
+                        stopwatch.Restart();
+
+                        if ( format != finalFormat )
+                        {
+                            worksheet.Column( columnCounter ).Style.Numberformat.Format = finalFormat;
+                        }
+                        stopwatch.Stop();
+                        Debug.WriteLine( $"[{stopwatch.Elapsed.TotalMilliseconds}ms] worksheet.Column( columnCounter ).Style.Numberformat.Format " );
                     }
 
                     dataIndex++;
