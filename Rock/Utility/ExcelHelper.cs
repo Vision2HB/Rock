@@ -279,7 +279,7 @@ namespace Rock.Utility
         /// <param name="exportValue">The cell value to use for formatting</param>
         /// <param name="defaultFormat">The existing column format to use if no changes are to be made</param>
         /// <returns></returns>
-        public static string FinalColumnFormat( object exportValue, string defaultFormat )
+        private static string FinalColumnFormat( object exportValue, string defaultFormat )
         {
             var dateValue = exportValue as DateTime?;
             if ( dateValue != null && dateValue.Value.TimeOfDay.TotalSeconds > 0 )
@@ -294,6 +294,16 @@ namespace Rock.Utility
             }
 
             return defaultFormat;
+        }
+
+        public static void FinalizeColumnFormat( ExcelWorksheet worksheet, int columnCounter, object exportValue )
+        {
+            var currentFormat = worksheet.Column( columnCounter ).Style.Numberformat.Format;
+            var finalFormat = ExcelHelper.FinalColumnFormat( exportValue, currentFormat );
+            if ( finalFormat != currentFormat)
+            {
+                worksheet.Column( columnCounter ).Style.Numberformat.Format = currentFormat;
+            }
         }
 
         /// <summary>

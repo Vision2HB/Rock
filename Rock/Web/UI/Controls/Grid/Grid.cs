@@ -1428,6 +1428,8 @@ namespace Rock.Web.UI.Controls
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void Actions_ExcelExportClick( object sender, EventArgs e )
         {
+            Stopwatch stopwatchTotal = Stopwatch.StartNew();
+            
             // disable paging if no specific keys where selected (or if no select option is shown)
             bool selectAll = !SelectedKeys.Any();
             RebindGrid( e, selectAll, true );
@@ -1563,9 +1565,9 @@ namespace Rock.Web.UI.Controls
                         }
 
                         // Update column formatting based on data
-                        var format = worksheet.Column( columnCounter ).Style.Numberformat.Format;
+                        //var format = worksheet.Column( columnCounter ).Style.Numberformat.Format;
 
-                        format = ExcelHelper.FinalColumnFormat( exportValue, format );
+                        //format = ExcelHelper.FinalColumnFormat( exportValue, format );
                     }
                 }
             }
@@ -1599,7 +1601,7 @@ namespace Rock.Web.UI.Controls
                         ExcelHelper.SetExcelValue( worksheet.Cells[rowCounter, i + 1], value );
 
                         // Update column formatting based on data
-                        worksheet.Column( i + 1 ).Style.Numberformat.Format = ExcelHelper.FinalColumnFormat( value, worksheet.Column( i + 1 ).Style.Numberformat.Format );
+                        ExcelHelper.FinalizeColumnFormat( worksheet, i + 1, value );
                     }
                 }
             }
@@ -1706,8 +1708,14 @@ namespace Rock.Web.UI.Controls
                 IList data = this.DataSourceAsList;
 
                 var selectedKeys = SelectedKeys.ToList();
+
+                Dictionary<BoundField, PropertyInfo> boundFieldPropLookup = new Dictionary<BoundField, PropertyInfo>();
+                Dictionary<PropertyInfo, bool> propIsDefinedValueLookup = new Dictionary<PropertyInfo, bool>();
+
                 foreach ( var item in data )
                 {
+                    Stopwatch stopwatchRow = Stopwatch.StartNew();
+
                     if ( selectedKeys.Any() && this.DataKeyNames.Count() == 1 )
                     {
                         var dataKeyValue = item.GetPropertyValue( this.DataKeyNames[0] );
@@ -1767,7 +1775,7 @@ namespace Rock.Web.UI.Controls
                                 worksheet.Cells[rowCounter, columnCounter].Value = resultHtml;
 
                                 // Update column formatting based on data
-                                worksheet.Column( columnCounter ).Style.Numberformat.Format = ExcelHelper.FinalColumnFormat( resultHtml, worksheet.Column( columnCounter ).Style.Numberformat.Format );
+                                ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, resultHtml );
                             }
                             continue;
                         }
@@ -1776,7 +1784,13 @@ namespace Rock.Web.UI.Controls
                         if ( boundField != null )
                         {
                             var cell = worksheet.Cells[rowCounter, columnCounter];
-                            var prop = props.FirstOrDefault( p => boundField.DataField == p.Name || boundField.DataField.StartsWith( p.Name + "." ) );
+                            if ( !boundFieldPropLookup.ContainsKey(boundField) )
+                            {
+                                boundFieldPropLookup.Add( boundField, props.FirstOrDefault( p => boundField.DataField == p.Name || boundField.DataField.StartsWith( p.Name + "." ) ) );
+                            }
+
+                            var prop = boundFieldPropLookup[boundField];
+
                             object exportValue = null;
                             if ( prop != null )
                             {
@@ -1792,9 +1806,19 @@ namespace Rock.Web.UI.Controls
                                     propValue = ( dataField as LavaBoundField ).GetFormattedDataValue( propValue );
                                 }
 
-                                var definedValueAttribute = prop.GetCustomAttributes( typeof( DefinedValueAttribute ), true ).FirstOrDefault();
+                                bool isDefinedValue;
+                                if ( !propIsDefinedValueLookup.ContainsKey( prop ) )
+                                {
+                                    var definedValueAttribute = prop.GetCustomAttributes( typeof( DefinedValueAttribute ), true ).FirstOrDefault();
 
-                                bool isDefinedValue = ( definedValueAttribute != null || definedValueFields.Any( f => f.DataField == prop.Name ) );
+                                    isDefinedValue = ( definedValueAttribute != null || definedValueFields.Any( f => f.DataField == prop.Name ) );
+                                    propIsDefinedValueLookup.Add( prop, isDefinedValue );
+                                }
+                                else
+                                {
+                                    isDefinedValue = propIsDefinedValueLookup[prop];
+                                }
+                                
                                 exportValue = GetExportValue( prop, propValue, isDefinedValue, cell ).ReverseCurrencyFormatting();
                             }
                             else if ( boundField is PersonField )
@@ -1804,10 +1828,10 @@ namespace Rock.Web.UI.Controls
 
                             if ( exportValue != null )
                             {
-                                ExcelHelper.SetExcelValue( cell, exportValue );
+                                ExcelHelper.SetExcelValue( worksheet.Cells[rowCounter, columnCounter], exportValue );
 
                                 // Update column formatting based on data
-                                worksheet.Column( columnCounter ).Style.Numberformat.Format = ExcelHelper.FinalColumnFormat( exportValue, worksheet.Column( columnCounter ).Style.Numberformat.Format );
+                                ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, exportValue );
                             }
                             
                             continue;
@@ -1829,10 +1853,11 @@ namespace Rock.Web.UI.Controls
                             }
 
                             string resolvedValue = lavaField.LiquidTemplate.ResolveMergeFields( mergeValues );
-                            worksheet.Cells[rowCounter, columnCounter].Value = resolvedValue.Replace( "~~/", themeRoot ).Replace( "~/", appRoot ).ReverseCurrencyFormatting().ToString();
+                            resolvedValue = resolvedValue.Replace( "~~/", themeRoot ).Replace( "~/", appRoot ).ReverseCurrencyFormatting().ToString();
+                            worksheet.Cells[rowCounter, columnCounter].Value = resolvedValue;
 
                             // Update column formatting based on data
-                            worksheet.Column( columnCounter ).Style.Numberformat.Format = ExcelHelper.FinalColumnFormat( worksheet.Cells[rowCounter, columnCounter].Value, worksheet.Column( columnCounter ).Style.Numberformat.Format );
+                            ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, resolvedValue );
 
                             continue;
                         }
@@ -1843,41 +1868,43 @@ namespace Rock.Web.UI.Controls
                         columnCounter++;
                         object propValue = prop.GetValue( item, null );
 
-                        var definedValueAttribute = prop.GetCustomAttributes( typeof( DefinedValueAttribute ), true ).FirstOrDefault();
+                        // TODO timesuck?
+                        bool isDefinedValue;
+                        if (!propIsDefinedValueLookup.ContainsKey(prop))
+                        {
+                            var definedValueAttribute = prop.GetCustomAttributes( typeof( DefinedValueAttribute ), true ).FirstOrDefault();
 
-                        bool isDefinedValue = ( definedValueAttribute != null || definedValueFields.Any( f => f.DataField == prop.Name ) );
+                            isDefinedValue = ( definedValueAttribute != null || definedValueFields.Any( f => f.DataField == prop.Name ) );
+                            propIsDefinedValueLookup.Add( prop, isDefinedValue );
+                        }
+                        else
+                        {
+                            isDefinedValue = propIsDefinedValueLookup[prop];
+                        }
 
                         var cell = worksheet.Cells[rowCounter, columnCounter];
                         var exportValue = GetExportValue( prop, propValue, isDefinedValue, cell ).ReverseCurrencyFormatting();
                         ExcelHelper.SetExcelValue( cell, exportValue );
 
                         // Update column formatting based on data
-                        Stopwatch stopwatch = Stopwatch.StartNew();
-                        var format = worksheet.Column( columnCounter ).Style.Numberformat.Format;
-
-                        stopwatch.Stop();
-                        Debug.WriteLine( $"[{stopwatch.Elapsed.TotalMilliseconds}ms] format" );
-                        stopwatch.Restart();
-
-                        var finalFormat = ExcelHelper.FinalColumnFormat( exportValue, format );
-
-                        stopwatch.Stop();
-                        Debug.WriteLine( $"[{stopwatch.Elapsed.TotalMilliseconds}ms] getFormat" );
-                        stopwatch.Restart();
-
-                        if ( format != finalFormat )
-                        {
-                            worksheet.Column( columnCounter ).Style.Numberformat.Format = finalFormat;
-                        }
-                        stopwatch.Stop();
-                        Debug.WriteLine( $"[{stopwatch.Elapsed.TotalMilliseconds}ms] worksheet.Column( columnCounter ).Style.Numberformat.Format " );
+                        ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, exportValue );
                     }
 
                     dataIndex++;
+                    if ( dataIndex % 1000 == 0 )
+                    {
+                        stopwatchRow.Stop();
+                        Debug.WriteLine( $"[{stopwatchRow.Elapsed.TotalMilliseconds}ms] stopwatchRow" );
+                        Debug.WriteLine( $"[{stopwatchTotal.Elapsed.TotalMilliseconds}ms] DataIndex: {dataIndex}" );
+                    }
+
                 }
             }
 
             worksheet.FormatWorksheet( title, headerRows, rowCounter, columnCounter );
+
+            Debug.WriteLine( $"[{stopwatchTotal.Elapsed.TotalMilliseconds}ms] stopwatchtotal" );
+            Debug.Flush();
 
             // send the spreadsheet to the browser
             excel.SendToBrowser( this.Page, filename );
