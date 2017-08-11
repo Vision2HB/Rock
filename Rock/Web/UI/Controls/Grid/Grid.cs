@@ -1563,11 +1563,6 @@ namespace Rock.Web.UI.Controls
                         {
                             worksheet.Column( columnCounter ).Style.Numberformat.Format = ExcelHelper.DefaultColumnFormat( col.Value, exportValue );
                         }
-
-                        // Update column formatting based on data
-                        //var format = worksheet.Column( columnCounter ).Style.Numberformat.Format;
-
-                        //format = ExcelHelper.FinalColumnFormat( exportValue, format );
                     }
                 }
             }
@@ -1598,16 +1593,19 @@ namespace Rock.Web.UI.Controls
                     for ( int i = 0; i < data.Columns.Count; i++ )
                     {
                         var value = rowView.Row[i].ReverseCurrencyFormatting();
-                        ExcelHelper.SetExcelValue( worksheet.Cells[rowCounter, i + 1], value );
+                        int columnIndex = i + 1;
+                        ExcelHelper.SetExcelValue( worksheet.Cells[rowCounter, columnIndex], value );
 
                         // Update column formatting based on data
-                        ExcelHelper.FinalizeColumnFormat( worksheet, i + 1, value );
+                        ExcelHelper.FinalizeColumnFormat( worksheet, columnIndex, value );
                     }
                 }
             }
             else
             {
                 var definedValueFields = this.Columns.OfType<DefinedValueField>().ToList();
+                Dictionary<PropertyInfo, bool> propIsDefinedValueLookup = new Dictionary<PropertyInfo, bool>();
+                Dictionary<BoundField, PropertyInfo> boundFieldPropLookup = new Dictionary<BoundField, PropertyInfo>();
                 var attributeFields = this.Columns.OfType<AttributeField>().ToList();
                 var lavaFields = new List<LiquidField>();
                 var visibleFields = new Dictionary<int, DataControlField>();
@@ -1665,7 +1663,7 @@ namespace Rock.Web.UI.Controls
                     var boundField = dataField as BoundField;
                     if ( boundField != null )
                     {
-                        var prop = props.FirstOrDefault( p => boundField.DataField == p.Name || boundField.DataField.StartsWith( p.Name + "." ) );
+                        var prop = GetPropertyFromBoundField( props, boundFieldPropLookup, boundField );
                         if ( prop != null )
                         {
                             if ( lavaFields.Any() )
@@ -1708,10 +1706,6 @@ namespace Rock.Web.UI.Controls
                 IList data = this.DataSourceAsList;
 
                 var selectedKeys = SelectedKeys.ToList();
-
-                Dictionary<BoundField, PropertyInfo> boundFieldPropLookup = new Dictionary<BoundField, PropertyInfo>();
-                Dictionary<PropertyInfo, bool> propIsDefinedValueLookup = new Dictionary<PropertyInfo, bool>();
-
                 foreach ( var item in data )
                 {
                     Stopwatch stopwatchRow = Stopwatch.StartNew();
@@ -1772,10 +1766,13 @@ namespace Rock.Web.UI.Controls
                                 var attrib = dataItemWithAttributes.Attributes[attributeField.DataField];
                                 string rawValue = dataItemWithAttributes.GetAttributeValue( attributeField.DataField );
                                 string resultHtml = attrib.FieldType.Field.FormatValue( null, attrib.EntityTypeId, dataItemWithAttributes.Id, rawValue, attrib.QualifierValues, false ).ReverseCurrencyFormatting().ToString();
-                                worksheet.Cells[rowCounter, columnCounter].Value = resultHtml;
+                                if ( !string.IsNullOrEmpty( resultHtml ) )
+                                {
+                                    worksheet.Cells[rowCounter, columnCounter].Value = resultHtml;
 
-                                // Update column formatting based on data
-                                ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, resultHtml );
+                                    // Update column formatting based on data
+                                    ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, resultHtml );
+                                }
                             }
                             continue;
                         }
@@ -1784,13 +1781,7 @@ namespace Rock.Web.UI.Controls
                         if ( boundField != null )
                         {
                             var cell = worksheet.Cells[rowCounter, columnCounter];
-                            if ( !boundFieldPropLookup.ContainsKey(boundField) )
-                            {
-                                boundFieldPropLookup.Add( boundField, props.FirstOrDefault( p => boundField.DataField == p.Name || boundField.DataField.StartsWith( p.Name + "." ) ) );
-                            }
-
-                            var prop = boundFieldPropLookup[boundField];
-
+                            var prop = GetPropertyFromBoundField( props, boundFieldPropLookup, boundField );
                             object exportValue = null;
                             if ( prop != null )
                             {
@@ -1806,20 +1797,10 @@ namespace Rock.Web.UI.Controls
                                     propValue = ( dataField as LavaBoundField ).GetFormattedDataValue( propValue );
                                 }
 
-                                bool isDefinedValue;
-                                if ( !propIsDefinedValueLookup.ContainsKey( prop ) )
+                                if ( propValue != null )
                                 {
-                                    var definedValueAttribute = prop.GetCustomAttributes( typeof( DefinedValueAttribute ), true ).FirstOrDefault();
-
-                                    isDefinedValue = ( definedValueAttribute != null || definedValueFields.Any( f => f.DataField == prop.Name ) );
-                                    propIsDefinedValueLookup.Add( prop, isDefinedValue );
+                                    exportValue = GetExportValue( prop, propValue, IsDefinedValue( definedValueFields, propIsDefinedValueLookup, prop ), cell ).ReverseCurrencyFormatting();
                                 }
-                                else
-                                {
-                                    isDefinedValue = propIsDefinedValueLookup[prop];
-                                }
-                                
-                                exportValue = GetExportValue( prop, propValue, isDefinedValue, cell ).ReverseCurrencyFormatting();
                             }
                             else if ( boundField is PersonField )
                             {
@@ -1828,7 +1809,7 @@ namespace Rock.Web.UI.Controls
 
                             if ( exportValue != null )
                             {
-                                ExcelHelper.SetExcelValue( worksheet.Cells[rowCounter, columnCounter], exportValue );
+                                ExcelHelper.SetExcelValue( cell, exportValue );
 
                                 // Update column formatting based on data
                                 ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, exportValue );
@@ -1854,10 +1835,14 @@ namespace Rock.Web.UI.Controls
 
                             string resolvedValue = lavaField.LiquidTemplate.ResolveMergeFields( mergeValues );
                             resolvedValue = resolvedValue.Replace( "~~/", themeRoot ).Replace( "~/", appRoot ).ReverseCurrencyFormatting().ToString();
-                            worksheet.Cells[rowCounter, columnCounter].Value = resolvedValue;
 
-                            // Update column formatting based on data
-                            ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, resolvedValue );
+                            if ( !string.IsNullOrEmpty( resolvedValue ) )
+                            {
+                                worksheet.Cells[rowCounter, columnCounter].Value = resolvedValue;
+
+                                // Update column formatting based on data
+                                ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, resolvedValue );
+                            }
 
                             continue;
                         }
@@ -1867,33 +1852,20 @@ namespace Rock.Web.UI.Controls
                     {
                         columnCounter++;
                         object propValue = prop.GetValue( item, null );
-
-                        // TODO timesuck?
-                        bool isDefinedValue;
-                        if (!propIsDefinedValueLookup.ContainsKey(prop))
+                        if ( propValue != null )
                         {
-                            var definedValueAttribute = prop.GetCustomAttributes( typeof( DefinedValueAttribute ), true ).FirstOrDefault();
+                            var cell = worksheet.Cells[rowCounter, columnCounter];
+                            var exportValue = GetExportValue( prop, propValue, IsDefinedValue( definedValueFields, propIsDefinedValueLookup, prop ), cell ).ReverseCurrencyFormatting();
+                            ExcelHelper.SetExcelValue( cell, exportValue );
 
-                            isDefinedValue = ( definedValueAttribute != null || definedValueFields.Any( f => f.DataField == prop.Name ) );
-                            propIsDefinedValueLookup.Add( prop, isDefinedValue );
+                            // Update column formatting based on data
+                            ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, exportValue );
                         }
-                        else
-                        {
-                            isDefinedValue = propIsDefinedValueLookup[prop];
-                        }
-
-                        var cell = worksheet.Cells[rowCounter, columnCounter];
-                        var exportValue = GetExportValue( prop, propValue, isDefinedValue, cell ).ReverseCurrencyFormatting();
-                        ExcelHelper.SetExcelValue( cell, exportValue );
-
-                        // Update column formatting based on data
-                        ExcelHelper.FinalizeColumnFormat( worksheet, columnCounter, exportValue );
                     }
 
                     dataIndex++;
                     if ( dataIndex % 1000 == 0 )
                     {
-                        stopwatchRow.Stop();
                         Debug.WriteLine( $"[{stopwatchRow.Elapsed.TotalMilliseconds}ms] stopwatchRow" );
                         Debug.WriteLine( $"[{stopwatchTotal.Elapsed.TotalMilliseconds}ms] DataIndex: {dataIndex}" );
                     }
@@ -1908,6 +1880,46 @@ namespace Rock.Web.UI.Controls
 
             // send the spreadsheet to the browser
             excel.SendToBrowser( this.Page, filename );
+        }
+
+        /// <summary>
+        /// Determines whether [is defined value] [the specified defined value fields].
+        /// </summary>
+        /// <param name="definedValueFields">The defined value fields.</param>
+        /// <param name="propIsDefinedValueLookup">The property is defined value lookup.</param>
+        /// <param name="prop">The property.</param>
+        /// <returns>
+        ///   <c>true</c> if [is defined value] [the specified defined value fields]; otherwise, <c>false</c>.
+        /// </returns>
+        private static bool IsDefinedValue( List<DefinedValueField> definedValueFields, Dictionary<PropertyInfo, bool> propIsDefinedValueLookup, PropertyInfo prop )
+        {
+            if ( !propIsDefinedValueLookup.ContainsKey( prop ) )
+            {
+                var definedValueAttribute = prop.GetCustomAttributes( typeof( DefinedValueAttribute ), true ).FirstOrDefault();
+                bool isDefinedValue = ( definedValueAttribute != null || definedValueFields.Any( f => f.DataField == prop.Name ) );
+
+                propIsDefinedValueLookup.Add( prop, isDefinedValue );
+            }
+
+            return propIsDefinedValueLookup[prop];
+        }
+
+        /// <summary>
+        /// Gets the property from bound field.
+        /// </summary>
+        /// <param name="props">The props.</param>
+        /// <param name="boundFieldPropLookup">The bound field property lookup.</param>
+        /// <param name="boundField">The bound field.</param>
+        /// <returns></returns>
+        private static PropertyInfo GetPropertyFromBoundField( List<PropertyInfo> props, Dictionary<BoundField, PropertyInfo> boundFieldPropLookup, BoundField boundField )
+        {
+            if ( !boundFieldPropLookup.ContainsKey( boundField ) )
+            {
+                var prop = props.FirstOrDefault( p => boundField.DataField == p.Name || boundField.DataField.StartsWith( p.Name + "." ) );
+                boundFieldPropLookup.Add( boundField, prop );
+            }
+
+            return boundFieldPropLookup[boundField];
         }
 
         /// <summary>
