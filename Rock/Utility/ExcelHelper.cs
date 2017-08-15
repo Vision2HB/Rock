@@ -221,7 +221,11 @@ namespace Rock.Utility
 
             worksheet.View.FreezePanes( headerRows + 1, 1 );
 
-            worksheet.Cells.AutoFitColumns();
+            // do AutoFitColumns on no more than the first 10000 rows (10000 can take 4-5 seconds, but could take several minutes if there are 100000+ rows )
+            int autoFitRows = Math.Min( rows, 10000 );
+            var autoFitRange = worksheet.Cells[headerRows, 1, autoFitRows, columns];
+
+            autoFitRange.AutoFitColumns();
 
             // TODO: add alternating highlights
 
