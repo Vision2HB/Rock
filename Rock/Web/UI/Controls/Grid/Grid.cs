@@ -32,7 +32,6 @@ using Rock.Web.Cache;
 using Rock;
 using Rock.Utility;
 using EntityFramework.Utilities;
-using System.Diagnostics;
 
 namespace Rock.Web.UI.Controls
 {
@@ -1428,8 +1427,6 @@ namespace Rock.Web.UI.Controls
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void Actions_ExcelExportClick( object sender, EventArgs e )
         {
-            Stopwatch stopwatchTotal = Stopwatch.StartNew();
-            
             // disable paging if no specific keys where selected (or if no select option is shown)
             bool selectAll = !SelectedKeys.Any();
             RebindGrid( e, selectAll, true );
@@ -1708,8 +1705,6 @@ namespace Rock.Web.UI.Controls
                 var selectedKeys = SelectedKeys.ToList();
                 foreach ( var item in data )
                 {
-                    Stopwatch stopwatchRow = Stopwatch.StartNew();
-
                     if ( selectedKeys.Any() && this.DataKeyNames.Count() == 1 )
                     {
                         var dataKeyValue = item.GetPropertyValue( this.DataKeyNames[0] );
@@ -1864,19 +1859,10 @@ namespace Rock.Web.UI.Controls
                     }
 
                     dataIndex++;
-                    if ( dataIndex % 1000 == 0 )
-                    {
-                        Debug.WriteLine( $"[{stopwatchRow.Elapsed.TotalMilliseconds}ms] stopwatchRow" );
-                        Debug.WriteLine( $"[{stopwatchTotal.Elapsed.TotalMilliseconds}ms] DataIndex: {dataIndex}" );
-                    }
-
                 }
             }
 
             worksheet.FormatWorksheet( title, headerRows, rowCounter, columnCounter );
-
-            Debug.WriteLine( $"[{stopwatchTotal.Elapsed.TotalMilliseconds}ms] stopwatchtotal" );
-            Debug.Flush();
 
             // send the spreadsheet to the browser
             excel.SendToBrowser( this.Page, filename );
