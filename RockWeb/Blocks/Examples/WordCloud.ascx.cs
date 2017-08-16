@@ -51,7 +51,7 @@ namespace RockWeb.Blocks.Examples
 Sys.Application.add_load(function() {{
     Rock.controls.wordcloud.initialize({{
         inputTextId: '{0}',
-        svgContainerId: '{1}',
+        visId: '{1}',
         width: 800,
         height: 300
     }});
