@@ -1,0 +1,21 @@
+<div class="list-as-blocks clearfix">
+
+      <ul>
+        {% for childPage in Page.Pages %}
+            {% assign countType = forloop.index | Modulo:2 %} 
+            {% if countType == 1 %}
+                <li class="odd">
+            {% else %}
+                <li class="even">
+            {% endif %}
+                <a href="/Page/{{ childPage.Id }}" {% if childPage.DisplayDescription != 'true' %} title="{{ childPage.Description }}"{% endif %}>
+                      {% if childPage.IconCssClass != ' %}
+                          <i class="{{ childPage.IconCssClass }} fa-lg"></i>
+                      {% endif %}
+                      <h3>{{ childPage.Title }}</h3>
+                  </a>
+              </li>
+          {% endfor %}
+      </ul>
+
+</div>

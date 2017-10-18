@@ -1,0 +1,736 @@
+﻿
+// Load Master Styles
+// -------------------------
+@import "../../../Styles/Bootstrap/variables.less";
+@import "../../../Styles/_rock-core.less";
+@import "../../../Styles/_store.less";
+@import "../../../Styles/_rock-variables.less";
+@import "_variables.less";
+@import "_variable-overrides.less";
+@import "_print.less";
+@import "_fonts.less";
+
+/*
+    Rock Theme Styles
+
+    1. HTML Overrides
+    2. Bootstrap Overides
+    3. Theme Styling
+    4. Components
+    5. Rock Block Settings
+    6. Badges
+
+*/
+
+@background-color: #fff;
+@light-background: #fff;
+
+@pagelist-background:  @theme-5;
+@pagelist-background-text: @theme-5-text;
+
+
+/*@background-color: #e6e6dd;
+@light-background: #f1f1ec;
+
+@pagelist-background:  #756e5f;
+@pagelist-background-text: #eaeaea;
+*/
+
+
+// 1. HTML Overrides
+// -------------------------
+
+html {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+main {
+    display: block;
+}
+
+body {
+    background-color: @background-color;
+}
+
+.picker-select-item-details  .address {
+    display: none;
+}
+
+
+// 2. Bootstrap Overrides
+// -------------------------
+
+.loginstatus {
+    margin-top: 12px;
+}
+
+.nav .open > a, 
+.nav .open > a:hover, 
+.nav .open > a:focus,
+.nav > li > a:hover, 
+.nav > li > a:focus {
+    
+    background-color: transparent;
+}
+
+.table-condensed.wide {
+    td {
+        padding-top: 18px;
+        padding-bottom: 18px;
+    }
+}
+
+.panel {
+    background-color: @light-background;
+}
+
+/*
+a:hover i.fs {
+    text-decoration: none;
+}*/
+
+// 3. Theme Styling
+// -------------------------
+
+.icon-fw {
+    font-family: FontAwesome !important; // can be removed after Rock v7.0
+}
+
+// fonts
+h1,
+h2,
+h3
+{ font-family: 'Montserrat', sans-serif;
+  letter-spacing: -2px;
+}
+
+.h1, h1 {
+    font-size: 45px;
+}
+
+h1.page-title {
+    margin-bottom: 0;
+}
+
+.panel-title {
+    letter-spacing: -1px;
+}
+
+hr {
+    border-color: @panel-border;
+}
+
+.entry-meta li,
+.entry-link span,
+.entry blockquote p,
+.more-link,
+.comment-content .comment-author span,
+.button.button-desc span,
+.testi-content p,
+.team-title span,
+.before-heading,
+.wedding-head .first-name span,
+.wedding-head .last-name span,
+.font-secondary { font-family: 'Merriweather', serif; }
+
+.breadcrumb {
+    background-color: @background-color;
+    padding-left: 0;
+}
+
+.page-icon {
+    display: none;
+}
+
+#wrapper > header {
+    margin-top: 24px;
+    
+    .logo {
+        width: 180px;
+
+        @media @md {
+                width: 280px;
+        }
+    }
+}
+
+main {
+    min-height: 700px;
+}
+
+
+footer {
+    margin-top: 50px;
+    padding-top: 50px;
+    padding-bottom: 25px;
+    background-color: @theme-3;
+    color: @theme-3-text;
+
+    a {
+        color: lighten(@theme-3-text, 10%);
+    }
+
+    hr {
+        border-color: lighten(@theme-3-text, 10%);
+        opacity: .5;
+    }
+
+    .footer-message {
+        float: left;
+    }
+
+    .footer-address {
+        float: right;
+    }
+}
+
+#splash.error {
+    background-color: @gray-lighter;
+
+    #content {
+        margin-top: 20px;
+        background-color: @body-bg;
+        border-radius: @border-radius-base;
+        padding: 20px;
+    }
+}
+
+.not-found h2 {
+    font-size: 200px;
+    font-weight: @font-weight-bold;
+    letter-spacing: -5px;
+    line-height: 210px;
+
+    i {
+        color: #F03;
+        font-size: 210px;
+        position: relative;
+        top: -12px;
+    }
+}
+
+// 4. Components
+// -------------------------
+
+#wrapper {
+	margin: 0;
+	width: 100%;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+}
+
+.side-cover-wrapper {
+	position: fixed;
+	top: 0;
+	left: auto;
+	right: 0;
+	width: 0;
+	height: 100%;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-position: center right;
+	background-size: cover;
+
+    .fslider{
+            --background-color: @theme-2;
+    }
+}
+
+@media @md { 
+    .side-bar #wrapper {
+        width: 80%;
+    }
+
+    .side-bar .side-cover-wrapper {
+        width: 20%;
+    }
+}
+
+@media @lg { 
+    .side-bar #wrapper {
+        width: 75%;
+    }
+
+    .side-bar .side-cover-wrapper {
+        width: 25%;
+    }
+}
+
+.rowlist {
+
+    margin-bottom: 12px;
+
+    .row {
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+
+    &.rowlist-striped {
+        .row:nth-child(odd) {
+            background-color: @grid-row-odd-bg;
+        }
+    }
+}
+
+// 5. Rock Blocks
+// -------------------------
+
+.note .date {
+    font-family: 'OpenSans','Helvetica Neue',Helvetica,Arial,sans-serif;
+    letter-spacing: -1px;
+}
+
+.search-wrapper {
+    border: 1px solid @panel-border;
+    margin-bottom: 12px;
+}
+
+.smartsearch {
+    margin: 12px auto;
+    min-width: 290px;
+    width: 50%;
+    color: @text-color;
+    background-color: @light-background;
+
+    input {
+        color: lighten(@text-color, 40%);
+    }
+
+    input.searchinput {
+        color: @text-color;
+    }
+
+    .dropdown {
+        .navbar-link {
+            color: @text-color;
+        }
+    }
+
+    .tt-dropdown-menu {
+        border: 1px solid @smartsearch-border-color;
+        margin-left: -7px;
+    }
+}
+
+.tt-dropdown-menu {
+    background-color: #fff;
+    color: @text-color;
+}
+
+.tt-suggestion p:hover {
+    background-color: @grid-hover-bg;
+    color: @grid-hover-color;
+}
+
+.block-instance.login {
+    legend {
+        display: none;
+    }
+}
+
+.list-as-blocks {
+
+    h3 {
+        font-size: 18px;
+    }
+
+    ul {
+        li {
+            width: 48.5% !important;
+            margin: 0 0 24px;
+            color: @pagelist-background-text;
+            background-color: @pagelist-background;
+            border-color: darken(@pagelist-background, 10%);
+
+            &.odd {
+                float: left;
+            }
+            &.even {
+                float: right;
+            }
+
+            a {
+                color: @pagelist-background-text;
+                text-decoration: none;
+                background-color: @pagelist-background;
+
+                &:hover {
+                    background-color: darken(@pagelist-background, 10%);
+                    text-decoration: none;
+                    color: @pagelist-background-text;
+
+                    i {
+                        color: @pagelist-background-text;
+                    }
+                }
+
+                i {
+                    margin-bottom: 8px;
+                    color: @pagelist-background-text;
+                }
+            }
+        }
+    }
+}
+
+h1.name {
+    span.firstname {
+        font-size: 24px;
+    }
+}
+
+// assessment styles
+.personprofilebar-bio.assessment {
+    .title.name {
+        font-size: 25px;
+
+        .firstname {
+            font-size: 16px;
+            font-weight: normal;
+            letter-spacing: -1px;
+        }
+    }
+    
+    .photo {
+        max-width: 120px;
+        background-color: @persondetails-familybar-photo-bg;
+    }
+}
+
+.personprofilebar-bio.assessment {
+    position: relative;
+
+    .actions {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+    }
+}
+
+.assessment-options {
+
+    .rock-checkbox-icon {
+        font-weight: 700;
+    }
+    
+    .text-muted {
+        opacity: .6;
+        font-weight: normal;
+    }
+}
+
+.contextsetter {
+    position: absolute;
+    top: 0;
+    right: 4px;
+    margin-right: 8px;
+    z-index: 2000;
+}
+
+.assessment-points {
+    background-color: @persondetails-bio-bg;
+    color: @persondetails-bio-color;
+    padding: 24px;
+
+    h4 {
+        margin-top: 0;
+    }
+}
+
+.col-history,
+.col-serviceareas {
+    div {
+        padding-top: 3px;
+        padding-bottom: 3px;
+    }
+}
+
+// 6. Badges
+// -------------------------
+
+.personprofilebar-badge {
+    height: 64px;
+}
+
+.badge,
+.personprofilebar-badge .badge-group .badge {
+    padding: 0 7px;
+}
+
+.badge-incomestatus {
+  position: relative;
+
+  &:before {
+    font-family: FontAwesome;
+    font-size: 45px;
+    color: darken(@persondetails-badge-bg, 10%);
+    content: "\f0d6";
+  }
+
+  &.meets:before {
+    color: @brand-success;
+  }
+
+  &.not-meet:before {
+      color: @brand-warning;
+  }
+}
+
+.badge-foodvisits {
+    position: relative;
+    
+    .badge-icon {
+        font-size: 40px;
+        display: block;
+        float: left;
+    }
+
+    .details {
+        float: left;
+        margin-left: 2px;
+    }
+
+    .gracevisit,
+    .courtesyvisit {
+        color: @brand-danger;
+    }
+
+    span {
+        display: block;
+        font-size: 14px;
+        color: @text-color;
+    }
+
+    &.food {
+        .badge-icon {
+            color: @brand-success;
+        }
+    }
+
+    &.bread {
+        .badge-icon {
+            color: saddlebrown;
+        }
+    }
+
+    &.none {
+        .badge-icon {
+            color: @brand-danger;
+        }
+    }
+
+    &.grace-allowed {
+        .gracevisit {
+            color: @brand-success;
+        }
+    }
+
+    &.courtesy-allowed {
+        .courtesyvisit {
+            color: @brand-success;
+        }
+    }
+}
+
+.badge-visitcount {
+
+    .visit-metric {
+        position: relative;
+        color: #686576;
+
+        &:before {
+            font-family: FontAwesome;
+            content: "\f0c8";
+            color: #ecc759;
+            font-size: 45px;
+        }
+
+        .visits-year {
+            position: absolute;
+            top: 7px;
+            left: 3px;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -2px;
+            display: block;
+            width: 18px;
+            text-align: center;
+        }
+
+        .visits-total {
+            position: absolute;
+            bottom: 10px;
+            right: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+    }
+}
+
+.badge.dental {
+    .badge-icon {
+        font-size: 38px;
+    }
+}
+
+.badge-servicearea {
+
+    &.expired {
+        color: @brand-warning;
+    }
+
+    &.approved {
+        color: @brand-success;
+    }
+
+    &.not-approved {
+        color: darken(@persondetails-badge-bg, 10%);
+    }
+}
+
+.badge-clothingvisit {
+    margin-top: -10px;
+    color: darken(@persondetails-badge-bg, 10%);
+
+    &.full {
+        color: @brand-success;
+    }
+}
+
+.badge-language {
+    
+    .badge-details{
+        position: relative;
+
+        &:before {
+            font-family: FontAwesome;
+            content: "\f111";
+            font-size: 45px;
+        }
+    }
+
+    span {
+        color: #fff;
+        position: absolute;
+        top: 18px;
+        left: 7px;
+        font-size: 12px;
+    }
+}
+
+.badge-householdsize {
+     .badge-details{
+        position: relative;
+
+        &:before {
+            font-family: FontAwesome;
+            content: "\f111";
+            font-size: 45px;
+            color: #674ea7;
+        }
+    }
+
+    i {
+        position: absolute;
+        top: 4px;
+        left: 12px;
+        font-size: 14px;
+    }
+
+    span {
+        text-align: center;
+        width: 24px;
+        color: #fff;
+        position: absolute;
+        top: 18px;
+        left: 7px;
+        font-size: 20px;
+    }
+}
+
+.badge-churchstatus {
+    .badge-details{
+        position: relative;
+        color: lighten(@persondetails-badge-bg, 10%);
+
+        span {
+            position: absolute;
+            top: 12px;
+            left: 8px;
+            font-size: 24px;
+        }
+    }
+    
+    .badge-details:before {
+        font-family: FontAwesome;
+        content: "\f111";
+        color: darken(@persondetails-badge-bg, 10%);
+        font-size: 45px;
+    }
+
+    .badge-details.attends-willow,
+    .badge-details.difference-church,
+    .badge-details.attends-willow {
+        color: #fff;
+    }
+
+    &.no-church .badge-details.no-church:before {
+        color: #a884bf;
+    }
+
+    &.difference-church .badge-details:before {
+        color: @brand-info;
+    }
+
+    &.attends-willow .badge-details:before {
+        color: @brand-success;
+    }
+}
+
+.badge-careteamcount {
+    .badge-details{
+        position: relative;
+        color: lighten(@persondetails-badge-bg, 10%);
+
+        span {
+            position: absolute;
+            top: 12px;
+            left: 4px;
+            font-size: 24px;
+            letter-spacing: -2px;
+        }
+    }
+    
+    .badge-details:before {
+        font-family: FontAwesome;
+        content: "\f111";
+        color: darken(@persondetails-badge-bg, 10%);
+        font-size: 45px;
+    }
+
+    &.has-visited .badge-details:before {
+        color: @brand-info;
+    }
+}
+
+.badge {
+    position: relative;
+
+    .banned{
+        position: absolute;
+        bottom: 0;
+        left: 6px;
+
+
+        &:before{
+            content: @fa-var-ban;
+            color: @brand-danger;
+            font-family: FontAwesome;
+            font-size: 18px;
+        }
+    }
+}
+
+@import "_css-overrides.less";
