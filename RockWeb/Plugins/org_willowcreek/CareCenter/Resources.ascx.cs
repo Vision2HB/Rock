@@ -1015,7 +1015,8 @@ ORDER BY [Order]
                 communication.SenderPersonAliasId = CurrentPersonAliasId;
                 communicationService.Add( communication );
                 communication.IsBulkCommunication = false;
-                communication.MediumEntityTypeId = EntityTypeCache.Read( "Rock.Communication.Medium.Email" ).Id;
+                //communication.MediumEntityTypeId = EntityTypeCache.Read( "Rock.Communication.Medium.Email" ).Id;
+                communication.CommunicationType = CommunicationType.Email;
                 communication.FutureSendDateTime = null;
 
                 if ( personId.HasValue )
