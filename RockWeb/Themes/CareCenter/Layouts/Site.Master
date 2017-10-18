@@ -60,7 +60,7 @@
             <!-- Page Header -->
             <header class="container-fluid">
                 <div class="pull-left">
-                    <a href="/"><img src="/Themes/CareCenter/Assets/Images/logo.png" class="logo" class="pull-left"/></a>
+                    <a href="/CareCenter"><img src="/Themes/CareCenter/Assets/Images/logo.png" class="logo" class="pull-left"/></a>
                     <Rock:Zone Name="Header" runat="server" />
                 </div>
 
