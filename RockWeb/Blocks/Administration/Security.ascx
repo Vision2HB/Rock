@@ -98,11 +98,11 @@
                             <Columns>
                                 <Rock:RockBoundField DataField="AuthRule.DisplayName" HeaderText="Role / User" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left" HtmlEncode="false" />
                                 <Rock:RockTemplateField>
-                                    <HeaderTemplate>Allow or Deny</HeaderTemplate>
-                                    <HeaderStyle HorizontalAlign="Left" />
-                                    <ItemStyle Wrap="false" HorizontalAlign="Left" />
+                                    <HeaderTemplate>Action</HeaderTemplate>
+                                    <HeaderStyle HorizontalAlign="Center" />
+                                    <ItemStyle Wrap="false" HorizontalAlign="Center" />
                                     <ItemTemplate>
-                                        <%# Eval("AuthRule.AllowOrDeny").ToString() == "A" ? "Allow" : "Deny" %>
+                                        <%# Eval("AuthRule.AllowOrDeny").ToString() == "A" ? "<span class='label label-success'>Allow</span>" : "<span class='label label-danger'>Deny</span>" %>
                                     </ItemTemplate>
                                 </Rock:RockTemplateField>
                                 <Rock:RockBoundField DataField="EntityTitle" HeaderText="From" HeaderStyle-HorizontalAlign="Left" ItemStyle-HorizontalAlign="Left" HtmlEncode="false" />
@@ -117,7 +117,7 @@
 
                 <fieldset>
                     <legend>Select Role to Add</legend>
-                    <Rock:RockDropDownList ID="ddlRoles" runat="server" Label="Role" AutoPostBack="true" OnSelectedIndexChanged="ddlRoles_SelectedIndexChanged" />
+                    <Rock:RockDropDownList ID="ddlRoles" runat="server" Label="Role" AutoPostBack="true" OnSelectedIndexChanged="ddlRoles_SelectedIndexChanged" EnhanceForLongLists="true" />
                     <dl>
                         <dt></dt>
                         <dd>

@@ -56,7 +56,8 @@ namespace RockWeb.Blocks.Connection
 )]
 
     [CodeEditorField( "Opportunity Summary Template", "Lava Template that can be used to customize what is displayed in each Opportunity Summary. Includes common merge fields plus the OpportunitySummary, ConnectionOpportunity, and its ConnectionRequests.", CodeEditorMode.Lava, CodeEditorTheme.Rock, defaultValue:
-@"<i class='{{ OpportunitySummary.IconCssClass }}'></i>
+@"<span class=""item-count"" title=""There are {{ 'active connection' | ToQuantity:OpportunitySummary.TotalRequests }} in this opportunity."">{{ OpportunitySummary.TotalRequests | Format:'#,###,##0' }}</span>
+<i class='{{ OpportunitySummary.IconCssClass }}'></i>
 <h3>{{ OpportunitySummary.Name }}</h3>
 <div class='status-list'>
     <span class='badge badge-info'>{{ OpportunitySummary.AssignedToYou | Format:'#,###,###' }}</span>
@@ -134,7 +135,7 @@ namespace RockWeb.Blocks.Connection
             gRequests.GridRebind += gRequests_GridRebind;
             gRequests.ShowConfirmDeleteDialog = false;
             gRequests.PersonIdField = "PersonId";
-            gRequests.Columns[6].Visible = GetAttributeValue( "ShowLastActivityNote" ).AsBoolean();
+            gRequests.Columns[7].Visible = GetAttributeValue( "ShowLastActivityNote" ).AsBoolean();
 
             this.BlockUpdated += Block_BlockUpdated;
             this.AddConfigurationUpdateTrigger( upnlContent );
@@ -996,7 +997,7 @@ namespace RockWeb.Blocks.Connection
                         GroupRole = r.AssignedGroupMemberRoleId.HasValue ? roles[r.AssignedGroupMemberRoleId.Value] : "",
                         Connector = r.ConnectorPersonAlias != null ? r.ConnectorPersonAlias.Person.FullName : "",
                         LastActivity = FormatActivity( r.ConnectionRequestActivities.OrderByDescending( a => a.CreatedDateTime ).FirstOrDefault() ),
-                        LastActivityNote = gRequests.Columns[6].Visible ? r.ConnectionRequestActivities.OrderByDescending(
+                        LastActivityNote = gRequests.Columns[7].Visible ? r.ConnectionRequestActivities.OrderByDescending(
                             a => a.CreatedDateTime ).Select( a => a.Note ).FirstOrDefault() : "",
                         Status = r.ConnectionStatus.Name,
                         StatusLabel = r.ConnectionStatus.IsCritical ? "warning" : "info",

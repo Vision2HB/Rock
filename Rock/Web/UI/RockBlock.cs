@@ -475,11 +475,21 @@ namespace Rock.Web.UI
             {
                 if ( this.PageParameter( "ShowDebugTimings" ).AsBoolean() )
                 {
-                    TimeSpan tsDuration = RockDateTime.Now.Subtract( (DateTime)Context.Items["Request_Start_Time"] );
+                    TimeSpan tsDuration = RockDateTime.Now.Subtract( ( DateTime ) Context.Items["Request_Start_Time"] );
                     var lblShowDebugTimings = this.Page.Form.Controls.OfType<Label>().Where( a => a.ID == "lblShowDebugTimings" ).FirstOrDefault();
                     if ( lblShowDebugTimings != null )
                     {
+                        var previousPointInTimeMS = lblShowDebugTimings.Attributes["PointInTimeMS"]?.AsDoubleOrNull();
+                        if ( previousPointInTimeMS.HasValue )
+                        {
+                            var lastDurationMS = Math.Round(tsDuration.TotalMilliseconds - previousPointInTimeMS.Value, 3);
+                            lblShowDebugTimings.Text = lblShowDebugTimings.Text.ReplaceLastOccurrence( "</pre>", $"  [{lastDurationMS}ms]</pre>" );
+                        }
+
                         lblShowDebugTimings.Text += string.Format( "<pre>Start OnLoad {0} @ {1}</pre>", this.BlockName, tsDuration.TotalMilliseconds );
+
+
+                        lblShowDebugTimings.Attributes["PointInTimeMS"] = tsDuration.TotalMilliseconds.ToString();
                     }
                 }
             }
@@ -742,9 +752,12 @@ namespace Rock.Web.UI
         {
             var pageReference = new Rock.Web.PageReference( this.CurrentPageReference );
             pageReference.QueryString = new System.Collections.Specialized.NameValueCollection( pageReference.QueryString );
-            foreach ( var qryParam in additionalQueryParameters )
+            if ( additionalQueryParameters != null )
             {
-                pageReference.QueryString[qryParam.Key] = qryParam.Value;
+                foreach ( var qryParam in additionalQueryParameters )
+                {
+                    pageReference.QueryString[qryParam.Key] = qryParam.Value;
+                }
             }
 
             return NavigateToPage( pageReference );

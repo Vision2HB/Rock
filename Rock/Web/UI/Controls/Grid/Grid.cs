@@ -27,11 +27,10 @@ using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using OfficeOpenXml;
-using Rock.Data;
-using Rock.Web.Cache;
 using Rock;
+using Rock.Data;
 using Rock.Utility;
-using EntityFramework.Utilities;
+using Rock.Web.Cache;
 
 namespace Rock.Web.UI.Controls
 {
@@ -701,8 +700,10 @@ namespace Rock.Web.UI.Controls
 
             string gridSelectCellScriptFormat = @"
    $('#{0} .grid-select-cell').on( 'click', function (event) {{
-  var dataRowIndexValue = $(this).closest('tr').attr('data-row-index');
-  {1}
+  if (!($(event.target).is('a') || $(event.target).parent().is('a'))) {{
+    var dataRowIndexValue = $(this).closest('tr').attr('data-row-index');
+    {1}
+  }}
 }});";
             string gridSelectCellScript = string.Format( gridSelectCellScriptFormat, this.ClientID, clickScript );
             ScriptManager.RegisterStartupScript( this, this.GetType(), "grid-select-cell-script-" + this.ClientID, gridSelectCellScript, true );
@@ -758,15 +759,20 @@ namespace Rock.Web.UI.Controls
         /// <param name="writer">The <see cref="T:System.Web.UI.HtmlTextWriter" /> object that receives the control content.</param>
         public override void RenderControl( HtmlTextWriter writer )
         {
-
+            var divClasses = new List<string>();
             if ( this.EnableResponsiveTable )
             {
-                writer.AddAttribute( HtmlTextWriterAttribute.Class, "table-responsive" );
+                divClasses.Add( "table-responsive" );
             }
 
             if ( DisplayType == GridDisplayType.Light )
             {
-                writer.AddAttribute( HtmlTextWriterAttribute.Class, "table-no-border" );
+                divClasses.Add( "table-no-border" );
+            }
+
+            if ( divClasses.Any() )
+            {
+                writer.AddAttribute( HtmlTextWriterAttribute.Class, divClasses.AsDelimited( " " ) );
             }
 
             writer.RenderBeginTag( HtmlTextWriterTag.Div );
@@ -1311,7 +1317,7 @@ namespace Rock.Web.UI.Controls
 
                     if ( rockPage.Request != null && rockPage.Request.Url != null )
                     {
-                        communication.MediumData.AddOrReplace( "UrlReferrer", rockPage.Request.Url.AbsoluteUri );
+                        communication.UrlReferrer = rockPage.Request.Url.AbsoluteUri;
                     }
 
                     communicationService.Add( communication );
@@ -1337,18 +1343,24 @@ namespace Rock.Web.UI.Controls
                         chunkedPersonIds = personIds.Skip( skipCount ).Take( 1000 );
                     }
 
+                    // NOTE: Set CreatedDateTime, ModifiedDateTime, etc manually set we are using BulkInsert
+                    var currentDateTime = RockDateTime.Now;
+                    var currentPersonAliasId = rockPage.CurrentPersonAliasId;
+
                     var communicationRecipientList = primaryAliasList.Select( a => new Rock.Model.CommunicationRecipient
                     {
                         CommunicationId = communication.Id,
                         PersonAliasId = a.Id,
-                        AdditionalMergeValues = recipients[a.PersonId]
-                    } );
+                        AdditionalMergeValues = recipients[a.PersonId],
+                        CreatedByPersonAliasId = currentPersonAliasId,
+                        ModifiedByPersonAliasId = currentPersonAliasId,
+                        CreatedDateTime = currentDateTime,
+                        ModifiedDateTime = currentDateTime
+                    } ).ToList();
 
+                    // BulkInsert to quickly insert the CommunicationRecipient records. Note: This is much faster, but will bypass EF and Rock processing.
                     var communicationRecipientRockContext = new RockContext();
-
-                    var communicationRecipientService = new Rock.Model.CommunicationRecipientService( communicationRecipientRockContext );
-                    communicationRecipientService.AddRange( communicationRecipientList );
-                    communicationRecipientRockContext.SaveChanges();
+                    communicationRecipientRockContext.BulkInsert( communicationRecipientList );
 
                     // Get the URL to communication page
                     string url = CommunicationPageRoute;
@@ -1604,15 +1616,15 @@ namespace Rock.Web.UI.Controls
                 Dictionary<PropertyInfo, bool> propIsDefinedValueLookup = new Dictionary<PropertyInfo, bool>();
                 Dictionary<BoundField, PropertyInfo> boundFieldPropLookup = new Dictionary<BoundField, PropertyInfo>();
                 var attributeFields = this.Columns.OfType<AttributeField>().ToList();
-                var lavaFields = new List<LiquidField>();
+                var lavaFields = new List<LavaField>();
                 var visibleFields = new Dictionary<int, DataControlField>();
 
                 int fieldOrder = 0;
                 foreach ( DataControlField dataField in this.Columns )
                 {
-                    if ( dataField is LiquidField )
+                    if ( dataField is LavaField )
                     {
-                        var lavaField = dataField as LiquidField;
+                        var lavaField = dataField as LavaField;
                         lavaFields.Add( lavaField );
                         visibleFields.Add( fieldOrder++, lavaField );
                     }
@@ -1649,7 +1661,7 @@ namespace Rock.Web.UI.Controls
                     props.Add( prop );
                 }
 
-                var lavaDataFields = new Dictionary<string, LiquidFieldTemplate.DataFieldInfo>();
+                var lavaDataFields = new Dictionary<string, LavaFieldTemplate.DataFieldInfo>();
 
                 // Grid column headings
                 var boundPropNames = new List<string>();
@@ -1666,7 +1678,7 @@ namespace Rock.Web.UI.Controls
                             if ( lavaFields.Any() )
                             {
                                 var mergeFieldName = boundField.HeaderText.Replace( " ", string.Empty ).RemoveSpecialCharacters();
-                                lavaDataFields.AddOrIgnore( mergeFieldName, new LiquidFieldTemplate.DataFieldInfo { PropertyInfo = prop, GridField = boundField } );
+                                lavaDataFields.AddOrIgnore( mergeFieldName, new LavaFieldTemplate.DataFieldInfo { PropertyInfo = prop, GridField = boundField } );
                             }
 
                             boundPropNames.Add( prop.Name );
@@ -1685,7 +1697,7 @@ namespace Rock.Web.UI.Controls
                     if ( lavaFields.Any() )
                     {
                         var mergeFieldName = prop.Name;
-                        lavaDataFields.AddOrIgnore( mergeFieldName, new LiquidFieldTemplate.DataFieldInfo { PropertyInfo = prop, GridField = null } );
+                        lavaDataFields.AddOrIgnore( mergeFieldName, new LavaFieldTemplate.DataFieldInfo { PropertyInfo = prop, GridField = null } );
                     }
 
                     worksheet.Cells[rowCounter, columnCounter].Value = prop.Name.SplitCase();
@@ -1813,7 +1825,7 @@ namespace Rock.Web.UI.Controls
                             continue;
                         }
 
-                        var lavaField = dataField as LiquidField;
+                        var lavaField = dataField as LavaField;
                         if ( lavaField != null )
                         {
                             var mergeValues = new Dictionary<string, object>();
@@ -1828,7 +1840,7 @@ namespace Rock.Web.UI.Controls
                                 mergeValues.Add( dataFieldItem.Key, dataFieldValue );
                             }
 
-                            string resolvedValue = lavaField.LiquidTemplate.ResolveMergeFields( mergeValues );
+                            string resolvedValue = lavaField.LavaTemplate.ResolveMergeFields( mergeValues );
                             resolvedValue = resolvedValue.Replace( "~~/", themeRoot ).Replace( "~/", appRoot ).ReverseCurrencyFormatting().ToString();
 
                             if ( !string.IsNullOrEmpty( resolvedValue ) )
@@ -2346,6 +2358,7 @@ namespace Rock.Web.UI.Controls
                 var entitySet = new Rock.Model.EntitySet();
                 entitySet.EntityTypeId = Rock.Web.Cache.EntityTypeCache.Read<Rock.Model.Person>().Id;
                 entitySet.ExpireDateTime = RockDateTime.Now.AddMinutes( 5 );
+                List<Rock.Model.EntitySetItem> entitySetItems = new List<Rock.Model.EntitySetItem>();
 
                 foreach ( var key in keys )
                 {
@@ -2353,7 +2366,7 @@ namespace Rock.Web.UI.Controls
                     {
                         var item = new Rock.Model.EntitySetItem();
                         item.EntityId = ( int ) key.Key;
-                        entitySet.Items.Add( item );
+                        entitySetItems.Add( item );
                     }
                     catch
                     {
@@ -2361,12 +2374,19 @@ namespace Rock.Web.UI.Controls
                     }
                 }
 
-                if ( entitySet.Items.Any() )
+                if ( entitySetItems.Any() )
                 {
                     var rockContext = new RockContext();
                     var service = new Rock.Model.EntitySetService( rockContext );
                     service.Add( entitySet );
                     rockContext.SaveChanges();
+                    entitySetItems.ForEach( a =>
+                    {
+                        a.EntitySetId = entitySet.Id;
+                    } );
+
+                    rockContext.BulkInsert( entitySetItems );
+
                     return entitySet.Id;
                 }
             }
@@ -2465,6 +2485,7 @@ namespace Rock.Web.UI.Controls
             DataColumn dataKeyColumn = this.DataSourceAsDataTable.Columns.OfType<DataColumn>().FirstOrDefault( a => a.ColumnName == dataKeyField );
 
             entitySet.ExpireDateTime = RockDateTime.Now.AddMinutes( 5 );
+            List<Rock.Model.EntitySetItem> entitySetItems = new List<Rock.Model.EntitySetItem>();
 
             int itemOrder = 0;
             foreach ( DataRowView row in this.DataSourceAsDataTable.DefaultView )
@@ -2491,7 +2512,7 @@ namespace Rock.Web.UI.Controls
                         item.AdditionalMergeValues.Add( col.ColumnName, row[col.ColumnName] );
                     }
 
-                    entitySet.Items.Add( item );
+                    entitySetItems.Add( item );
                 }
                 catch
                 {
@@ -2499,12 +2520,20 @@ namespace Rock.Web.UI.Controls
                 }
             }
 
-            if ( entitySet.Items.Any() )
+            if ( entitySetItems.Any() )
             {
                 var rockContext = new RockContext();
                 var service = new Rock.Model.EntitySetService( rockContext );
                 service.Add( entitySet );
                 rockContext.SaveChanges();
+
+                entitySetItems.ForEach( a =>
+                {
+                    a.EntitySetId = entitySet.Id;
+                } );
+
+                rockContext.BulkInsert( entitySetItems );
+
                 return entitySet.Id;
             }
 
@@ -2702,7 +2731,7 @@ namespace Rock.Web.UI.Controls
                      a.EntitySetId = entitySet.Id;
                  } );
 
-                EFBatchOperation.For( rockContext, rockContext.EntitySetItems ).InsertAll( entitySetItems );
+                rockContext.BulkInsert( entitySetItems );
 
                 return entitySet.Id;
             }
