@@ -682,18 +682,13 @@ namespace RockWeb.Plugins.com_simpledonation.Event
 
                 // Show or Hide the Credit card entry panel based on if a saved account exists and it's selected or not.
                 divNewCard.Style[HtmlTextWriterStyle.Display] = ( rblSavedCC.Items.Count == 0 || rblSavedCC.Items[rblSavedCC.Items.Count - 1].Selected ) ? "block" : "none";
-
-                /* SimpleDonation.Start */
-                // Processes Block Settings
-                ProcessBlockSettings();
-                /* SimpleDonation.End */
             }
         }
 
         /// <summary>
         /// Returns breadcrumbs specific to the block that should be added to navigation
         /// based on the current page reference.  This function is called during the page's
-        /// oninit to load any initial breadcrumbs.
+        /// oninit to load any initial breadcrumbs. 
         /// </summary>
         /// <param name="pageReference">The <see cref="T:Rock.Web.PageReference" />.</param>
         /// <returns>
@@ -2122,6 +2117,8 @@ namespace RockWeb.Plugins.com_simpledonation.Event
                 {
                     bool hasPayment = ( RegistrationState.PaymentAmount ?? 0.0m ) > 0.0m;
 
+
+
                     // Save the registration
                     registration = SaveRegistration( rockContext, hasPayment );
                     if ( registration != null )
@@ -3402,6 +3399,10 @@ namespace RockWeb.Plugins.com_simpledonation.Event
 
                 var transactionDetail = new FinancialTransactionDetail();
                 transactionDetail.Amount = RegistrationState.PaymentAmount ?? 0.0m;
+                /* SimpleDonation.Start */
+                transactionDetail.Amount = nbAmountPaid.Text.AsDecimal();
+                /* SimpleDonation.End */
+
                 transactionDetail.AccountId = RegistrationInstanceState.AccountId.Value;
                 transactionDetail.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Registration ) ).Id;
                 transactionDetail.EntityId = registration.Id;
@@ -4044,7 +4045,7 @@ namespace RockWeb.Plugins.com_simpledonation.Event
             }
             else
             {
-                pnlPaymentInfo.Visible = false;
+                pnlPaymentInfo.Visible = true;
             }
         }
 
@@ -5407,6 +5408,9 @@ namespace RockWeb.Plugins.com_simpledonation.Event
                             }
 
                             divNewCard.Style[HtmlTextWriterStyle.Display] = ( rblSavedCC.Items.Count == 0 || rblSavedCC.Items[rblSavedCC.Items.Count - 1].Selected ) ? "block" : "none";
+                            /* SimpleDonation.Start */
+                            divNewCard.Style[HtmlTextWriterStyle.Display] = "block";
+                            /* SimpleDonation.Start */
 
                             if ( Using3StepGateway )
                             {
