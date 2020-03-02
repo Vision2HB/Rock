@@ -131,6 +131,7 @@ namespace RockWeb.Blocks.Connection
             rFilter.ApplyFilterClick += rFilter_ApplyFilterClick;
 
             gRequests.DataKeyNames = new string[] { "Id" };
+            gRequests.EntityTypeId = EntityTypeCache.Get<ConnectionRequest>().Id;
             gRequests.Actions.AddClick += gRequests_Add;
             gRequests.GridRebind += gRequests_GridRebind;
             gRequests.ShowConfirmDeleteDialog = false;
@@ -146,7 +147,7 @@ namespace RockWeb.Blocks.Connection
             this.AddConfigurationUpdateTrigger( upnlContent );
 
             string deleteScript = @"
-    $('table.js-grid-requests a.grid-delete-button').click(function( e ){
+    $('table.js-grid-requests a.grid-delete-button').on('click', function( e ){
         e.preventDefault();
         Rock.dialogs.confirm('Are you sure you want to delete this connection request? All of the activities for this request will also be deleted, and any existing workflow associations will be lost!', function (result) {
             if (result) {
@@ -171,9 +172,6 @@ namespace RockWeb.Blocks.Connection
                 tglMyOpportunities.Checked = GetUserPreference( TOGGLE_SETTING ).AsBoolean( true );
                 tglShowActive.Checked = GetUserPreference( TOGGLE_ACTIVE_SETTING ).AsBoolean( true );
                 SelectedOpportunityId = GetUserPreference( SELECTED_OPPORTUNITY_SETTING ).AsIntegerOrNull();
-
-                // Reset the state filter on every initial request to be Active and Past Due future follow up
-                rFilter.SaveUserPreference( "State", "State", "0;-2" );
 
                 // NOTE: Don't include Inactive Campuses for the "Campus Filter for Page"
                 cpCampusFilterForPage.Campuses = CampusCache.All( false );
@@ -422,6 +420,10 @@ namespace RockWeb.Blocks.Connection
                 else if ( e.Key == MakeKeyUniqueToOpportunity( "LastActivity" ) )
                 {
                     e.Value = ResolveValues( e.Value, cblLastActivity );
+                }
+                else if ( e.Key == "LastActivityDateRange" )
+                {
+                    e.Value = SlidingDateRangePicker.FormatDelimitedValues( e.Value );
                 }
                 else
                 {
@@ -1041,7 +1043,7 @@ namespace RockWeb.Blocks.Connection
                         Group = r.AssignedGroup != null ? r.AssignedGroup.Name : "",
                         GroupStatus = r.AssignedGroupMemberStatus != null ? r.AssignedGroupMemberStatus.ConvertToString() : "",
                         GroupRole = r.AssignedGroupMemberRoleId.HasValue ? roles[r.AssignedGroupMemberRoleId.Value] : "",
-                        Connector = r.ConnectorPersonAlias != null ? r.ConnectorPersonAlias.Person.FullName : "",
+                        Connector = r.ConnectorPersonAlias != null ? r.ConnectorPersonAlias.Person.FullNameReversed : "",
                         LastActivity = FormatActivity( r.ConnectionRequestActivities.OrderByDescending( a => a.CreatedDateTime ).FirstOrDefault() ),
                         LastActivityDateTime = r.ConnectionRequestActivities.OrderByDescending( a => a.CreatedDateTime ).Select( a => a.CreatedDateTime ).FirstOrDefault(),
                         LastActivityNote = lastActivityNoteBoundField != null && lastActivityNoteBoundField.Visible ? r.ConnectionRequestActivities.OrderByDescending(
@@ -1064,6 +1066,10 @@ namespace RockWeb.Blocks.Connection
                             connectionRequests = connectionRequests.OrderBy( a => a.LastActivityDateTime ).ToList();
                         }
                     }
+
+                    // Hide the campus column if the campus filter is not visible.
+                    gRequests.ColumnsOfType<RockBoundField>().First( c => c.DataField == "Campus" ).Visible = cpCampusFilterForPage.Visible;
+
                     gRequests.DataSource = connectionRequests;
                     gRequests.DataBind();
 

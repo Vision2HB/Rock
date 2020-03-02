@@ -18,12 +18,11 @@ using System;
 using System.ComponentModel;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using System.Web.UI.HtmlControls;
 
 namespace Rock.Web.UI.Controls
 {
     /// <summary>
-    /// 
+    /// Control that can be used to select month and year
     /// </summary>
     public class MonthYearPicker : CompositeControl, IRockControl, IRockChangeHandlerControl
     {

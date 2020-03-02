@@ -47,7 +47,7 @@ namespace RockWeb.Blocks.Reporting
     {% endif %}
     {% if InteractionChannel.ChannelTypeMediumValue != null and InteractionChannel.ChannelTypeMediumValue != '' %}
         <div class='col-md-6'>
-            <dl><dt>Name</dt><dd>{{ InteractionChannel.ChannelTypeMediumValue.Value }}<dd/></dl>
+            <dl><dt>Medium</dt><dd>{{ InteractionChannel.ChannelTypeMediumValue.Value }}<dd/></dl>
         </div>
     {% endif %}
     {% if InteractionChannel.EngagementStrength != null and InteractionChannel.EngagementStrength != '' %}
@@ -199,7 +199,9 @@ namespace RockWeb.Blocks.Reporting
                 _channel.InteractionListTemplate = ceInteractionList.Text;
                 _channel.InteractionDetailTemplate = ceInteractionDetail.Text;
                 _channel.IsActive = cbIsActive.Checked;
-
+                _channel.ChannelCustom1Label = tbChannelCustom1Label.Text;
+                _channel.ChannelCustom2Label = tbChannelCustom2Label.Text;
+                _channel.ChannelCustomIndexed1Label = tbChannelCustomIndexed1Label.Text;
                 _channel.ModifiedDateTime = RockDateTime.Now;
                 _channel.ModifiedByPersonAliasId = CurrentPersonAliasId;
 
@@ -249,6 +251,9 @@ namespace RockWeb.Blocks.Reporting
                 ceComponentDetail.Text = _channel.ComponentDetailTemplate;
                 ceInteractionList.Text = _channel.InteractionListTemplate;
                 ceInteractionDetail.Text = _channel.InteractionDetailTemplate;
+                tbChannelCustom1Label.Text = _channel.ChannelCustom1Label;
+                tbChannelCustom2Label.Text = _channel.ChannelCustom2Label;
+                tbChannelCustomIndexed1Label.Text = _channel.ChannelCustomIndexed1Label;
             }
         }
 

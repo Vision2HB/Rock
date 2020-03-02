@@ -1,15 +1,16 @@
 /*
-
   Rock's Core CSS
-
   1. Imports - Used to import the various core less files
   2. HTML Overrides - Style overrides for basic HTML tags
   3. Utility Classes - Classes that we use often to keep from writing from repeating ourselves
-  4. Bootstrap Overrides - When Bootstrap gets it wrong, we make it right (we know it's called delusion)
+  4. Bootstrap Overrides - When Bootstrap gets it wrong, we make it right
   5. ASP.Net Overrides - Yep they get it wrong too sometimes
-
 */
 
+:root {
+  --focus-state-border: 1px solid @input-border-focus;
+  --focus-state-shadow: @input-focus-box-shadow;
+}
 
 // 1. Imports
 //--------------------------------
@@ -23,6 +24,7 @@
 @import "./chosen/bootstrap-chosen.less";
 
 .fa-font-face( @fa-theme-weight-name, @fa-edition );
+// Single quotes are required for LESS compilation in Rock
 .fa-font-face( 'brands' );
 
 // import as less files so they are concatenated properly
@@ -76,6 +78,11 @@ iframe {
   & > [class*="col-"] {
     padding-right: 5px;
     padding-left: 5px;
+  }
+
+  .form-control-group & {
+    margin-right: 0;
+    margin-left: 0;
   }
 }
 
@@ -134,12 +141,16 @@ a.warning {
 }
 
 .help-message {
-  font-weight: normal;
+  font-weight: 400;
 }
 
 .photo {
   img {
     width: 100%;
+  }
+
+  > a.fluidbox-opened:hover + a {
+    display: none;
   }
 }
 
@@ -158,6 +169,12 @@ a.warning {
 
 .dropdown-menu {
   .box-shadow(@shadow-overlay);
+
+  // Added to Support Right Aligned Dropdowns
+  .dropdown-right & {
+    right: 0;
+    left: auto;
+  }
 
   .dropdown-item-danger {
     color: @brand-danger;
@@ -218,34 +235,13 @@ a.warning {
   }
 }
 
-// fix btn colors that are inside of panels
-.alert-warning {
-  .btn-warning {
-    color: @btn-warning-color;
-  }
-}
-
-.alert-danger {
-  .btn-danger {
-    color: @btn-danger-color;
-  }
-}
-
-.alert-info {
-  .btn-info {
-    color: @btn-info-color;
-  }
-}
-
-.alert-success {
-  .btn-success {
-    color: @btn-success-color;
-  }
-}
-
 // grid controls in asp.net center content using align=center but bootstrap overrides this
 th[align="center"] {
   text-align: center;
+}
+
+th[align="right"] {
+  text-align: right;
 }
 
 .form-right {
@@ -272,7 +268,11 @@ th[align="center"] {
 }
 
 .control-label {
-  font-weight: @font-weight-bold;
+  font-weight: @control-label-weight;
+
+  .label-hidden > & {
+    display: none;
+  }
 }
 
 // add badge colors back to BS3
@@ -315,7 +315,7 @@ th[align="center"] {
     padding: 8px 14px;
     margin: -9px -14px 8px;
     font-size: @font-size-base;
-    font-weight: normal;
+    font-weight: @font-weight-normal;
     line-height: 18px;
     background-color: @popover-title-bg;
     border-bottom: 1px solid darken(@popover-title-bg, 5%);
@@ -333,7 +333,7 @@ th[align="center"] {
       float: left;
       margin: 0 0 0 6px;
       font-size: 18px;
-      font-weight: normal;
+      font-weight: @font-weight-normal;
 
       small {
         display: block;
@@ -369,7 +369,6 @@ th[align="center"] {
   margin: -15px -15px 15px -15px;
 }
 
-// .panel-variant(@border; @heading-text-color; @heading-bg-color; @heading-border;) {}
 .panel {
   .panel-heading {
     a.btn-link {
@@ -405,7 +404,7 @@ th[align="center"] {
 
     .panel-labels {
       float: right;
-      margin-top: -2px;
+      margin-top: -(round(@font-size-base * 0.3125, 1));
 
       .panel-text {
         float: left;
@@ -468,7 +467,6 @@ th[align="center"] {
 }
 
 .panel-widget {
-  // .panel-variant(@border; @heading-text-color; @heading-bg-color; @heading-border;) {}
   .panel-variant(@panel-border; @panel-heading-text-color; @panel-heading-bg; @panel-heading-border;);
 
   .panel-heading {
@@ -526,6 +524,16 @@ th[align="center"] {
         text-overflow: ellipsis;
       }
     }
+
+    h4 {
+      font-size: @font-size-base;
+      font-weight: @font-weight-semibold;
+    }
+
+    hr {
+      margin-top: @padding-base-vertical;
+      margin-bottom: (@padding-base-vertical * 2);
+    }
     // styles for matrix attributes
     .form-group.static-control.matrix-attribute label {
       width: 100%;
@@ -544,7 +552,6 @@ th[align="center"] {
 
 .panel-block {
   border-top-color: @panel-top-border-color;
-  //.panel-variant(@border; @heading-text-color; @heading-bg-color; @heading-border;)
 
   .panel-variant(@panel-border; @panel-heading-text-color; @panel-heading-bg; @panel-heading-border;);
 
@@ -581,6 +588,15 @@ th[align="center"] {
       }
     }
   }
+
+  .panel-inline-heading {
+    background: @panel-heading-bg;
+    border-bottom: 1px solid @panel-border;
+  }
+
+  .panel-sidebar {
+    border-right: 1px solid @panel-border;
+  }
 }
 
 .panel-analytics {
@@ -599,6 +615,13 @@ th[align="center"] {
 
     .grid.grid-panel {
       margin-bottom: 0;
+    }
+  }
+
+  .analytics-details {
+    > .grid-filter {
+      padding: 15px;
+      margin: -15px -15px 15px -15px;
     }
   }
 
@@ -639,6 +662,44 @@ th[align="center"] {
 
   i {
     float: right;
+  }
+}
+
+.panel-badges {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  -ms-flex-pack: end;
+  align-items: center;
+  justify-content: flex-end;
+  height: 32px;
+  border-bottom: 1px solid @panel-border;
+
+  &:empty {
+    display: none;
+  }
+
+  .badge {
+    background-color: inherit;
+  }
+
+  .badge-icon {
+    font-size: 20px;
+  }
+}
+
+.badge {
+  .fa-square::before,
+  .fa-circle::before {
+    display: block;
+    width: 1em;
+    height: 1em;
+    content: " ";
+    background: currentColor;
+  }
+
+  .fa-circle::before {
+    border-radius: 50%;
   }
 }
 
@@ -689,7 +750,7 @@ th[align="center"] {
     color: #fff;
     background-color: #3d5a96;
 
-    &.facebook::before {
+    &::before {
       margin-right: 12px;
       font-family: "@{fa-font-face} Brands";
       font-weight: 400;
@@ -701,7 +762,7 @@ th[align="center"] {
     color: #fff;
     background-color: #ed4e23;
 
-    &.google::before {
+    &::before {
       margin-right: 12px;
       font-family: "@{fa-font-face} Brands";
       font-weight: 400;
@@ -713,7 +774,7 @@ th[align="center"] {
     color: #fff;
     background-color: #2aa3ef;
 
-    &.twitter::before {
+    &::before {
       margin-right: 12px;
       font-family: "@{fa-font-face} Brands";
       font-weight: 400;
@@ -730,44 +791,53 @@ th[align="center"] {
 }
 
 // make links in alerts the same color as the text with a nice dotted underline
+// fix btn colors that are inside of panels
 .alert-success {
+  .btn-success {
+    color: @btn-success-color;
+  }
+
   a {
     color: @alert-success-text;
     border-bottom: @alert-success-link-border-bottom;
   }
-
-  a.help {
-    border-bottom: 0;
-  }
 }
 
 .alert-info {
+  .btn-info {
+    color: @btn-info-color;
+  }
+
   a:not([class]) {
     color: @alert-info-text;
     border-bottom: @alert-info-link-border-bottom;
   }
-
-  a.help {
-    border-bottom: 0;
-  }
 }
 
 .alert-warning {
+  .btn-warning {
+    color: @btn-warning-color;
+  }
+
   a {
     color: @alert-warning-text;
     border-bottom: @alert-warning-link-border-bottom;
   }
-  a.help {
-    border-bottom: 0;
-  }
 }
 
 .alert-danger {
+  .btn-danger {
+    color: @btn-danger-color;
+  }
+
   a {
     color: @alert-danger-text;
     border-bottom: @alert-danger-link-border-bottom;
   }
-  a.help {
+}
+
+.alert {
+  .help{
     border-bottom: 0;
   }
 }
@@ -806,7 +876,7 @@ th[align="center"] {
 
 // list extensions
 
-ul.list-padded {
+.list-padded {
   margin-top: 12px;
 
   li {

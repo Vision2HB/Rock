@@ -4,23 +4,23 @@
 
     function pageLoad() {
 
-        $('#show-cache-objects').click(function () {
-            $('#cache-objects').toggle('slow', function () {
+        $('#show-cache-objects').off('click').on('click', function () {
+            $('#cache-objects').toggle(0, function () {
                 Rock.controls.modal.updateSize();
             });
         });
 
-        $('#show-routes').click(function () {
-            $('#routes').toggle('slow', function () {
+        $('#show-routes').off('click').on('click', function () {
+            $('#routes').toggle(0, function () {
                 Rock.controls.modal.updateSize();
             });
         });
 
-        $('a.show-pill').click(function () {
+        $('a.show-pill').off('click').on('click', function () {
     	    $('ul.nav-pills > li').attr('class', '');
     	    $(this).parent().attr('class', 'active');
-    	    $('div.tabContent > div').hide('slow');
-    	    $('#' + $(this).attr('pill')).show('slow', function () {
+    	    $('div.tabContent > div').hide();
+    	    $('#' + $(this).attr('pill')).show(0, function () {
     	        Rock.controls.modal.updateSize();
     	    });
         });
@@ -51,35 +51,36 @@
 
         <p><strong>Client Culture Setting: </strong>
             <asp:Literal ID="lClientCulture" runat="server"></asp:Literal></p>
-        
+
         <Rock:NotificationBox ID="nbMessage" runat="server" NotificationBoxType="Success" Title="Success" Visible="false" Text=""></Rock:NotificationBox>
 
         <div class="actions margin-t-xl">
             <Rock:BootstrapButton runat="server" ID="btnFlushCache" CssClass="btn btn-primary" Text="Clear Cache" OnClick="btnClearCache_Click" DataLoadingText="Clearing..." ToolTip="Flushes all cached items from the Rock cache (e.g. Pages, BlockTypes, Blocks, Attributes, etc." />
-            <asp:Button runat="server" ID="btnRestart" CssClass="btn btn-link js-restart" Text="Restart Rock" OnClick="btnRestart_Click" ToolTip="Restarts the Application." />
+            <a href="#" Class="btn btn-link js-restart" title="Restarts the Application.">Restart Rock</a>
+            <asp:Button runat="server" ID="btnRestart" OnClick="btnRestart_Click" CssClass="hidden" />
         </div>
     </div>
 
     <div id="diagnostics-tab" style="display:none">
-        
+
         <h4>Details</h4>
         <p>
            <strong>Database:</strong><br />
            <asp:Literal ID="lDatabase" runat="server"></asp:Literal>
         </p>
-        
+
         <p>
             <strong>System Date Time:</strong><br />
             <asp:Literal ID="lSystemDateTime" runat="server" />
         </p>
 
         <p>
-            <strong>Rock Time:</strong><br /> 
+            <strong>Rock Time:</strong><br />
             <asp:Literal ID="lRockTime" runat="server" />
         </p>
 
         <p>
-            <strong>Process Start Time:</strong><br /> 
+            <strong>Process Start Time:</strong><br />
             <asp:Literal ID="lProcessStartTime" runat="server" />
         </p>
 
@@ -130,8 +131,6 @@
             <asp:Literal ID="lCacheOverview" runat="server"></asp:Literal>
         </div>
 
-        <asp:Literal ID="lFalseCacheHits" runat="server"></asp:Literal>
-
         <p><a id="show-cache-objects" href="#">Show Cache Statistics</a></p>
         <div id="cache-objects" style="display:none">
             <p><asp:Literal ID="lCacheObjects" runat="server"></asp:Literal></p>
@@ -150,7 +149,12 @@
 
     <script>
         $(".js-restart").on("click", function () {
-            bootbox.alert("The Rock application will be restarted. You will need to reload this page to continue.")
+            Rock.dialogs.confirm('Are you sure you want to restart Rock?', function (result) {
+                if (result) {
+                    bootbox.alert("The Rock application will be restarted. You will need to reload this page to continue.")
+                    __doPostBack('<%= btnRestart.UniqueID %>', '');
+                }
+            });
         });
     </script>
 

@@ -25,7 +25,6 @@ using System.Xml.Linq;
 using Rock.Data;
 using Rock.Model;
 using Rock.Security;
-using Rock.Web;
 
 namespace Rock.Web.Cache
 {
@@ -293,6 +292,24 @@ namespace Rock.Web.Cache
         /// </value>
         [DataMember]
         public string BodyCssClass { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the icon binary file identifier.
+        /// </summary>
+        /// <value>
+        /// The icon binary file identifier.
+        /// </value>
+        [DataMember]
+        public int? IconBinaryFileId { get; private set; }
+
+        /// <summary>
+        /// Gets the additional settings.
+        /// </summary>
+        /// <value>
+        /// The additional settings.
+        /// </value>
+        [DataMember]
+        public string AdditionalSettings { get; private set; }
 
         /// <summary>
         /// Gets the parent page.
@@ -582,6 +599,8 @@ namespace Rock.Web.Cache
             IncludeAdminFooter = page.IncludeAdminFooter;
             AllowIndexing = page.AllowIndexing;
             BodyCssClass = page.BodyCssClass;
+            IconBinaryFileId = page.IconBinaryFileId;
+            AdditionalSettings = page.AdditionalSettings;
 
             PageContexts = new Dictionary<string, string>();
             page.PageContexts?.ToList().ForEach( c => PageContexts.Add( c.Entity, c.IdParameter ) );
@@ -625,6 +644,8 @@ namespace Rock.Web.Cache
         /// <summary>
         /// Flushes the cached block instances.
         /// </summary>
+        [Obsolete("This will not work with a distributed cache system such as Redis. Remove the page from the cache so it can safely reload all its properties on Get().")]
+        [RockObsolete("1.10")]
         public void RemoveBlocks()
         {
             _blockIds = null;
@@ -633,6 +654,8 @@ namespace Rock.Web.Cache
         /// <summary>
         /// Flushes the cached child pages.
         /// </summary>
+        [Obsolete("This will not work with a distributed cache system such as Redis. Remove the page from the cache so it can safely reload all its properties on Get().")]
+        [RockObsolete("1.10")]
         public void RemoveChildPages()
         {
             _pageIds = null;
@@ -779,12 +802,12 @@ namespace Rock.Web.Cache
             {
                 {"Id", Id},
                 {"Title", string.IsNullOrWhiteSpace(PageTitle) ? InternalName : PageTitle},
-                {"Current", isCurrentPage.ToString().ToLower()},
-                {"IsParentOfCurrent", isParentOfCurrent.ToString().ToLower()},
+                {"Current", isCurrentPage},
+                {"IsParentOfCurrent", isParentOfCurrent},
                 {"Url", new PageReference(Id, 0, parameters, queryString).BuildUrl()},
-                {"DisplayDescription", MenuDisplayDescription.ToString().ToLower()},
+                {"DisplayDescription", MenuDisplayDescription},
                 {"DisplayIcon", MenuDisplayIcon.ToString().ToLower()},
-                {"DisplayChildPages", MenuDisplayChildPages.ToString().ToLower()},
+                {"DisplayChildPages", MenuDisplayChildPages},
                 {"IconCssClass", IconCssClass ?? string.Empty},
                 {"Description", Description ?? string.Empty},
                 {"IconUrl", iconUrl}
@@ -824,7 +847,7 @@ namespace Rock.Web.Cache
         /// <param name="pageId">The page identifier.</param>
         /// <returns></returns>
         [RockObsolete( "1.8" )]
-        [Obsolete("No longer needed")]
+        [Obsolete("No longer needed", true )]
         public static string CacheKey( int pageId )
         {
             return string.Format( "Rock:Page:{0}", pageId );
@@ -858,6 +881,8 @@ namespace Rock.Web.Cache
         /// <summary>
         /// Flushes the block instances for all the pages that use a specific layout.
         /// </summary>
+        [Obsolete("This will not work with a distributed cache system such as Redis. In order to refresh the list of blocks in the PageCache obj we need to flush the page. Use FlushPagesForLayout( int ) instead.")]
+        [RockObsolete("1.10")]
         public static void RemoveLayoutBlocks( int layoutId )
         {
             foreach ( var page in All() )
@@ -872,6 +897,8 @@ namespace Rock.Web.Cache
         /// <summary>
         /// Flushes the block instances for all the pages that use a specific site.
         /// </summary>
+        [Obsolete("This will not work with a distributed cache system such as Redis. In order to refresh the list of blocks in the PageCache obj we need to flush the page. Use FlushPagesForSite( int ) instead.")]
+        [RockObsolete("1.10")]
         public static void RemoveSiteBlocks( int siteId )
         {
             foreach ( var page in All() )
@@ -879,6 +906,36 @@ namespace Rock.Web.Cache
                 if ( page != null && page.SiteId == siteId )
                 {
                     page.RemoveBlocks();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Flushes the pages for a layout.
+        /// </summary>
+        /// <param name="layoutId">The layout identifier.</param>
+        public static void FlushPagesForLayout( int layoutId )
+        {
+            foreach ( var page in All() )
+            {
+                if ( page != null && page.LayoutId == layoutId )
+                {
+                    PageCache.FlushItem( page.Id );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Flushes the pages for a site.
+        /// </summary>
+        /// <param name="siteId">The site identifier.</param>
+        public static void FlushPagesForSite( int siteId )
+        {
+            foreach ( var page in All() )
+            {
+                if ( page != null && page.SiteId == siteId )
+                {
+                    PageCache.FlushItem( page.Id );
                 }
             }
         }

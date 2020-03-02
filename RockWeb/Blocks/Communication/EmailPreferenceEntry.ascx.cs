@@ -96,18 +96,24 @@ We have unsubscribed you from the following lists:
                 _communication = new CommunicationService( rockContext ).Get( communicationId.Value );
                 mergeFields.Add( "Communication", _communication );
             }
-            
+
             var key = PageParameter( "Person" );
             if ( !string.IsNullOrWhiteSpace( key ) )
             {
                 var service = new PersonService( rockContext );
-                _person = service.GetByUrlEncodedKey( key );
+                _person = service.GetByPersonActionIdentifier( key, "Unsubscribe" );
+                if ( _person == null )
+                {
+                    _person = new PersonService( rockContext ).GetByUrlEncodedKey( key );
+                }
             }
 
             if ( _person == null && CurrentPerson != null )
             {
                 _person = CurrentPerson;
             }
+
+            LoadDropdowns( mergeFields );
 
             if ( _person != null )
             {
@@ -121,8 +127,6 @@ We have unsubscribed you from the following lists:
                 nbEmailPreferenceSuccessMessage.Visible = true;
                 btnSubmit.Visible = false;
             }
-
-            LoadDropdowns( mergeFields );
         }
 
         /// <summary>
@@ -425,7 +429,7 @@ We have unsubscribed you from the following lists:
         /// <param name="mergeObjects">The merge objects.</param>
         private void LoadDropdowns( Dictionary<string, object> mergeObjects )
         {
-            var availableOptions = GetAttributeValue( "AvailableOptions" ).SplitDelimitedValues(false);
+            var availableOptions = GetAttributeValue( "AvailableOptions" ).SplitDelimitedValues( false );
 
             rbUnsubscribe.Visible = availableOptions.Contains( UNSUBSCRIBE );
             rbUnsubscribe.Text = GetAttributeValue( "UnsubscribefromListsText" ).ResolveMergeFields( mergeObjects );
@@ -440,8 +444,9 @@ We have unsubscribed you from the following lists:
                 int communicationListGroupTypeId = GroupTypeCache.Get( Rock.SystemGuid.GroupType.GROUPTYPE_COMMUNICATIONLIST.AsGuid() ).Id;
 
                 // Get a list of all the Active CommunicationLists that the person is an active member of
+                int? personId = _person != null ? (int?)_person.Id:null;
                 var communicationListQry = groupService.Queryable()
-                    .Where( a => a.GroupTypeId == communicationListGroupTypeId && a.IsActive && a.Members.Any( m => m.PersonId == _person.Id && m.GroupMemberStatus == GroupMemberStatus.Active ) );
+                    .Where( a => a.GroupTypeId == communicationListGroupTypeId && a.IsActive && a.Members.Any( m => m.PersonId == personId && m.GroupMemberStatus == GroupMemberStatus.Active ) );
 
                 var categoryGuids = this.GetAttributeValue( "CommunicationListCategories" ).SplitDelimitedValues().AsGuidList();
 
@@ -453,7 +458,7 @@ We have unsubscribed you from the following lists:
                     if ( !categoryGuids.Any() )
                     {
                         // if no categories where specified, only show lists that the person has VIEW auth
-                        if ( communicationList.IsAuthorized( Rock.Security.Authorization.VIEW, this.CurrentPerson ) )
+                        if ( communicationList.IsAuthorized( Rock.Security.Authorization.VIEW, _person ) )
                         {
                             viewableCommunicationLists.Add( communicationList );
                         }
