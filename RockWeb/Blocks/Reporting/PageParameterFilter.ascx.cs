@@ -15,6 +15,7 @@ using Rock.Attribute;
 using Rock.Web.UI;
 using System.Web;
 using Rock.Security;
+using Rock.Field.Types;
 
 namespace RockWeb.Blocks.Reporting
 {
@@ -26,17 +27,34 @@ namespace RockWeb.Blocks.Reporting
     [Category( "Reporting" )]
     [Description( "Filter block that passes the filter values as query string parameters." )]
 
-    [BooleanField( "Show Block Title", "Determines if the Block Title should be displayed", true, "", 1 )]
-    [TextField( "Block Title", "The text to display as the block title.", true, "BlockTitle", "", 2 )]
-    [TextField( "Block Title Icon CSS Class", "The css class name to use for the block title icon. ", true, "fa fa-filter", "", 3 )]
-    [IntegerField( "Filters Per Row", "The number of filters to have per row.  Maximum is 12.", true, 2, "", 4 )]
-    [BooleanField( "Show Reset Filters", "Determines if the Reset Filters button should be displayed", true, "", 5 )]
-    [TextField( "Filter Button Text", "Sets the button text for the filter button.", true, "Filter", "", 6 )]
-    [CustomRadioListField( "Filter Button Size", "", "1^Normal, 2^Small, 3^Extra Small", true, "1", order: 7 )]
-    [LinkedPage( "Page Redirect", "If set, the filter button will redirect to the selected page.", false, "", "", 8 )]
-    [BooleanField( "Postback On Selection", "If set, selecting a filter will force a PostBack, recalculating the available selections. Useful for SQL values.", false, "", 9 )]
-    public partial class PageParameterFilter : RockBlock, IDynamicAttributesBlock
+    [BooleanField( "Show Block Title", "Determines if the Block Title should be displayed", true, "CustomSetting", 1, AttributeKey.ShowBlockTitle )]
+    [TextField( "Block Title Text", "The text to display as the block title.", true, "BlockTitle", "CustomSetting", 2, AttributeKey.BlockTitleText )]
+    [TextField( "Block Title Icon CSS Class", "The css class name to use for the block title icon.", true, "fa fa-filter", "CustomSetting", 3, AttributeKey.BlockTitleIconCssClass )]
+    [IntegerField( "Filters Per Row", "The number of filters to have per row.  Maximum is 12.", true, 2, "CustomSetting", 4, AttributeKey.FiltersPerRow )]
+    [BooleanField( "Show Reset Filters Button", "Determines if the Reset Filters button should be displayed", true, "CustomSetting", 5, AttributeKey.ShowResetFiltersButton )]
+    [TextField( "Filter Button Text", "Sets the button text for the filter button.", true, "Filter", "CustomSetting", 6, AttributeKey.FilterButtonText )]
+    [CustomRadioListField( "Filter Button Size", "", "1^Normal, 2^Small, 3^Extra Small", true, "1", "CustomSetting", 7, AttributeKey.FilterButtonSize )]
+    [LinkedPage( "Redirect Page", "If set, the filter button will redirect to the selected page.", false, "", "CustomSetting", 8, AttributeKey.RedirectPage )]
+    [BooleanField( "Does Selection Cause Postback", "If set, selecting a filter will force a PostBack, recalculating the available selections. Useful for SQL values.", false, "CustomSetting", 9, AttributeKey.DoesSelectionCausePostback )]
+    public partial class PageParameterFilter : RockBlockCustomSettings, IDynamicAttributesBlock
     {
+        #region Attribute Keys
+
+        private static class AttributeKey
+        {
+            public const string ShowBlockTitle = "ShowBlockTitle";
+            public const string BlockTitleText = "BlockTitleText";
+            public const string BlockTitleIconCssClass = "BlockTitleIconCSSClass";
+            public const string FiltersPerRow = "FiltersPerRow";
+            public const string ShowResetFiltersButton = "ShowResetFiltersButton";
+            public const string FilterButtonText = "FilterButtonText";
+            public const string FilterButtonSize = "FilterButtonSize";
+            public const string RedirectPage = "RedirectPage";
+            public const string DoesSelectionCausePostback = "DoesSelectionCausePostback";
+        }
+
+        #endregion Attribute Keys
+
         #region Properties
         Dictionary<string, object> CurrentParameters { get; set; }
         #endregion
@@ -68,11 +86,11 @@ namespace RockWeb.Blocks.Reporting
             _blockTypeEntityId = EntityTypeCache.GetId<Block>().Value;
             _block = new BlockService( new RockContext() ).Get( this.BlockId );
 
-            pnlHeading.Visible = GetAttributeValue( "ShowBlockTitle" ).AsBoolean();
-            lBlockTitle.Text = GetAttributeValue( "BlockTitle" );
-            lBlockTitleIcon.Text = "<i class='" + GetAttributeValue( "BlockTitleIconCSSClass" ) + "'></i>";
+            pnlHeading.Visible = GetAttributeValue( AttributeKey.ShowBlockTitle ).AsBoolean();
+            lBlockTitle.Text = GetAttributeValue( AttributeKey.BlockTitleText );
+            lBlockTitleIcon.Text = "<i class='" + GetAttributeValue( AttributeKey.BlockTitleIconCssClass ) + "'></i>";
 
-            var filterButtonSize = GetAttributeValue( "FilterButtonSize" ).AsInteger();
+            var filterButtonSize = GetAttributeValue( AttributeKey.FilterButtonSize ).AsInteger();
             btnResetFilters.RemoveCssClass( "btn-sm" ).RemoveCssClass( "btn-xs" );
             btnFilter.RemoveCssClass( "btn-sm" ).RemoveCssClass( "btn-xs" );
             if ( filterButtonSize == 2 )
@@ -86,7 +104,7 @@ namespace RockWeb.Blocks.Reporting
                 btnFilter.AddCssClass( "btn-xs" );
             }
 
-            int perRow = GetAttributeValue( "FiltersPerRow" ).AsInteger();
+            int perRow = GetAttributeValue( AttributeKey.FiltersPerRow ).AsInteger();
             if ( perRow > 12 )
             {
                 perRow = 12;
@@ -121,12 +139,10 @@ namespace RockWeb.Blocks.Reporting
                 cbRequired.Visible = false;
             }
 
-            lbEdit.Visible = IsUserAuthorized( "Edit" );
-
-            var filterButtonText = GetAttributeValue( "FilterButtonText" );
+            var filterButtonText = GetAttributeValue( AttributeKey.FilterButtonText );
             btnFilter.Text = filterButtonText.IsNotNullOrWhiteSpace() ? filterButtonText : "Filter";
 
-            btnResetFilters.Visible = GetAttributeValue( "ShowResetFilters" ).AsBoolean();
+            btnResetFilters.Visible = GetAttributeValue( AttributeKey.ShowResetFiltersButton ).AsBoolean();
 
             var securityField = gFilters.ColumnsOfType<SecurityField>().FirstOrDefault();
             if ( securityField != null )
@@ -140,7 +156,7 @@ namespace RockWeb.Blocks.Reporting
             this.BlockUpdated += Block_BlockUpdated;
             this.AddConfigurationUpdateTrigger( upnlContent );
 
-            _reloadOnSelection = GetAttributeValue( "PostbackOnSelection" ).AsBoolean();
+            _reloadOnSelection = GetAttributeValue( AttributeKey.DoesSelectionCausePostback ).AsBoolean();
         }
 
         /// <summary>
@@ -193,6 +209,7 @@ namespace RockWeb.Blocks.Reporting
                 }
             }
         }
+
         protected override object SaveViewState()
         {
             ViewState["CurrentParameters"] = CurrentParameters;
@@ -200,6 +217,171 @@ namespace RockWeb.Blocks.Reporting
             return base.SaveViewState();
         }
         #endregion
+
+        #region Settings
+
+        /// <summary>
+        /// Shows the settings.
+        /// </summary>
+        protected override void ShowSettings()
+        {
+            pnlSettings.Visible = true;
+            cbShowBlockTitle.Checked = GetAttributeValue( AttributeKey.ShowBlockTitle ).AsBoolean();
+            rtbBlockTitleText.Text = GetAttributeValue( AttributeKey.BlockTitleText );
+            rtbBlockTitleIconCssClass.Text = GetAttributeValue( AttributeKey.BlockTitleIconCssClass );
+            nbFiltersPerRow.Text = GetAttributeValue( AttributeKey.FiltersPerRow );
+            cbShowResetFiltersButton.Checked = GetAttributeValue( AttributeKey.ShowResetFiltersButton ).AsBoolean();
+            rtbFilterButtonText.Text = GetAttributeValue( AttributeKey.FilterButtonText );
+            ddlFilterButtonSize.SetValue( GetAttributeValue( AttributeKey.FilterButtonSize ).AsInteger() );
+            var ppFieldType = new PageReferenceFieldType();
+            ppFieldType.SetEditValue( ppRedirectPage, null, GetAttributeValue( AttributeKey.RedirectPage ) );
+            cbDoesSelectionCausePostback.Checked = GetAttributeValue( AttributeKey.DoesSelectionCausePostback ).AsBoolean();
+            BindGrid();
+
+            mdSettings.Show();
+        }
+
+        /// <summary>
+        /// Handles the SaveClick event of the mdSettings control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void mdSettings_SaveClick( object sender, EventArgs e )
+        {
+            SetAttributeValue( AttributeKey.ShowBlockTitle, cbShowBlockTitle.Checked.ToString() );
+            SetAttributeValue( AttributeKey.BlockTitleText, rtbBlockTitleText.Text );
+            SetAttributeValue( AttributeKey.BlockTitleIconCssClass, rtbBlockTitleIconCssClass.Text );
+            SetAttributeValue( AttributeKey.FiltersPerRow, nbFiltersPerRow.Text );
+            SetAttributeValue( AttributeKey.ShowResetFiltersButton, cbShowResetFiltersButton.Checked.ToString() );
+            SetAttributeValue( AttributeKey.FilterButtonText, rtbFilterButtonText.Text );
+            SetAttributeValue( AttributeKey.FilterButtonSize, ddlFilterButtonSize.SelectedValue );
+            var ppFieldType = new PageReferenceFieldType();
+            SetAttributeValue( AttributeKey.RedirectPage, ppFieldType.GetEditValue( ppRedirectPage, null ) );
+            SetAttributeValue( AttributeKey.DoesSelectionCausePostback, cbDoesSelectionCausePostback.Checked.ToString() );
+
+            SaveAttributeValues();
+
+            mdSettings.Hide();
+            pnlSettings.Visible = false;
+
+            // reload the page to make sure we have a clean load
+            ResetFilters();
+            NavigateToCurrentPageReference();
+        }
+
+        /// <summary>
+        /// Handles the GridReorder events.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GridReorderEventArgs"/> instance containing the event data.</param>
+        protected void gFilters_GridReorder( object sender, GridReorderEventArgs e )
+        {
+            var rockContext = new RockContext();
+            var attributeService = new AttributeService( rockContext );
+            var qry = attributeService.Get( _blockTypeEntityId, "Id", _block.Id.ToString() );
+            qry = qry.OrderBy( a => a.Order );
+            var updatedAttributeIds = attributeService.Reorder( qry.ToList(), e.OldIndex, e.NewIndex );
+
+            rockContext.SaveChanges();
+
+            BindGrid();
+            LoadFilters();
+        }
+
+        /// <summary>
+        /// Handles the RowDataBound event of the rGrid control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GridViewRowEventArgs" /> instance containing the event data.</param>
+        protected void gFilters_RowDataBound( object sender, GridViewRowEventArgs e )
+        {
+            if ( e.Row.RowType == DataControlRowType.DataRow )
+            {
+                int attributeId = ( int ) gFilters.DataKeys[e.Row.RowIndex].Value;
+
+                var attribute = Rock.Web.Cache.AttributeCache.Get( attributeId );
+                var fieldType = FieldTypeCache.Get( attribute.FieldTypeId );
+
+                Literal lDefaultValue = e.Row.FindControl( "lDefaultValue" ) as Literal;
+                if ( lDefaultValue != null )
+                {
+                    lDefaultValue.Text = fieldType.Field.FormatValueAsHtml( lDefaultValue, attribute.EntityTypeId, null, attribute.DefaultValue, attribute.QualifierValues, true );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the Edit filters event.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
+        protected void gFilters_Edit( object sender, RowEventArgs e )
+        {
+            var rockContext = new RockContext();
+            var attributeService = new AttributeService( rockContext );
+            var attribute = new AttributeService( rockContext ).Get( e.RowKeyId );
+
+            edtFilter.ReservedKeyNames = attributeService.Get( _blockTypeEntityId, "Id", _block.Id.ToString() )
+                 .Where( a => a.Id != e.RowKeyId )
+                 .Select( a => a.Key )
+                 .Distinct()
+                 .ToList();
+
+            edtFilter.SetAttributeProperties( attribute );
+
+            mdFilter.Title = "Edit Filter";
+            mdFilter.Show();
+        }
+
+        /// <summary>
+        /// Handes the Delete filters event.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
+        protected void gFilters_Delete( object sender, RowEventArgs e )
+        {
+            var rockContext = new RockContext();
+            var attributeService = new AttributeService( rockContext );
+
+            var attribute = attributeService.Get( e.RowKeyId );
+            if ( attribute != null )
+            {
+                attributeService.Delete( attribute );
+
+                rockContext.SaveChanges();
+            }
+
+            BindGrid();
+            LoadFilters();
+        }
+
+        /// <summary>
+        /// Handles the Add actions event.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void gFilters_Add( object sender, EventArgs e )
+        {
+            var rockContext = new RockContext();
+            var attributeService = new AttributeService( rockContext );
+
+            // reset editor
+            edtFilter.Name = "";
+            edtFilter.Key = "";
+            edtFilter.AttributeId = null;
+            edtFilter.IsFieldTypeEditable = true;
+            edtFilter.SetAttributeFieldType( FieldTypeCache.Get( Rock.SystemGuid.FieldType.TEXT ).Id, null );
+
+            edtFilter.ReservedKeyNames = attributeService.Get( _blockTypeEntityId, "Id", _block.Id.ToString() )
+                 .Select( a => a.Key )
+                 .Distinct()
+                 .ToList();
+
+            mdFilter.Title = "Add Filter";
+            mdFilter.Show();
+        }
+
+        #endregion Settings
 
         #region Methods
 
@@ -258,7 +440,7 @@ namespace RockWeb.Blocks.Reporting
             var attributes = query.OrderBy( a => a.Order ).ToList();
 
             var exclusions = new List<string>();
-            exclusions.Add( "PageRedirect" );
+            exclusions.Add( AttributeKey.RedirectPage );
 
             _block.LoadAttributes();
             phAttributes.Controls.Clear();
@@ -414,7 +596,7 @@ namespace RockWeb.Blocks.Reporting
 
             string url = Request.Url.AbsolutePath;
 
-            Guid? pageGuid = GetAttributeValue( "PageRedirect" ).AsGuidOrNull();
+            Guid? pageGuid = GetAttributeValue( AttributeKey.RedirectPage ).AsGuidOrNull();
             if ( pageGuid.HasValue )
             {
                 var page = PageCache.Get( pageGuid.Value );
@@ -440,146 +622,6 @@ namespace RockWeb.Blocks.Reporting
         protected void btnResetFilters_Click( object sender, EventArgs e )
         {
             ResetFilters();
-        }
-
-        /// <summary>
-        /// Handles the EditFilters event.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void lbEditFilters_Click( object sender, EventArgs e )
-        {
-            BindGrid();
-
-            lBlockTitle.Text = "Filter Settings";
-            lBlockTitleIcon.Visible = false;
-            lbEdit.Visible = false;
-
-            pnlEdit.Visible = true;
-            pnlFilters.Visible = false;
-        }
-
-        /// <summary>
-        /// Handles the lbClose event.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void lbClose_Click( object sender, EventArgs e )
-        {
-            ResetFilters();
-            Response.Redirect( Request.Url.AbsolutePath );
-        }
-
-        /// <summary>
-        /// Handles the GridReorder events.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GridReorderEventArgs"/> instance containing the event data.</param>
-        protected void gFilters_GridReorder( object sender, GridReorderEventArgs e )
-        {
-            var rockContext = new RockContext();
-            var attributeService = new AttributeService( rockContext );
-            var qry = attributeService.Get( _blockTypeEntityId, "Id", _block.Id.ToString() );
-            qry = qry.OrderBy( a => a.Order );
-            var updatedAttributeIds = attributeService.Reorder( qry.ToList(), e.OldIndex, e.NewIndex );
-
-            rockContext.SaveChanges();
-
-            BindGrid();
-            LoadFilters();
-        }
-
-        /// <summary>
-        /// Handles the RowDataBound event of the rGrid control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GridViewRowEventArgs" /> instance containing the event data.</param>
-        protected void gFilters_RowDataBound( object sender, GridViewRowEventArgs e )
-        {
-            if ( e.Row.RowType == DataControlRowType.DataRow )
-            {
-                int attributeId = ( int ) gFilters.DataKeys[e.Row.RowIndex].Value;
-
-                var attribute = Rock.Web.Cache.AttributeCache.Get( attributeId );
-                var fieldType = FieldTypeCache.Get( attribute.FieldTypeId );
-
-                Literal lDefaultValue = e.Row.FindControl( "lDefaultValue" ) as Literal;
-                if ( lDefaultValue != null )
-                {
-                    lDefaultValue.Text = fieldType.Field.FormatValueAsHtml( lDefaultValue, attribute.EntityTypeId, null, attribute.DefaultValue, attribute.QualifierValues, true );
-                }
-            }
-        }
-
-        /// <summary>
-        /// Handles the Edit filters event.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-        protected void gFilters_Edit( object sender, RowEventArgs e )
-        {
-            var rockContext = new RockContext();
-            var attributeService = new AttributeService( rockContext );
-            var attribute = new AttributeService( rockContext ).Get( e.RowKeyId );
-
-            edtFilter.ReservedKeyNames = attributeService.Get( _blockTypeEntityId, "Id", _block.Id.ToString() )
-                 .Where( a => a.Id != e.RowKeyId )
-                 .Select( a => a.Key )
-                 .Distinct()
-                 .ToList();
-
-            edtFilter.SetAttributeProperties( attribute );
-
-            mdFilter.Title = "Edit Filter";
-            mdFilter.Show();
-        }
-
-        /// <summary>
-        /// Handes the Delete filters event.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-        protected void gFilters_Delete( object sender, RowEventArgs e )
-        {
-            var rockContext = new RockContext();
-            var attributeService = new AttributeService( rockContext );
-
-            var attribute = attributeService.Get( e.RowKeyId );
-            if ( attribute != null )
-            {
-                attributeService.Delete( attribute );
-
-                rockContext.SaveChanges();
-            }
-
-            BindGrid();
-            LoadFilters();
-        }
-
-        /// <summary>
-        /// Handles the Add actions event.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void gFilters_Add( object sender, EventArgs e )
-        {
-            var rockContext = new RockContext();
-            var attributeService = new AttributeService( rockContext );
-
-            // reset editor
-            edtFilter.Name = "";
-            edtFilter.Key = "";
-            edtFilter.AttributeId = null;
-            edtFilter.IsFieldTypeEditable = true;
-            edtFilter.SetAttributeFieldType( FieldTypeCache.Get( Rock.SystemGuid.FieldType.TEXT ).Id, null );
-
-            edtFilter.ReservedKeyNames = attributeService.Get( _blockTypeEntityId, "Id", _block.Id.ToString() )
-                 .Select( a => a.Key )
-                 .Distinct()
-                 .ToList();
-
-            mdFilter.Title = "Add Filter";
-            mdFilter.Show();
         }
 
         /// <summary>
