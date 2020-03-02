@@ -4,7 +4,7 @@
     <ContentTemplate>
         <div class="panel panel-block">
             <div class="panel-heading">
-                <h4 class="panel-title"><asp:Literal ID="lHeadingIcon" runat="server" />&nbsp;<asp:Literal ID="lHeading" runat="server" /></h4>
+                <h4 class="panel-title"><asp:Literal ID="lHeadingIcon" runat="server" />&nbsp;<asp:Literal ID="lBlockTitle" runat="server" /></h4>
                 <div class="pull-right">
                     <asp:LinkButton ID="lbEdit" runat="server" CssClass="btn btn-xs btn-square btn-default" OnClick="lbEditFilters_Click"><i class="fa fa-gear"></i></asp:LinkButton>
                 </div>
