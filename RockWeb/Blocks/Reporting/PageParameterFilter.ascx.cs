@@ -27,7 +27,7 @@ namespace RockWeb.Blocks.Reporting
     [Description( "Filter block that passes the filter values as query string parameters." )]
 
     [TextField( "Block Title", "The text to display as the block title.", true, "BlockTitle", "", 1 )]
-    [TextField( "Heading Icon CSS Class", "The css class name to use for the heading icon. ", true, "fa fa-filter", "", 2 )]
+    [TextField( "Block Title Icon CSS Class", "The css class name to use for the block title icon. ", true, "fa fa-filter", "", 2 )]
     [IntegerField( "Filters Per Row", "The number of filters to have per row.  Maximum is 12.", true, 2, "", 3 )]
     [BooleanField( "Show Reset Filters", "Determines if the Reset Filters button should be displayed", true, "", 4 )]
     [TextField( "Filter Button Text", "Sets the button text for the filter button.", true, "Filter", "", 5 )]
@@ -67,7 +67,7 @@ namespace RockWeb.Blocks.Reporting
             _block = new BlockService( new RockContext() ).Get( this.BlockId );
 
             lBlockTitle.Text = GetAttributeValue( "BlockTitle" );
-            lHeadingIcon.Text = "<i class='" + GetAttributeValue( "HeadingIconCSSClass" ) + "'></i>";
+            lBlockTitleIcon.Text = "<i class='" + GetAttributeValue( "BlockTitleIconCSSClass" ) + "'></i>";
 
             int perRow = GetAttributeValue( "FiltersPerRow" ).AsInteger();
             if ( perRow > 12 )
@@ -435,7 +435,7 @@ namespace RockWeb.Blocks.Reporting
             BindGrid();
 
             lBlockTitle.Text = "Filter Settings";
-            lHeadingIcon.Visible = false;
+            lBlockTitleIcon.Visible = false;
             lbEdit.Visible = false;
 
             pnlEdit.Visible = true;
