@@ -26,14 +26,15 @@ namespace RockWeb.Blocks.Reporting
     [Category( "Reporting" )]
     [Description( "Filter block that passes the filter values as query string parameters." )]
 
-    [TextField( "Block Title", "The text to display as the block title.", true, "BlockTitle", "", 1 )]
-    [TextField( "Block Title Icon CSS Class", "The css class name to use for the block title icon. ", true, "fa fa-filter", "", 2 )]
-    [IntegerField( "Filters Per Row", "The number of filters to have per row.  Maximum is 12.", true, 2, "", 3 )]
-    [BooleanField( "Show Reset Filters", "Determines if the Reset Filters button should be displayed", true, "", 4 )]
-    [TextField( "Filter Button Text", "Sets the button text for the filter button.", true, "Filter", "", 5 )]
-    [CustomRadioListField( "Filter Button Size", "", "1^Normal, 2^Small, 3^Extra Small", true, "1", order: 6 )]
-    [LinkedPage( "Page Redirect", "If set, the filter button will redirect to the selected page.", false, "", "", 7 )]
-    [BooleanField( "Postback On Selection", "If set, selecting a filter will force a PostBack, recalculating the available selections. Useful for SQL values.", false, "", 8 )]
+    [BooleanField( "Show Block Title", "Determines if the Block Title should be displayed", true, "", 1 )]
+    [TextField( "Block Title", "The text to display as the block title.", true, "BlockTitle", "", 2 )]
+    [TextField( "Block Title Icon CSS Class", "The css class name to use for the block title icon. ", true, "fa fa-filter", "", 3 )]
+    [IntegerField( "Filters Per Row", "The number of filters to have per row.  Maximum is 12.", true, 2, "", 4 )]
+    [BooleanField( "Show Reset Filters", "Determines if the Reset Filters button should be displayed", true, "", 5 )]
+    [TextField( "Filter Button Text", "Sets the button text for the filter button.", true, "Filter", "", 6 )]
+    [CustomRadioListField( "Filter Button Size", "", "1^Normal, 2^Small, 3^Extra Small", true, "1", order: 7 )]
+    [LinkedPage( "Page Redirect", "If set, the filter button will redirect to the selected page.", false, "", "", 8 )]
+    [BooleanField( "Postback On Selection", "If set, selecting a filter will force a PostBack, recalculating the available selections. Useful for SQL values.", false, "", 9 )]
     public partial class PageParameterFilter : RockBlock, IDynamicAttributesBlock
     {
         #region Properties
@@ -67,6 +68,7 @@ namespace RockWeb.Blocks.Reporting
             _blockTypeEntityId = EntityTypeCache.GetId<Block>().Value;
             _block = new BlockService( new RockContext() ).Get( this.BlockId );
 
+            pnlHeading.Visible = GetAttributeValue( "ShowBlockTitle" ).AsBoolean();
             lBlockTitle.Text = GetAttributeValue( "BlockTitle" );
             lBlockTitleIcon.Text = "<i class='" + GetAttributeValue( "BlockTitleIconCSSClass" ) + "'></i>";
 
