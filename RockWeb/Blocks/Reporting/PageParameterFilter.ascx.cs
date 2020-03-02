@@ -590,6 +590,10 @@ namespace RockWeb.Blocks.Reporting
                         {
                             queryString.Set( attribute.Key, value );
                         }
+                        else
+                        {
+                            queryString.Remove( attribute.Key );
+                        }
                     }
                 }
             }
