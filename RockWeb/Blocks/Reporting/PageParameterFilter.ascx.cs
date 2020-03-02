@@ -462,26 +462,9 @@ namespace RockWeb.Blocks.Reporting
         /// </summary>
         private void ResetFilters()
         {
-            var queryString = HttpUtility.ParseQueryString( String.Empty );
-
             BuildControls();
 
-            if ( _block.Attributes != null )
-            {
-                foreach ( var attribute in _block.Attributes )
-                {
-                    Control control = phAttributes.FindControl( string.Format( "attribute_field_{0}", attribute.Value.Id ) );
-                    if ( control != null )
-                    {
-                        string value = attribute.Value.DefaultValue;
-
-                        if ( value.IsNotNullOrWhiteSpace() )
-                        {
-                            queryString.Set( attribute.Key, value );
-                        }
-                    }
-                }
-            }
+            System.Collections.Specialized.NameValueCollection queryString = GenerateQueryString();
 
             if ( queryString.AllKeys.Any() )
             {
@@ -566,6 +549,34 @@ namespace RockWeb.Blocks.Reporting
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnFilter_Click( object sender, EventArgs e )
         {
+            System.Collections.Specialized.NameValueCollection queryString = GenerateQueryString();
+
+            string url = Request.Url.AbsolutePath;
+
+            Guid? pageGuid = GetAttributeValue( AttributeKey.RedirectPage ).AsGuidOrNull();
+            if ( pageGuid.HasValue )
+            {
+                var page = PageCache.Get( pageGuid.Value );
+
+                url = System.Web.VirtualPathUtility.ToAbsolute( string.Format( "~/page/{0}", page.Id ) );
+            }
+
+            if ( queryString.AllKeys.Any() )
+            {
+                Response.Redirect( string.Format( "{0}?{1}", url, queryString ), false );
+            }
+            else
+            {
+                Response.Redirect( url, false );
+            }
+        }
+
+        /// <summary>
+        /// Generates the query string.
+        /// </summary>
+        /// <returns></returns>
+        private System.Collections.Specialized.NameValueCollection GenerateQueryString()
+        {
             var queryString = HttpUtility.ParseQueryString( String.Empty );
             foreach ( var parameter in CurrentParameters )
             {
@@ -598,24 +609,7 @@ namespace RockWeb.Blocks.Reporting
                 }
             }
 
-            string url = Request.Url.AbsolutePath;
-
-            Guid? pageGuid = GetAttributeValue( AttributeKey.RedirectPage ).AsGuidOrNull();
-            if ( pageGuid.HasValue )
-            {
-                var page = PageCache.Get( pageGuid.Value );
-
-                url = System.Web.VirtualPathUtility.ToAbsolute( string.Format( "~/page/{0}", page.Id ) );
-            }
-
-            if ( queryString.AllKeys.Any() )
-            {
-                Response.Redirect( string.Format( "{0}?{1}", url, queryString ), false );
-            }
-            else
-            {
-                Response.Redirect( url, false );
-            }
+            return queryString;
         }
 
         /// <summary>
