@@ -31,8 +31,9 @@ namespace RockWeb.Blocks.Reporting
     [IntegerField( "Filters Per Row", "The number of filters to have per row.  Maximum is 12.", true, 2, "", 3 )]
     [BooleanField( "Show Reset Filters", "Determines if the Reset Filters button should be displayed", true, "", 4 )]
     [TextField( "Filter Button Text", "Sets the button text for the filter button.", true, "Filter", "", 5 )]
-    [LinkedPage( "Page Redirect", "If set, the filter button will redirect to the selected page.", false, "", "", 6 )]
-    [BooleanField( "Postback On Selection", "If set, selecting a filter will force a PostBack, recalculating the available selections. Useful for SQL values.", false, "", 7 )]
+    [CustomRadioListField( "Filter Button Size", "", "1^Normal, 2^Small, 3^Extra Small", true, "1", order: 6 )]
+    [LinkedPage( "Page Redirect", "If set, the filter button will redirect to the selected page.", false, "", "", 7 )]
+    [BooleanField( "Postback On Selection", "If set, selecting a filter will force a PostBack, recalculating the available selections. Useful for SQL values.", false, "", 8 )]
     public partial class PageParameterFilter : RockBlock, IDynamicAttributesBlock
     {
         #region Properties
@@ -68,6 +69,20 @@ namespace RockWeb.Blocks.Reporting
 
             lBlockTitle.Text = GetAttributeValue( "BlockTitle" );
             lBlockTitleIcon.Text = "<i class='" + GetAttributeValue( "BlockTitleIconCSSClass" ) + "'></i>";
+
+            var filterButtonSize = GetAttributeValue( "FilterButtonSize" ).AsInteger();
+            btnResetFilters.RemoveCssClass( "btn-sm" ).RemoveCssClass( "btn-xs" );
+            btnFilter.RemoveCssClass( "btn-sm" ).RemoveCssClass( "btn-xs" );
+            if ( filterButtonSize == 2 )
+            {
+                btnResetFilters.AddCssClass( "btn-sm" );
+                btnFilter.AddCssClass( "btn-sm" );
+            }
+            else if ( filterButtonSize == 3 )
+            {
+                btnResetFilters.AddCssClass( "btn-xs" );
+                btnFilter.AddCssClass( "btn-xs" );
+            }
 
             int perRow = GetAttributeValue( "FiltersPerRow" ).AsInteger();
             if ( perRow > 12 )
