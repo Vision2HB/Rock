@@ -19,7 +19,7 @@
                         </div>
                     </div>
 
-                    <div class="pull-right">
+                    <div class="pull-left">
                         <Rock:BootstrapButton ID="btnResetFilters" runat="server" Text="Reset Filters" CssClass="btn btn-default" OnClick="btnResetFilters_Click" />
                         <Rock:BootstrapButton ID="btnFilter" runat="server" Text="Filter" CssClass="btn btn-primary" OnClick="btnFilter_Click" />
                     </div>
