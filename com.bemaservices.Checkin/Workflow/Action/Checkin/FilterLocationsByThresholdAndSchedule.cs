@@ -28,7 +28,7 @@ using Rock.Workflow;
 using Rock.Workflow.Action.CheckIn;
 using Rock;
 
-namespace com_bemaservices.Workflow.Action.CheckIn
+namespace com_bemaservices.CheckIn.Workflow.Action.CheckIn
 {
     /// <summary>
     /// Removes (or excludes) any locations that are not active

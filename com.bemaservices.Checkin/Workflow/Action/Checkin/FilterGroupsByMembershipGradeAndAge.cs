@@ -28,7 +28,7 @@ using Rock.Web.Cache;
 using Rock.Workflow;
 using Rock.Workflow.Action.CheckIn;
 
-namespace com_bemaservices.Workflow.Action.CheckIn
+namespace com_bemaservices.CheckIn.Workflow.Action.CheckIn
 {
     /// <summary>
     /// Removes (or excludes) the groups for each selected family member that are not specific to their grade.

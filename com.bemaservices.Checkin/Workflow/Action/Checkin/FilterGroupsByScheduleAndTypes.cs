@@ -40,7 +40,7 @@ using Rock.Workflow;
 using Rock.Workflow.Action.CheckIn;
 
 
-namespace com_bemaservices.Workflow.Action.CheckIn
+namespace com_bemaservices.CheckIn.Workflow.Action.CheckIn
 {
     /// <summary>
     /// Removes unselected schedules.
