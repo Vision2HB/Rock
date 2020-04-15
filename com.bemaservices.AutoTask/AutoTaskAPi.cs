@@ -51,7 +51,6 @@ namespace com.bemaservices.AutoTask
                         accountDefinedValue.ForeignKey = _FOREIGNKEY;
                         accountDefinedValue.DefinedTypeId = DefinedTypeCache.GetId( AutoTask.SystemGuid.DefinedType.AUTOTASK_ACCOUNT.AsGuid() ).Value;
                         definedValueService.Add( accountDefinedValue );
-                        autoTaskAccounts.Add( accountDefinedValue );
                     }
 
                     accountDefinedValue.Value = customerAccount.AccountName;
@@ -69,7 +68,10 @@ namespace com.bemaservices.AutoTask
                 ExceptionLogService.LogException( ex );
             }
 
-            return autoTaskAccounts;
+            return definedValueService.GetByDefinedTypeGuid( AutoTask.SystemGuid.DefinedType.AUTOTASK_ACCOUNT.AsGuid() )
+                                        .Where( d => d.ForeignKey == _FOREIGNKEY )
+                                        .ToList();
+            ;
         }
 
         public List<DefinedValue> getContracts( DefinedValueCache account )
@@ -128,5 +130,100 @@ namespace com.bemaservices.AutoTask
                                                             .ToList();
         }
 
+        public List<DefinedValue> getWorkTypes()
+        {
+            var rockContext = new RockContext();
+            var definedValueService = new DefinedValueService( rockContext );
+
+            List<DefinedValue> autoTaskWorkTypes = definedValueService.GetByDefinedTypeGuid( AutoTask.SystemGuid.DefinedType.AUTOTASK_WORK_TYPE.AsGuid() ).Where( d => d.ForeignKey == _FOREIGNKEY ).ToList();
+
+            try
+            {
+                List<AllocationCode> allocationCodes = _atAPI.Query( typeof( AllocationCode ), new QueryFilter() {
+                    new QueryField( "AllocationCodeType", QueryFieldOperation.Equals, 1 ),
+                    new QueryCondition(QueryConditionOperation.AND)
+                    {
+                        new QueryField("Active", QueryFieldOperation.Equals, true )
+                    }
+                } ).OfType<AllocationCode>().ToList();
+
+                foreach ( var allocationCode in allocationCodes )
+                {
+                    var allocationCodeDefinedValue = autoTaskWorkTypes.Where( a => a.ForeignId == allocationCode.id ).FirstOrDefault();
+
+                    if ( allocationCodeDefinedValue.IsNull() )
+                    {
+                        allocationCodeDefinedValue = new DefinedValue();
+                        allocationCodeDefinedValue.ForeignId = Convert.ToInt32( allocationCode.id );
+                        allocationCodeDefinedValue.ForeignKey = _FOREIGNKEY;
+                        allocationCodeDefinedValue.DefinedTypeId = DefinedTypeCache.GetId( AutoTask.SystemGuid.DefinedType.AUTOTASK_WORK_TYPE.AsGuid() ).Value;
+                        definedValueService.Add( allocationCodeDefinedValue );
+                    }
+
+                    allocationCodeDefinedValue.Value = allocationCode.Name;
+
+                }
+
+                var autoTaskWorkTypesToRemove = autoTaskWorkTypes.Where( v => !allocationCodes.Any( a => a.id == v.ForeignId && v.ForeignKey == _FOREIGNKEY ) );
+
+                definedValueService.DeleteRange( autoTaskWorkTypesToRemove );
+
+                rockContext.SaveChanges();
+            }
+            catch ( Exception ex )
+            {
+                ExceptionLogService.LogException( ex );
+            }
+
+            return definedValueService.GetByDefinedTypeGuid( AutoTask.SystemGuid.DefinedType.AUTOTASK_WORK_TYPE.AsGuid() )
+                                        .Where( d => d.ForeignKey == _FOREIGNKEY )
+                                        .ToList();
+        }
+
+        public List<DefinedValue> getTicketPickList( string field, Guid DefinedTypeGuid )
+        {
+            var rockContext = new RockContext();
+            var definedValueService = new DefinedValueService( rockContext );
+
+            List<DefinedValue> pickListDefinedValues = definedValueService.GetByDefinedTypeGuid( DefinedTypeGuid ).Where( d => d.ForeignKey == _FOREIGNKEY ).ToList();
+
+            try
+            {
+                List<PicklistValue> picklists = _atAPI.GetPicklistValues( typeof( Ticket ), field );
+
+                foreach ( var item in picklists )
+                {
+                    var itemDefinedValue = pickListDefinedValues.Where( a => a.Value == item.Label ).FirstOrDefault();
+
+                    if ( itemDefinedValue.IsNull() )
+                    {
+                        itemDefinedValue = new DefinedValue();
+                        itemDefinedValue.ForeignKey = _FOREIGNKEY;
+                        itemDefinedValue.DefinedTypeId = DefinedTypeCache.GetId( DefinedTypeGuid ).Value;
+                        definedValueService.Add( itemDefinedValue );
+                    }
+
+                    itemDefinedValue.Value = item.Label;
+                    itemDefinedValue.Description = item.Value;
+
+                }
+
+                var autoTaskTicketStatusesToRemove = pickListDefinedValues.Where( v => !picklists.Any( a => a.Label == v.Value && v.ForeignKey == _FOREIGNKEY ) );
+
+                definedValueService.DeleteRange( autoTaskTicketStatusesToRemove );
+
+                rockContext.SaveChanges();
+            }
+            catch ( Exception ex )
+            {
+                ExceptionLogService.LogException( ex );
+            }
+
+            return definedValueService.GetByDefinedTypeGuid( DefinedTypeGuid )
+                                        .Where( d => d.ForeignKey == _FOREIGNKEY )
+                                        .ToList();
+        }
+
     }
+
 }
