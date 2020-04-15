@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29920.165
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RockWeb", "RockWeb\", "{E43B5D55-BED0-4E74-BF97-9327F9A9D656}"
 	ProjectSection(WebsiteProperties) = preProject
@@ -93,6 +93,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.bemaservices.PastoralCare", "com.bemaservices.PastoralCare\com.bemaservices.PastoralCare.csproj", "{14FB9414-472A-4783-9EF5-D7875A6EEFFE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.bemaservices.MinistrySafe", "com.bemaservices.MinistrySafe\com.bemaservices.MinistrySafe.csproj", "{A3CA2838-987D-483D-9A0C-431D5A847E22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.bemaservices.AutoTask", "com.bemaservices.AutoTask\com.bemaservices.AutoTask.csproj", "{28DE20AE-62CA-41F3-96CA-9213821743D9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -232,6 +234,10 @@ Global
 		{A3CA2838-987D-483D-9A0C-431D5A847E22}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3CA2838-987D-483D-9A0C-431D5A847E22}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3CA2838-987D-483D-9A0C-431D5A847E22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28DE20AE-62CA-41F3-96CA-9213821743D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28DE20AE-62CA-41F3-96CA-9213821743D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28DE20AE-62CA-41F3-96CA-9213821743D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28DE20AE-62CA-41F3-96CA-9213821743D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

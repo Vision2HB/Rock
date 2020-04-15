@@ -351,8 +351,7 @@ $(document).ready(function() {
 
                 if ( OutputCacheDuration.HasValue && OutputCacheDuration.Value > 0 )
                 {
-                    var cacheItemPolicy = new CacheItemPolicy { AbsoluteExpiration = DateTimeOffset.Now.AddSeconds( OutputCacheDuration.Value ) };
-                    AddCacheItem( OUTPUT_CACHE_KEY, outputContents, cacheItemPolicy );
+                    AddCacheItem( OUTPUT_CACHE_KEY, outputContents, OutputCacheDuration.Value );
                 }
             }
 
@@ -378,8 +377,7 @@ $(document).ready(function() {
 
                     if ( ItemCacheDuration.HasValue && ItemCacheDuration.Value > 0 )
                     {
-                        var cacheItemPolicy = new CacheItemPolicy { AbsoluteExpiration = DateTimeOffset.Now.AddSeconds( ItemCacheDuration.Value ) };
-                        AddCacheItem( TEMPLATE_CACHE_KEY, template, cacheItemPolicy );
+                        AddCacheItem( TEMPLATE_CACHE_KEY, template, ItemCacheDuration.Value );
                     }
                 }
             }
