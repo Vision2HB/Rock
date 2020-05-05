@@ -112,7 +112,7 @@ namespace com.bemaservices.TrelloSync
             return rockContext.SaveChanges();
         }
 
-        public string getBoardActions( DefinedValueCache board, DateTime since )
+        public List<CommentCardAction> getBoardActions( DefinedValueCache board, DateTime since )
         {
 
             var trelloBoard = _trello.Boards.WithId( board.Value );
@@ -120,13 +120,14 @@ namespace com.bemaservices.TrelloSync
             var comments = _trello.Actions
                                     .ForBoard( trelloBoard, new[] { ActionType.CommentCard }, Since.Date( since ) )
                                     .OfType<CommentCardAction>()
-                                    .Where( c => c.Data.Text.Contains("@EOD" ) );
+                                    .Where( c => c.Data.Text.Contains("@EOD" ) )
+                                    .ToList();
 
-            return comments.ToJson();
+            return comments;
 
         }
 
-        public List<CommentCardAction> getUserEndOfDayActionsAsJson( DefinedValueCache user, DateTime since )
+        public List<CommentCardAction> getUserEndOfDayActions( DefinedValueCache user, DateTime since )
         {
 
             var trelloUser = _trello.Members.WithId( user.Value );

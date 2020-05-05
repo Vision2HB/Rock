@@ -117,7 +117,7 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
 
                                         if ( DateTime.TryParse( sinceValue, out since ) )
                                         {
-                                            var trelloActions = trelloApi.getUserEndOfDayActionsAsJson( trelloUser, since );
+                                            var trelloActions = trelloApi.getUserEndOfDayActions( trelloUser, since );
 
                                             string groupAttributeValue = GetAttributeValue( action, ORGANIZATION_ATTRIBUTE_KEY );
                                             Guid? guidGroupAttributeValue = groupAttributeValue.AsGuidOrNull();
@@ -160,15 +160,13 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                                     .GroupBy( x => new {
                                                         Id = x.Data.Card.Id,
                                                         Name = x.Data.Card.Name,
-                                                        ShortLink = x.Data.Card.ShortLink,
-                                                        Board = x.Data.Board
+                                                        BoardId = x.Data.Board.Id
                                                     } )
                                                     .Select( x => new
                                                     {
                                                         CardId = x.Key.Id,
                                                         Name = x.Key.Name,
-                                                        BoardId = x.Key.Board.Id,
-                                                        Comments = Actions.Where( a => a.CardId == x.Key.Id ).ToList()
+                                                        BoardId = x.Key.BoardId
                                                     } )
                                                     .ToList();
 
@@ -191,7 +189,7 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                                 var card = new Model.CardComments
                                                 {
                                                     Card = trelloCard,
-                                                    Comments = tmpCard.Comments
+                                                    Comments = Actions.Where( a => a.CardId == trelloCard.Id ).ToList()
                                                 };
 
                                                 Cards.Add( card );
