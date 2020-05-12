@@ -22,7 +22,16 @@ namespace com.bemaservices.TrelloSync.Model
         public string Name { get; set; }
         public string ShortLink { get; set; }
         public List<CardComments> Cards { get; set; }
+        public List<List> Lists { get; set; }
 
+    }
+
+    public class List
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string BoardId { get; set; }
+        public List<Card> Cards { get; set; }
     }
 
     public class CardComments

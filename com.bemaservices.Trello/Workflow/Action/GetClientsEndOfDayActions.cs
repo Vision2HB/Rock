@@ -105,7 +105,7 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
 
                                         var trelloApi = new TrelloApi();
 
-                                        var trelloActions = trelloApi.getBoardActions( trelloBoard, since );
+                                        var trelloActions = trelloApi.GetBoardActions( trelloBoard, since );
 
                                         var Actions = trelloActions.Select( x => new Model.Comment
                                         {
@@ -137,7 +137,7 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                         foreach ( var tmpCard in tmpCards )
                                         {
 
-                                            var trelloCard = trelloApi.getCard( tmpCard.CardId );
+                                            var trelloCard = trelloApi.GetCard( tmpCard.CardId );
 
                                             if ( trelloCard.IsNull() )
                                             {

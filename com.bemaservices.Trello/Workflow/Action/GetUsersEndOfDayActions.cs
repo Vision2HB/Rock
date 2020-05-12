@@ -87,7 +87,7 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
 
                                     var trelloApi = new TrelloApi();
 
-                                    trelloApi.matchUsers();
+                                    trelloApi.MatchUsers();
 
                                     // update person attribute
                                     person.LoadAttributes();
@@ -117,7 +117,7 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
 
                                         if ( DateTime.TryParse( sinceValue, out since ) )
                                         {
-                                            var trelloActions = trelloApi.getUserEndOfDayActions( trelloUser, since );
+                                            var trelloActions = trelloApi.GetUserEndOfDayActions( trelloUser, since );
 
                                             string groupAttributeValue = GetAttributeValue( action, ORGANIZATION_ATTRIBUTE_KEY );
                                             Guid? guidGroupAttributeValue = groupAttributeValue.AsGuidOrNull();
@@ -175,7 +175,7 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                             foreach ( var tmpCard in tmpCards )
                                             {
 
-                                                var trelloCard = trelloApi.getCard( tmpCard.CardId );
+                                                var trelloCard = trelloApi.GetCard( tmpCard.CardId );
 
                                                 if( trelloCard.IsNull() )
                                                 {
