@@ -34,10 +34,11 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v9.2.1)
+ * BEMA Modified Core Block ( v9.4.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
+ * - FE1) Added ability to hide group members who have not been checked in to the grandparent group that day
  * - UI1) Added ability to hide the cancel button
  * - UI2) Added ability to hide the Print Attendance Roster button 
  */
@@ -61,8 +62,17 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
     [EnumsField( "Send Summary Email To", "", typeof( SendSummaryEmailType ), false, "", "", 11 )]
     [SystemEmailField( "Attendance Email", "The System Email to use to send the attendance", false, Rock.SystemGuid.SystemEmail.ATTENDANCE_NOTIFICATION, "", 12, "AttendanceEmailTemplate" )]
     [BooleanField( "Allow Sorting", "Should the block allow sorting the Member's list by First Name or Last Name?", true, "", 13 )]
-    
-	/* BEMA.UI1.Start */
+
+    /* BEMA.FE1.Start */
+    [BooleanField(
+        "Hide Non-Checked in Group Members?",
+        Key = AttributeKey.HideNonCheckedInMembers,
+        Description = "Should group members that haven't checked into the grandparent group be hidden?",
+        DefaultValue = "False",
+        Category = "BEMA Additional Features" )]
+    /* BEMA.FE1.End */
+
+    /* BEMA.UI1.Start */
     [BooleanField(
         "Hide Cancel Button?",
         Key = AttributeKey.HideCancelButton,
@@ -71,7 +81,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         Category = "BEMA Additional Features" )]
     // UMC Value = true
     /* BEMA.UI1.End */
-       
+
     /* BEMA.UI1.Start */
     [BooleanField(
         "Hide Print Attendance Roster Button?",
@@ -81,8 +91,8 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         Category = "BEMA Additional Features" )]
     // UMC Value = true
     /* BEMA.UI1.End */
-	
-	public partial class GroupAttendanceDetail : RockBlock
+
+    public partial class GroupAttendanceDetail : RockBlock
     {
         /* BEMA.Start */
         #region Attribute Keys
@@ -90,6 +100,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         {
             public const string HideCancelButton = "HideCancelButton";
             public const string HidePrintRosterButton = "HidePrintRosterButton";
+            public const string HideNonCheckedInMembers = "HideNonCheckedInMembers";
         }
 
         #endregion
@@ -854,7 +865,11 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                         .Select( a => a.PersonAlias.PersonId )
                         .Distinct()
                         .ToList();
+
+
                 }
+
+
 
                 var allowAddPerson = GetAttributeValue( "AllowAddingPerson" ).AsBoolean();
                 var addPersonAs = GetAttributeValue( "AddPersonAs" );
@@ -885,10 +900,36 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                 string template = GetAttributeValue( "LavaTemplate" );
                 var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( null );
 
+                /* BEMA.FE1.Start */
+                var filterNonCheckedInMembers = GetAttributeValue( AttributeKey.HideNonCheckedInMembers ).AsBoolean();
+                var grandparentAttendedIds = new List<int>();
+                if ( _occurrence.Group != null && _occurrence.Group.ParentGroup != null && _occurrence.Group.ParentGroup.ParentGroup != null )
+                {
+                    grandparentAttendedIds = new AttendanceService( _rockContext )
+                        .Queryable().AsNoTracking()
+                        .Where( a =>
+                            _occurrence.GroupId.HasValue &&
+                            _occurrence.Group.ParentGroupId.HasValue &&
+                            _occurrence.Group.ParentGroup.ParentGroupId.HasValue &&
+                            a.Occurrence.GroupId == _occurrence.Group.ParentGroup.ParentGroupId &&
+                            a.Occurrence.OccurrenceDate == _occurrence.OccurrenceDate &&
+                            a.DidAttend.HasValue &&
+                            a.DidAttend.Value &&
+                            a.PersonAlias != null )
+                        .Select( a => a.PersonAlias.PersonId )
+                        .Distinct()
+                        .ToList();
+                }
+
+                /* BEMA.FE1.End */
+
                 // Bind the attendance roster
                 _attendees = new PersonService( _rockContext )
                     .Queryable().AsNoTracking()
                     .Where( p => attendedIds.Contains( p.Id ) || unattendedIds.Contains( p.Id ) )
+                    /* BEMA.FE1.Start */
+                    .Where( p => !filterNonCheckedInMembers || grandparentAttendedIds.Contains( p.Id ) )
+                    /* BEMA.FE1.End */
                     .ToList()
                     .Select( p => new GroupAttendanceAttendee()
                     {
@@ -1214,18 +1255,18 @@ cbDidNotMeet.ClientID );
                             break;
 
                         case SendSummaryEmailType.ParentGroupLeaders:
-                                if ( _group.ParentGroupId.HasValue )
-                                {
-                                    var parentLeaders = new GroupMemberService( _rockContext )
-                                    .Queryable( "Person" )
-                                    .AsNoTracking()
-                                    .Where( m => m.GroupId == _group.ParentGroupId.Value )
-                                    .Where( m => m.IsArchived == false )
-                                    .Where( m => m.GroupMemberStatus != GroupMemberStatus.Inactive )
-                                    .Where( m => m.GroupRole.IsLeader );
+                            if ( _group.ParentGroupId.HasValue )
+                            {
+                                var parentLeaders = new GroupMemberService( _rockContext )
+                                .Queryable( "Person" )
+                                .AsNoTracking()
+                                .Where( m => m.GroupId == _group.ParentGroupId.Value )
+                                .Where( m => m.IsArchived == false )
+                                .Where( m => m.GroupMemberStatus != GroupMemberStatus.Inactive )
+                                .Where( m => m.GroupRole.IsLeader );
 
-                                    recipients.AddRange( parentLeaders.Where( a => !string.IsNullOrEmpty( a.Person.Email ) ).Select( a => a.Person.Email ) );
-                                }
+                                recipients.AddRange( parentLeaders.Where( a => !string.IsNullOrEmpty( a.Person.Email ) ).Select( a => a.Person.Email ) );
+                            }
 
                             break;
 
