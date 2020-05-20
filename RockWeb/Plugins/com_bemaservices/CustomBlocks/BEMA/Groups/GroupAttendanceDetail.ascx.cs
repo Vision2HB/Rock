@@ -865,11 +865,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                         .Select( a => a.PersonAlias.PersonId )
                         .Distinct()
                         .ToList();
-
-
                 }
-
-
 
                 var allowAddPerson = GetAttributeValue( "AllowAddingPerson" ).AsBoolean();
                 var addPersonAs = GetAttributeValue( "AddPersonAs" );
