@@ -45,6 +45,7 @@ using Rock.Web.UI.Controls;
  * - FE2) Added ability to autofill the From Name,From Email, and ReplyTo address fields with the current user's information if they're blank on the template
  * - FE3) Added ability to set a default category
  * - FE4) Added ability to hide the generic template
+ * - FE5) Added ability to set what communication list categories are visible
  */
 namespace RockWeb.Plugins.com_bemaservices.Communication
 {
@@ -116,6 +117,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
     [BooleanField( "Are From Fields Autofilled", "Should the From fields be autofilled with the user's info?", false, "", 12, BemaAttributeKey.AreFromFieldsAutofilled )]
     [CategoryField( "Default Category", "", false, "Rock.Model.CommunicationTemplate", "", "", false, "", "", 13, BemaAttributeKey.DefaultCategory )]
     [BooleanField( "Is the Generic Template Hidden?", "", false, "", 14, BemaAttributeKey.IsGenericTemplateHidden )]
+    [GroupCategoryField( "Communication List Categories", "Dictates what Communication Lists are visible for selection.", true, Rock.SystemGuid.GroupType.GROUPTYPE_COMMUNICATIONLIST, false, "", "", 15, BemaAttributeKey.CommunicationListCategories )]
 
     public partial class CommunicationEntryWizard : RockBlock, IDetailBlock
     {
@@ -127,6 +129,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             public const string AreFromFieldsAutofilled = "AreFromFieldsAutofilled";
             public const string DefaultCategory = "DefaultCategory";
             public const string IsGenericTemplateHidden = "IsGenericTemplateHidden";
+            public const string CommunicationListCategories = "CommunicationListCategories";
         }
 
         #endregion
@@ -517,11 +520,27 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             var communicationGroupList = groupService.Queryable().AsNoTracking().Where( a => a.GroupTypeId == groupTypeCommunicationGroupId && a.IsActive ).OrderBy( a => a.Order ).ThenBy( a => a.Name ).ToList();
             var authorizedCommunicationGroupList = communicationGroupList.Where( g => g.IsAuthorized( Rock.Security.Authorization.VIEW, this.CurrentPerson ) ).ToList();
 
+            /* BEMA.FE5.Start */
+            var categoryGuids = GetAttributeValue( BemaAttributeKey.CommunicationListCategories ).SplitDelimitedValues().AsGuidList();
+            /* BEMA.FE5.End */
+
             ddlCommunicationGroupList.Items.Clear();
             ddlCommunicationGroupList.Items.Add( new ListItem() );
             foreach ( var communicationGroup in authorizedCommunicationGroupList )
             {
                 ddlCommunicationGroupList.Items.Add( new ListItem( communicationGroup.Name, communicationGroup.Id.ToString() ) );
+
+                /* BEMA.FE5.Start */
+                if ( categoryGuids.Any() )
+                {
+                    communicationGroup.LoadAttributes();
+                    Guid? categoryGuid = communicationGroup.GetAttributeValue( "Category" ).AsGuidOrNull();
+                    if ( !categoryGuid.HasValue || !categoryGuids.Contains( categoryGuid.Value ) )
+                    {
+                        ddlCommunicationGroupList.Items.Remove( new ListItem( communicationGroup.Name, communicationGroup.Id.ToString() ) );
+                    }
+                }
+                /* BEMA.FE5.End */
             }
 
             LoadCommunicationSegmentFilters();
