@@ -46,6 +46,7 @@ using Rock.Web.UI.Controls;
  * - FE3) Added ability to set a default category
  * - FE4) Added ability to hide the generic template
  * - FE5) Added ability to set what communication list categories are visible
+ *  -FE6) Added ability to set a parent group to filter on.
  */
 namespace RockWeb.Plugins.com_bemaservices.Communication
 {
