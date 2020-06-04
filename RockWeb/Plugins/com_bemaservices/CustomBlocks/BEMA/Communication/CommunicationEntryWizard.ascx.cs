@@ -118,6 +118,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
     [CategoryField( "Default Category", "", false, "Rock.Model.CommunicationTemplate", "", "", false, "", "", 13, BemaAttributeKey.DefaultCategory )]
     [BooleanField( "Is the Generic Template Hidden?", "", false, "", 14, BemaAttributeKey.IsGenericTemplateHidden )]
     [GroupCategoryField( "Communication List Categories", "Dictates what Communication Lists are visible for selection.", true, Rock.SystemGuid.GroupType.GROUPTYPE_COMMUNICATIONLIST, false, "", "", 15, BemaAttributeKey.CommunicationListCategories )]
+    [GroupField( "Parent Group Filter", "Selecting a Group here will only allow its children as options to send to.", false , "", "", 16, BemaAttributeKey.ParentGroupFilter )]
 
     public partial class CommunicationEntryWizard : RockBlock, IDetailBlock
     {
@@ -130,6 +131,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             public const string DefaultCategory = "DefaultCategory";
             public const string IsGenericTemplateHidden = "IsGenericTemplateHidden";
             public const string CommunicationListCategories = "CommunicationListCategories";
+            public const string ParentGroupFilter = "ParentGroupFilter";
         }
 
         #endregion
@@ -524,6 +526,10 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             var categoryGuids = GetAttributeValue( BemaAttributeKey.CommunicationListCategories ).SplitDelimitedValues().AsGuidList();
             /* BEMA.FE5.End */
 
+            /* BEMA.FE6.Start */
+            var parentGroupFilterGuid = GetAttributeValue( BemaAttributeKey.ParentGroupFilter ).AsGuidOrNull();
+            /* BEMA.FE6.End */
+
             ddlCommunicationGroupList.Items.Clear();
             ddlCommunicationGroupList.Items.Add( new ListItem() );
             foreach ( var communicationGroup in authorizedCommunicationGroupList )
@@ -541,6 +547,23 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
                     }
                 }
                 /* BEMA.FE5.End */
+
+                /* BEMA.FE6.Start */
+                if( parentGroupFilterGuid.HasValue )
+                {
+                    var parentGroupFilter = groupService.Get( parentGroupFilterGuid.Value );
+
+                    if ( parentGroupFilter.IsNotNull() )
+                    {
+                        var ancestorIds = groupService.GetAllAncestorIds( communicationGroup.Id );
+
+                        if ( ! ancestorIds.Contains( parentGroupFilter.Id ) )
+                        {
+                            ddlCommunicationGroupList.Items.Remove( new ListItem( communicationGroup.Name, communicationGroup.Id.ToString() ) );
+                        }    
+                    }
+                }
+                /* BEMA.FE6.End */
             }
 
             LoadCommunicationSegmentFilters();
