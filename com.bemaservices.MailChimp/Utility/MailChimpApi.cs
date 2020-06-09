@@ -217,13 +217,17 @@ namespace com.bemaservices.MailChimp.Utility
 
                                 rockContext.Database.CommandTimeout = 600;
 
-                                var rockPeopleToAdd = rockGroupMembers.Where( m => !mailChimpMemberLookUp.Keys.ToList().Contains( m.PersonId ) &&
-                                                                                    m.GroupMemberStatus != GroupMemberStatus.Inactive && !m.IsArchived );
-                                foreach ( var groupMember in rockPeopleToAdd )
+
+                                var rockPeopleToAdd = rockGroupMembers.Where( m => m.GroupMemberStatus != GroupMemberStatus.Inactive && !m.IsArchived );
+
+                                foreach ( var groupMember in rockGroupMembers )
                                 {
                                     try
                                     {
-                                        AddPersonToMailChimp( groupMember.Person, mailChimpListId );
+                                        if( !mailChimpMemberLookUp.ContainsKey( groupMember.PersonId ) )
+                                        {
+                                            AddPersonToMailChimp( groupMember.Person, mailChimpListId );
+                                        }
                                     }
                                     catch ( Exception ex )
                                     {
@@ -250,7 +254,7 @@ namespace com.bemaservices.MailChimp.Utility
                                     }
                                     catch ( Exception ex )
                                     {
-                                        string message = String.Format( "Error Adding Person #{0} to Group '{1}'", person.Id, group.Name );
+                                        string message = String.Format( "Error Adding Person #{0} to Group '{1}'", person.Key, group.Name );
                                         ExceptionLogService.LogException( new Exception( message, ex ) );
                                     }
 
@@ -345,8 +349,8 @@ namespace com.bemaservices.MailChimp.Utility
             RockContext rockContext = new RockContext();
             PersonService personService = new PersonService( rockContext );
 
-            var firstName = member.MergeFields["FNAME"].ToString();
-            var lastName = member.MergeFields["LNAME"].ToString();
+            var firstName = member.MergeFields["FNAME"].ToString().Left(50);
+            var lastName = member.MergeFields["LNAME"].ToString().Left(50);
             var email = member.EmailAddress;
             var mailchimpForeignKey = String.Format( "Mailchimp_{0}", member.Id );
 
