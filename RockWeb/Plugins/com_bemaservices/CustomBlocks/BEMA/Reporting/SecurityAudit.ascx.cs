@@ -605,6 +605,48 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             return qry;
         }
 
+        /// <summary>
+        /// Handles the PersonClick event of the lbNonStaff control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
+        protected void lbNonStaff_PersonClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var groupMemberService = new GroupMemberService( rockContext );
+                    var groupMember = groupMemberService.Get( ( Guid ) e.RowKeyValue );
+                    if ( groupMember != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.PersonDetailPage, "PersonId", groupMember.PersonId );
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the RoleClick event of the lbNonStaff control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
+        protected void lbNonStaff_RoleClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var groupMemberService = new GroupMemberService( rockContext );
+                    var groupMember = groupMemberService.Get( ( Guid ) e.RowKeyValue );
+                    if ( groupMember != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.SecurityRoleDetailPage, "GroupId", groupMember.GroupId );
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region PageParameterSql Methods
@@ -1212,38 +1254,5 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
         }
 
         #endregion
-
-
-        protected void lbNonStaff_PersonClick( object sender, RowEventArgs e )
-        {
-            if ( e.RowKeyValue != null )
-            {
-                using ( var rockContext = new RockContext() )
-                {
-                    var groupMemberService = new GroupMemberService( rockContext );
-                    var groupMember = groupMemberService.Get( ( Guid ) e.RowKeyValue );
-                    if ( groupMember != null )
-                    {
-                        NavigateToLinkedPage( AttributeKey.PersonDetailPage, "PersonId", groupMember.PersonId );
-                    }
-                }
-            }
-        }
-
-        protected void lbNonStaff_RoleClick( object sender, RowEventArgs e )
-        {
-            if ( e.RowKeyValue != null )
-            {
-                using ( var rockContext = new RockContext() )
-                {
-                    var groupMemberService = new GroupMemberService( rockContext );
-                    var groupMember = groupMemberService.Get( ( Guid ) e.RowKeyValue );
-                    if ( groupMember != null )
-                    {
-                        NavigateToLinkedPage( AttributeKey.SecurityRoleDetailPage, "GroupId", groupMember.GroupId );
-                    }
-                }
-            }
-        }
     }
 }
