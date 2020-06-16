@@ -64,6 +64,8 @@
                                 <Rock:RockBoundField DataField="Person.LastName" HeaderText="Last Name" SortExpression="LastName" />
                                 <Rock:RockBoundField DataField="Person.FirstName" HeaderText="First Name" SortExpression="FirstName" />
                                 <Rock:RockBoundField DataField="Group.Name" HeaderText="Security Role" SortExpression="Group" />
+                                <Rock:LinkButtonField CssClass="btn btn-primary" HeaderText="View Person" Text="<i class='fa fa-user'></i>" OnClick="lbNonStaff_PersonClick" />
+                                <Rock:LinkButtonField CssClass="btn btn-primary" HeaderText="View Role" Text="<i class='fa fa-lock'></i>" OnClick="lbNonStaff_RoleClick" />
                             </Columns>
                         </Rock:Grid>
                     </div>

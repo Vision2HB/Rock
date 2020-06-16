@@ -50,6 +50,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
     // Non Staff Members Settings
     [IntegerField( "Recommended Maximum Number of Non-Staff Members of Security Roles", "The recommended maximum number of non-staff members of security roles.", true, 5, "Non Staff Members Settings", 2, AttributeKey.RecommendedNonStaffMembers )]
     [CustomCheckboxListField( "Excluded Security Roles", "Security roles to exclude from the non-staff audit", "Select Id as Value, Name as Text from [Group] where IsSecurityRole = 1", false, "", "Non Staff Members Settings", 3, AttributeKey.ExcludedSecurityRoles )]
+    [GroupField( "Root Staff Group", "To be considered staff, a person must be a member of this group or a descendant of this group", true, "EF41CD00-1266-4BE6-9130-453982014B79", "Non Staff Members Settings", 4, AttributeKey.RootStaffGroup )]
 
     // Sql Page Parameter Settings
     [IntegerField( "Recommended Maximum Number of blocks using page parameters in their sql", "The recommended maximum number of blocks using page parameters in their sql.", true, 5, "Sql Page Parameter Settings", 4, AttributeKey.RecommendedSqlPageParameterBlocks )]
@@ -74,6 +75,10 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
     // Sensitive File Type Settings
     [BinaryFileTypesField( "Sensitive File Types", "The file types that should not be accessible to all users.", true, "", "Sensitive File Type Settings", 12, AttributeKey.SensitiveFileTypes )]
 
+    // Linked Pages
+    [LinkedPage( "Person Profile Page", "", true, Rock.SystemGuid.Page.PERSON_PROFILE_PERSON_PAGES, "Linked Pages", 13, AttributeKey.PersonDetailPage )]
+    [LinkedPage( "Security Role Detail Page", "", true, Rock.SystemGuid.Page.SECURITY_ROLES_DETAIL, "Linked Pages", 14, AttributeKey.SecurityRoleDetailPage )]
+
     public partial class SecurityAudit : RockBlock
     {
         #region Fields
@@ -97,6 +102,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             public const string RecommendedMaximumUnsecuredFinancePageCount = "RecommendedMaximumUnsecuredFinancePageCount";
             public const string RecommendedMaximumUnsecuredAdminPageCount = "RecommendedMaximumUnsecuredAdminPageCount";
             public const string SensitiveFileTypes = "SensitiveFileTypes";
+            public const string RootStaffGroup = "RootStaffGroup";
+            public const string PersonDetailPage = "PersonDetailPage";
+            public const string SecurityRoleDetailPage = "SecurityRoleDetailPage";
         }
 
         #endregion
@@ -172,18 +180,32 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
         protected override void OnInit( EventArgs e )
         {
             base.OnInit( e );
+
             gRockAdmins.GridRebind += gRockAdmins_GridRebind;
+
             gSslEnabled.GridRebind += gSslEnabled_GridRebind;
+
             gNonStaff.GridRebind += gNonStaff_GridRebind;
+            gNonStaff.DataKeyNames = new string[] { "Guid" };
+
             gPageParameterSql.GridRebind += gPageParameterSql_GridRebind;
+
             gSqlLavaCommand.GridRebind += gSqlLavaCommand_GridRebind;
+
             gPersonAuth.GridRebind += gPersonAuth_GridRebind;
+
             gUnencryptedSensitiveData.GridRebind += gUnencryptedSensitiveData_GridRebind;
+
             gFinanceDataViews.GridRebind += gFinanceDataViews_GridRebind;
+
             gFileTypeSecurity.GridRebind += gFileTypeSecurity_GridRebind;
+
             gGlobalLavaCommands.GridRebind += gGlobalLavaCommands_GridRebind;
+
             gFinancePages.GridRebind += gFinancePages_GridRebind;
+
             gAdminPages.GridRebind += gAdminPages_GridRebind;
+
 
             // this event gets fired after block settings are updated. it's nice to repaint the screen if these settings would alter it
             this.BlockUpdated += Block_BlockUpdated;
@@ -519,7 +541,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             var auditGoal = GetAttributeValue( AttributeKey.RecommendedNonStaffMembers ).AsInteger();
 
             var headerText = String.Format( "Non-Staff Security Role Members: <span class='badge'>{0}</span>", auditValue );
-            var descriptionText = String.Format( "BEMA recommends limiting the number of people in security roles that are not in your organization. We recommend no more than {0} people be in a security role that are not part of your organization in some way.", auditGoal );
+            var descriptionText = String.Format( "BEMA recommends limiting the number of people in security roles that are not in your organization. We recommend no more than {0} people be in a security role that are not part of your organization in some way. We consider anyone in the Root Staff Group defined in the block settings or one of its descendants to be a part of your organization.", auditGoal );
             GenerateHeader( headerText, descriptionText, auditValue, auditGoal, false, divHeaderNonStaff, lDescriptionNonStaff );
         }
 
@@ -558,13 +580,22 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
         private List<GroupMember> GetNonStaffData( RockContext rockContext )
         {
             var pageService = new PageService( rockContext );
+            var groupService = new GroupService( rockContext );
 
-            var organizationUnitGuid = Rock.SystemGuid.GroupType.GROUPTYPE_ORGANIZATION_UNIT.AsGuid();
+            var staffGroupGuids = new List<Guid>();
+            var rootGroupGuid = GetAttributeValue( AttributeKey.RootStaffGroup ).AsGuid();
+            staffGroupGuids.Add( rootGroupGuid );
+            var rootGroup = groupService.Get( rootGroupGuid );
+            if ( rootGroup != null )
+            {
+                staffGroupGuids.AddRange( new GroupService( rockContext ).GetAllDescendents( rootGroup.Id ).Select( g => g.Guid ) );
+            }
+
             var excludedRoleIds = GetAttributeValue( AttributeKey.ExcludedSecurityRoles ).SplitDelimitedValues().AsIntegerList();
 
             var qry = new GroupMemberService( rockContext ).Queryable().AsNoTracking()
                 .Where( gm =>
-                    gm.Person.Members.Where( gm1 => gm1.Group.GroupType.Guid == organizationUnitGuid && gm1.GroupMemberStatus == GroupMemberStatus.Active ).Count() == 0 &&
+                    gm.Person.Members.Where( gm1 => staffGroupGuids.Contains( gm1.Group.Guid ) && gm1.GroupMemberStatus == GroupMemberStatus.Active ).Count() == 0 &&
                     gm.Group.IsSecurityRole &&
                     !excludedRoleIds.Contains( gm.GroupId ) &&
                     gm.Group.IsActive
@@ -1181,5 +1212,38 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
         }
 
         #endregion
+
+
+        protected void lbNonStaff_PersonClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var groupMemberService = new GroupMemberService( rockContext );
+                    var groupMember = groupMemberService.Get( ( Guid ) e.RowKeyValue );
+                    if ( groupMember != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.PersonDetailPage, "PersonId", groupMember.PersonId );
+                    }
+                }
+            }
+        }
+
+        protected void lbNonStaff_RoleClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var groupMemberService = new GroupMemberService( rockContext );
+                    var groupMember = groupMemberService.Get( ( Guid ) e.RowKeyValue );
+                    if ( groupMember != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.SecurityRoleDetailPage, "GroupId", groupMember.GroupId );
+                    }
+                }
+            }
+        }
     }
 }
