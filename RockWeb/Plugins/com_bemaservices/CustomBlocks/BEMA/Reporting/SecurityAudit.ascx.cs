@@ -819,14 +819,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
         /// <returns></returns>
         private DataTable GetUnencryptedSensitiveDataData()
         {
-            var query = @"Select a.Id, a.Name, et.Name as EntityType, a.EntityTypeQualifierColumn, a.EntityTypeQualifierValue, count(0) as SensitiveRecords
+            var query = @"Select a.Id, a.Name, et.FriendlyName as EntityType, a.EntityTypeQualifierColumn, a.EntityTypeQualifierValue, count(0) as SensitiveRecords
                             From AttributeValue av
                             Join Attribute a on a.Id = av.AttributeId
                             Join EntityType et on a.EntityTypeId = et.Id
                             Where av.Value like '[0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]'
                             or av.Value like '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
                             or av.Value like '[0-9][0-9][0-9] [0-9][0-9] [0-9][0-9][0-9][0-9]'
-                            Group By a.Id, a.Name, et.Name, a.EntityTypeQualifierColumn, a.EntityTypeQualifierValue";
+                            Group By a.Id, a.Name, et.FriendlyName, a.EntityTypeQualifierColumn, a.EntityTypeQualifierValue";
             DataSet dataSet = DbService.GetDataSet( query, CommandType.Text, null, GetAttributeValue( "DatabaseTimeout" ).AsIntegerOrNull() ?? 180 );
             var data = dataSet.Tables[0];
             return data;

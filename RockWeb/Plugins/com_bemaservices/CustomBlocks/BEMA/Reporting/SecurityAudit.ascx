@@ -60,9 +60,9 @@
                     <div class="grid grid-panel">
                         <Rock:Grid ID="gNonStaff" runat="server" AllowSorting="true">
                             <Columns>
-                                <Rock:RockBoundField DataField="Person.Id" HeaderText="PersonId" SortExpression="PersonId" />
-                                <Rock:RockBoundField DataField="Person.LastName" HeaderText="LastName" SortExpression="LastName" />
-                                <Rock:RockBoundField DataField="Person.FirstName" HeaderText="FirstName" SortExpression="FirstName" />
+                                <Rock:RockBoundField DataField="Person.Id" HeaderText="Person Id" SortExpression="PersonId" />
+                                <Rock:RockBoundField DataField="Person.LastName" HeaderText="Last Name" SortExpression="LastName" />
+                                <Rock:RockBoundField DataField="Person.FirstName" HeaderText="First Name" SortExpression="FirstName" />
                                 <Rock:RockBoundField DataField="Group.Name" HeaderText="Security Role" SortExpression="Group" />
                             </Columns>
                         </Rock:Grid>
@@ -82,11 +82,11 @@
                     <div class="grid grid-panel">
                         <Rock:Grid ID="gPersonAuth" runat="server" AllowSorting="true">
                             <Columns>
-                                <Rock:RockBoundField DataField="PersonAlias.Person.Id" HeaderText="PersonId" SortExpression="PersonId" />
-                                <Rock:RockBoundField DataField="PersonAlias.Person.LastName" HeaderText="LastName" SortExpression="LastName" />
-                                <Rock:RockBoundField DataField="PersonAlias.Person.FirstName" HeaderText="FirstName" SortExpression="FirstName" />
-                                <Rock:RockBoundField DataField="EntityType.Name" HeaderText="Entity Type" SortExpression="EntityType" />
-                                <Rock:RockBoundField DataField="EntityId" HeaderText="Entity Id" SortExpression="EntityId" />
+                                <Rock:RockBoundField DataField="PersonAlias.Person.Id" HeaderText="Person Id" SortExpression="PersonId" />
+                                <Rock:RockBoundField DataField="PersonAlias.Person.LastName" HeaderText="Last Name" SortExpression="LastName" />
+                                <Rock:RockBoundField DataField="PersonAlias.Person.FirstName" HeaderText="First Name" SortExpression="FirstName" />
+                                <Rock:RockBoundField DataField="EntityType.FriendlyName" HeaderText="Auth Added To a:" SortExpression="EntityType" />
+                                <Rock:RockBoundField DataField="EntityId" HeaderText="With Id:" SortExpression="EntityId" />
                             </Columns>
                         </Rock:Grid>
                     </div>
@@ -279,9 +279,7 @@
                             <Columns>
                                 <Rock:RockBoundField DataField="Id" HeaderText="Attribute Id" SortExpression="AttributeId" />
                                 <Rock:RockBoundField DataField="Name" HeaderText="Attribute Name" SortExpression="Name" />
-                                <Rock:RockBoundField DataField="EntityType" HeaderText="Entity Type" SortExpression="EntityType" />
-                                <Rock:RockBoundField DataField="EntityTypeQualifierColumn" HeaderText="Entity Type Qualifier Column" SortExpression="EntityTypeQualifierColumn" />
-                                <Rock:RockBoundField DataField="EntityTypeQualifierValue" HeaderText="Entity Type Qualifier Value" SortExpression="EntityTypeQualifierValue" />
+                                <Rock:RockBoundField DataField="EntityType" HeaderText="On:" SortExpression="EntityType" />
                                 <Rock:RockBoundField DataField="SensitiveRecords" HeaderText="Sensitive Records" SortExpression="SensitiveRecords" />
 
                             </Columns>
