@@ -210,6 +210,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             gUnencryptedSensitiveData.GridRebind += gUnencryptedSensitiveData_GridRebind;
 
             gFinanceDataViews.GridRebind += gFinanceDataViews_GridRebind;
+            gFinanceDataViews.DataKeyNames = new string[] { "Guid" };
 
             gFileTypeSecurity.GridRebind += gFileTypeSecurity_GridRebind;
 
@@ -1072,6 +1073,22 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
 
             var unsecuredDataViews = dataViewService.GetByIds( unsecuredDataViewIds ).ToList();
             return unsecuredDataViews;
+        }
+
+         protected void lbFinanceDataViews_ViewClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var dataViewService = new DataViewService( rockContext );
+                    var dataView = dataViewService.Get( ( Guid ) e.RowKeyValue );
+                    if ( dataView != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.DataViewDetailPage, "DataViewId", dataView.Id );
+                    }
+                }
+            }
         }
 
         #endregion
