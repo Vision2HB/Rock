@@ -82,13 +82,19 @@
                         </p>
                     </div>
                     <div class="grid grid-panel">
-                        <Rock:Grid ID="gPersonAuth" runat="server" AllowSorting="true">
+                        <Rock:Grid ID="gPersonAuth" runat="server" AllowSorting="true" OnRowDataBound="gPersonAuth_RowDataBound">
                             <Columns>
                                 <Rock:RockBoundField DataField="PersonAlias.Person.Id" HeaderText="Person Id" SortExpression="PersonId" />
                                 <Rock:RockBoundField DataField="PersonAlias.Person.LastName" HeaderText="Last Name" SortExpression="LastName" />
                                 <Rock:RockBoundField DataField="PersonAlias.Person.FirstName" HeaderText="First Name" SortExpression="FirstName" />
                                 <Rock:RockBoundField DataField="EntityType.FriendlyName" HeaderText="Auth Added To a:" SortExpression="EntityType" />
                                 <Rock:RockBoundField DataField="EntityId" HeaderText="With Id:" SortExpression="EntityId" />
+                                <Rock:LinkButtonField CssClass="btn btn-primary" HeaderText="View Person" Text="<i class='fa fa-user'></i>" OnClick="lbPersonAuth_PersonClick" />
+                                <asp:TemplateField HeaderText="View Item">
+                                    <ItemTemplate>
+                                        <asp:LinkButton CssClass="btn btn-primary" ID="lbItem" runat="server" Text="<i class='fa fa-search'></i>" OnClick="lbPersonAuth_ItemClick" />
+                                    </ItemTemplate>
+                                </asp:TemplateField>
                             </Columns>
                         </Rock:Grid>
                     </div>

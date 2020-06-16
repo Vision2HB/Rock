@@ -62,6 +62,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
 
     // Person Auth Settings
     [IntegerField( "Recommended Maximum Number of Person Authorizations", "The recommended maximum number of person-specific auth rules to use for the audit.", true, 4, "Person Auth Settings", 8, AttributeKey.RecommendedMaximumPersonAuthCount )]
+    [BooleanField( "Show Admin Auths", "Should Person-Specific Auths tied to the Admin profile be shown in the list?", false, "Person Auth Settings", 9, AttributeKey.ShowAdminAuths )]
 
     // Finance Data Views Settings
     [IntegerField( "Recommended Maximum Number of Unsecured Finance Data Views", "The recommended maximum number of unsecured finance data views to use for the audit.", true, 4, "Finance Data View Settings", 9, AttributeKey.RecommendedMaximumUnsecuredFinanceDataViewCount )]
@@ -78,6 +79,11 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
     // Linked Pages
     [LinkedPage( "Person Profile Page", "", true, Rock.SystemGuid.Page.PERSON_PROFILE_PERSON_PAGES, "Linked Pages", 13, AttributeKey.PersonDetailPage )]
     [LinkedPage( "Security Role Detail Page", "", true, Rock.SystemGuid.Page.SECURITY_ROLES_DETAIL, "Linked Pages", 14, AttributeKey.SecurityRoleDetailPage )]
+    [LinkedPage( "Data View Detail Page", "", true, Rock.SystemGuid.Page.DATA_VIEWS, "Linked Pages", 15, AttributeKey.DataViewDetailPage )]
+    [LinkedPage( "Report Detail Page", "", true, Rock.SystemGuid.Page.REPORTS_REPORTING, "Linked Pages", 16, AttributeKey.ReportDetailPage )]
+    [LinkedPage( "Group Detail Page", "", true, Rock.SystemGuid.Page.GROUP_VIEWER, "Linked Pages", 17, AttributeKey.GroupDetailPage )]
+    [LinkedPage( "Workflow Type Detail Page", "", true, Rock.SystemGuid.Page.WORKFLOW_CONFIGURATION, "Linked Pages", 18, AttributeKey.WorkflowTypeDetailPage )]
+    [LinkedPage( "Page Detail Page", "", true, Rock.SystemGuid.Page.PAGE_MAP, "Linked Pages", 19, AttributeKey.PageDetailPage )]
 
     public partial class SecurityAudit : RockBlock
     {
@@ -105,6 +111,12 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             public const string RootStaffGroup = "RootStaffGroup";
             public const string PersonDetailPage = "PersonDetailPage";
             public const string SecurityRoleDetailPage = "SecurityRoleDetailPage";
+            public const string ShowAdminAuths = "ShowAdminAuths";
+            public const string ReportDetailPage = "ReportDetailPage";
+            public const string DataViewDetailPage = "DataViewDetailPage";
+            public const string GroupDetailPage = "GroupDetailPage";
+            public const string WorkflowTypeDetailPage = "WorkflowTypeDetailPage";
+            public const string PageDetailPage = "PageDetailPage";
         }
 
         #endregion
@@ -193,6 +205,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             gSqlLavaCommand.GridRebind += gSqlLavaCommand_GridRebind;
 
             gPersonAuth.GridRebind += gPersonAuth_GridRebind;
+            gPersonAuth.DataKeyNames = new string[] { "Guid" };
 
             gUnencryptedSensitiveData.GridRebind += gUnencryptedSensitiveData_GridRebind;
 
@@ -833,12 +846,95 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
         /// </summary>
         /// <param name="rockContext">The rock context.</param>
         /// <returns></returns>
-        private static List<Auth> GetPersonAuthData( RockContext rockContext )
+        private List<Auth> GetPersonAuthData( RockContext rockContext )
         {
             AuthService authService = new AuthService( rockContext );
-            var qry = authService.Queryable().AsNoTracking().Where( a => a.PersonAliasId != null )
-                        .ToList();
-            return qry;
+            var qry = authService.Queryable().AsNoTracking().Where( a => a.PersonAliasId != null && a.PersonAlias.PersonId != null );
+
+            if ( !GetAttributeValue( AttributeKey.ShowAdminAuths ).AsBoolean() )
+            {
+                var adminPersonAlias = new PersonAliasService( rockContext ).Get( "996c8b72-c255-40e6-bb98-b1d5cf345f3b".AsGuid() );
+                if ( adminPersonAlias != null )
+                {
+                    qry = qry.Where( a => a.PersonAlias.PersonId != adminPersonAlias.PersonId );
+                }
+            }
+
+            return qry.ToList();
+        }
+
+        protected void gPersonAuth_RowDataBound( object sender, GridViewRowEventArgs e )
+        {
+            if ( e.Row.RowType == DataControlRowType.DataRow )
+            {
+                var auth = ( Auth ) e.Row.DataItem;
+                LinkButton lbItem = ( LinkButton ) e.Row.FindControl( "lbItem" );
+                if ( auth.EntityType.FriendlyName != "Group" &&
+                    auth.EntityType.FriendlyName != "Data View" &&
+                    auth.EntityType.FriendlyName != "Report" &&
+                    auth.EntityType.FriendlyName != "Page" &&
+                    auth.EntityType.FriendlyName != "Workflow Type" )
+                {
+                    lbItem.Visible = false;
+                }
+            }
+        }
+
+        protected void lbPersonAuth_PersonClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var authService = new AuthService( rockContext );
+                    var auth = authService.Get( ( Guid ) e.RowKeyValue );
+                    if ( auth != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.PersonDetailPage, "PersonId", auth.PersonAlias.PersonId );
+                    }
+                }
+            }
+        }
+
+        protected void lbPersonAuth_ItemClick( object sender, EventArgs e )
+        {
+            LinkButton lbItem = ( LinkButton ) sender;
+            GridViewRow selectedRow = lbItem.NamingContainer as GridViewRow;
+            if ( selectedRow != null )
+            {
+                Guid guid = ( Guid ) gPersonAuth.DataKeys[selectedRow.RowIndex]["Guid"];
+
+                var rockContext = new RockContext();
+                var authService = new Rock.Model.AuthService( rockContext );
+                Rock.Model.Auth auth = authService.Get( guid );
+                if ( auth != null && auth.EntityId.HasValue )
+                {
+                    if ( auth.EntityType.FriendlyName == "Group" )
+                    {
+                        NavigateToLinkedPage( AttributeKey.GroupDetailPage, "GroupId", auth.EntityId.Value );
+                    }
+
+                    if ( auth.EntityType.FriendlyName == "Data View" )
+                    {
+                        NavigateToLinkedPage( AttributeKey.DataViewDetailPage, "DataViewId", auth.EntityId.Value );
+                    }
+
+                    if ( auth.EntityType.FriendlyName == "Report" )
+                    {
+                        NavigateToLinkedPage( AttributeKey.ReportDetailPage, "ReportId", auth.EntityId.Value );
+                    }
+
+                    if ( auth.EntityType.FriendlyName == "Page" )
+                    {
+                        NavigateToLinkedPage( AttributeKey.PageDetailPage, "Page", auth.EntityId.Value );
+                    }
+
+                    if ( auth.EntityType.FriendlyName == "Workflow Type" )
+                    {
+                        NavigateToLinkedPage( AttributeKey.WorkflowTypeDetailPage, "WorkflowTypeId", auth.EntityId.Value );
+                    }
+                }
+            }
         }
 
         #endregion
@@ -1253,6 +1349,6 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             return unsecuredPages;
         }
 
-        #endregion
+        #endregion     
     }
 }
