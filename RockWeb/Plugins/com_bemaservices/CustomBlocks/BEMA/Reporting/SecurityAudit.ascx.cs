@@ -217,6 +217,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             gGlobalLavaCommands.GridRebind += gGlobalLavaCommands_GridRebind;
 
             gFinancePages.GridRebind += gFinancePages_GridRebind;
+            gFinancePages.DataKeyNames = new string[] { "Guid" };
 
             gAdminPages.GridRebind += gAdminPages_GridRebind;
 
@@ -1289,6 +1290,22 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             }
             var unsecuredPages = pageService.GetByIds( unsecuredPageIds ).ToList();
             return unsecuredPages;
+        }
+        
+         protected void lbFinancePages_ViewClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var pageService = new PageService( rockContext );
+                    var page = pageService.Get( ( Guid ) e.RowKeyValue );
+                    if ( page != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.PageDetailPage, "Page", page.Id );
+                    }
+                }
+            }
         }
 
         #endregion

@@ -136,6 +136,7 @@
                             <Columns>
                                 <Rock:RockBoundField DataField="Id" HeaderText="Id" SortExpression="Id" />
                                 <Rock:RockBoundField DataField="PageTitle" HeaderText="Name" SortExpression="Name" />
+                                <Rock:LinkButtonField CssClass="btn btn-primary" HeaderText="Page" Text="<i class='fa fa-file'></i>" OnClick="lbFinancePages_ViewClick" />
                             </Columns>
                         </Rock:Grid>
                     </div>
