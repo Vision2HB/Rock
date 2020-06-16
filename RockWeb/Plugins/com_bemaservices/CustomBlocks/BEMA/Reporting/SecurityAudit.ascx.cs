@@ -220,6 +220,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             gFinancePages.DataKeyNames = new string[] { "Guid" };
 
             gAdminPages.GridRebind += gAdminPages_GridRebind;
+            gAdminPages.DataKeyNames = new string[] { "Guid" };
 
 
             // this event gets fired after block settings are updated. it's nice to repaint the screen if these settings would alter it
@@ -1382,7 +1383,21 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             var unsecuredPages = pageService.GetByIds( unsecuredPageIds ).ToList();
             return unsecuredPages;
         }
-
+          protected void lbAdminPages_ViewClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var pageService = new PageService( rockContext );
+                    var page = pageService.Get( ( Guid ) e.RowKeyValue );
+                    if ( page != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.PageDetailPage, "Page", page.Id );
+                    }
+                }
+            }
+        }
         #endregion     
     }
 }
