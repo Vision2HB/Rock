@@ -203,6 +203,7 @@
                                 <Rock:RockBoundField DataField="Id" HeaderText="Id" SortExpression="Id" />
                                 <Rock:RockBoundField DataField="Layout.Site.Name" HeaderText="Site" SortExpression="Site" />
                                 <Rock:RockBoundField DataField="PageTitle" HeaderText="Name" SortExpression="Name" />
+                                <Rock:LinkButtonField CssClass="btn btn-primary" HeaderText="Page" Text="<i class='fa fa-file'></i>" OnClick="lbSslEnabled_ViewClick" />
                             </Columns>
                         </Rock:Grid>
                     </div>

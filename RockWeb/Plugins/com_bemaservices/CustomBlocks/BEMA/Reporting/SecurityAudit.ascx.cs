@@ -49,7 +49,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
 
     // Non Staff Members Settings
     [IntegerField( "Recommended Maximum Number of Non-Staff Members of Security Roles", "The recommended maximum number of non-staff members of security roles.", true, 5, "Non Staff Members Settings", 2, AttributeKey.RecommendedNonStaffMembers )]
-    [CustomCheckboxListField( "Excluded Security Roles", "Security roles to exclude from the non-staff audit", "Select Id as Value, Name as Text from [Group] where IsSecurityRole = 1", false, "", "Non Staff Members Settings", 3, AttributeKey.ExcludedSecurityRoles )]
+    [CustomCheckboxListField( "Excluded Security Roles", "Security roles to exclude from the non-staff audit", "Select Id as Value, Name as Text from [Group] where IsSecurityRole = 1", false, "", "Non Staff Members Settings", 3, AttributeKey.NonStaffMemberExcludedRoles )]
     [GroupField( "Root Staff Group", "To be considered staff, a person must be a member of this group or a descendant of this group", true, "EF41CD00-1266-4BE6-9130-453982014B79", "Non Staff Members Settings", 4, AttributeKey.RootStaffGroup )]
 
     // Sql Page Parameter Settings
@@ -66,12 +66,15 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
 
     // Finance Data Views Settings
     [IntegerField( "Recommended Maximum Number of Unsecured Finance Data Views", "The recommended maximum number of unsecured finance data views to use for the audit.", true, 4, "Finance Data View Settings", 9, AttributeKey.RecommendedMaximumUnsecuredFinanceDataViewCount )]
+    [CustomCheckboxListField( "Authorized Security Roles", "Security roles authorized to view finance data views.", "Select Guid as Value, Name as Text from [Group] where IsSecurityRole = 1", false, "628c51a8-4613-43ed-a18d-4a6fb999273e,6246a7ef-b7a3-4c8c-b1e4-3ff114b84559,2539cf5d-e2ce-4706-8bbf-4a9df8e763e9,02fa0881-3552-42b8-a519-d021139b800f", "Finance Data View Settings", 3, AttributeKey.FinanceDataViewsExcludedRoles )]
 
     // Finance Pages Settings
     [IntegerField( "Recommended Maximum Number of Unsecured Finance Pages", "The recommended maximum number of unsecured finance pages to use for the audit.", true, 0, "Finance Page Settings", 10, AttributeKey.RecommendedMaximumUnsecuredFinancePageCount )]
+    [CustomCheckboxListField( "Authorized Security Roles", "Security roles authorized to view finance pages.", "Select Guid as Value, Name as Text from [Group] where IsSecurityRole = 1", false, "628c51a8-4613-43ed-a18d-4a6fb999273e,6246a7ef-b7a3-4c8c-b1e4-3ff114b84559,2539cf5d-e2ce-4706-8bbf-4a9df8e763e9,02fa0881-3552-42b8-a519-d021139b800f", "Finance Page Settings", 3, AttributeKey.FinancePagesExcludedRoles )]
 
     // Admin Pages Settings
     [IntegerField( "Recommended Maximum Number of Unsecured Admin Pages", "The recommended maximum number of unsecured admin pages to use for the audit.", true, 6, "Admin Page Settings", 11, AttributeKey.RecommendedMaximumUnsecuredAdminPageCount )]
+    [CustomCheckboxListField( "Authorized Security Roles", "Security roles authorized to view admin pages.", "Select Guid as Value, Name as Text from [Group] where IsSecurityRole = 1", false, "628c51a8-4613-43ed-a18d-4a6fb999273e,1918e74f-c00d-4ddd-94c4-2e7209ce12c3,b1906b7d-1a1e-41b9-bba4-f4482cecaf7b", "Admin Page Settings", 3, AttributeKey.AdminPagesExcludedRoles )]
 
     // Sensitive File Type Settings
     [BinaryFileTypesField( "Sensitive File Types", "The file types that should not be accessible to all users.", true, "", "Sensitive File Type Settings", 12, AttributeKey.SensitiveFileTypes )]
@@ -98,7 +101,10 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             public const string RecommendedMaximumAdminCount = "RecommendedMaximumAdminCount";
             public const string RecommendedUnencryptedPageCount = "RecommendedUnencryptedPageCount";
             public const string RecommendedNonStaffMembers = "RecommendedNonStaffMembers";
-            public const string ExcludedSecurityRoles = "ExcludedSecurityRoles";
+            public const string NonStaffMemberExcludedRoles = "NonStaffMemberExcludedRoles";
+            public const string FinanceDataViewsExcludedRoles = "FinanceDataViewsExcludedRoles";
+            public const string FinancePagesExcludedRoles = "FinancePagesExcludedRoles";
+            public const string AdminPagesExcludedRoles = "AdminPagesExcludedRoles";
             public const string RecommendedSqlPageParameterBlocks = "RecommendedSqlPageParameterBlocks";
             public const string SqlPageParameterSites = "SqlPageParameterSites";
             public const string RecommendedSqlLavaCommandBlocks = "RecommendedSqlLavaCommandBlocks";
@@ -196,6 +202,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             gRockAdmins.GridRebind += gRockAdmins_GridRebind;
 
             gSslEnabled.GridRebind += gSslEnabled_GridRebind;
+            gSslEnabled.DataKeyNames = new string[] { "Guid" };
 
             gNonStaff.GridRebind += gNonStaff_GridRebind;
             gNonStaff.DataKeyNames = new string[] { "Guid" };
@@ -496,7 +503,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             var auditGoal = GetAttributeValue( AttributeKey.RecommendedUnencryptedPageCount ).AsInteger();
 
             var headerText = String.Format( "Pages Allowing Unencrypted Traffic: <span class='badge'>{0}</span>", auditValue );
-            var descriptionText = String.Format( "A key part of improving your site's security is to require SSL Encryption. BEMA recommends allowing no more than {0} pages to be accessed on an unencrypted connection.", auditGoal );
+            var descriptionText = String.Format( "A key part of improving your site's security is to require SSL Encryption. BEMA recommends allowing no more than {0} pages to be accessed on an unencrypted connection. Go <a href='/Sites'>here</a> to force SSL on each of your sites.", auditGoal );
             GenerateHeader( headerText, descriptionText, auditValue, auditGoal, false, divHeaderSslEnabled, lDescriptionSslEnabled );
         }
 
@@ -541,6 +548,22 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
                         .AsNoTracking().Where( p => !p.RequiresEncryption && !p.Layout.Site.RequiresEncryption )
                         .ToList();
             return qry;
+        }
+
+        protected void lbSslEnabled_ViewClick( object sender, RowEventArgs e )
+        {
+            if ( e.RowKeyValue != null )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var pageService = new PageService( rockContext );
+                    var page = pageService.Get( ( Guid ) e.RowKeyValue );
+                    if ( page != null )
+                    {
+                        NavigateToLinkedPage( AttributeKey.PageDetailPage, "Page", page.Id );
+                    }
+                }
+            }
         }
 
         #endregion
@@ -607,7 +630,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
                 staffGroupGuids.AddRange( new GroupService( rockContext ).GetAllDescendents( rootGroup.Id ).Select( g => g.Guid ) );
             }
 
-            var excludedRoleIds = GetAttributeValue( AttributeKey.ExcludedSecurityRoles ).SplitDelimitedValues().AsIntegerList();
+            var excludedRoleIds = GetAttributeValue( AttributeKey.NonStaffMemberExcludedRoles ).SplitDelimitedValues().AsIntegerList();
 
             var qry = new GroupMemberService( rockContext ).Queryable().AsNoTracking()
                 .Where( gm =>
@@ -1062,10 +1085,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             List<int> authorizedGroupIds = new List<int>();
 
             var groupService = new GroupService( rockContext );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_FINANCE_ADMINISTRATORS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_FINANCE_USERS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_BENEVOLENCE.AsGuid() ).Id );
+            var groupGuids = GetAttributeValue( AttributeKey.FinanceDataViewsExcludedRoles ).SplitDelimitedValues().AsGuidList();
+            authorizedGroupIds.AddRange( groupService.GetByGuids( groupGuids ).Select( g => g.Id ).ToList() );
 
             var dataViews = dataViewService.Queryable().AsNoTracking().Where( dv => dv.EntityType.Name.Contains( "Financ" ) ).ToList();
             foreach ( var dataView in dataViews )
@@ -1077,7 +1098,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             return unsecuredDataViews;
         }
 
-         protected void lbFinanceDataViews_ViewClick( object sender, RowEventArgs e )
+        protected void lbFinanceDataViews_ViewClick( object sender, RowEventArgs e )
         {
             if ( e.RowKeyValue != null )
             {
@@ -1275,10 +1296,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             List<int> authorizedGroupIds = new List<int>();
 
             var groupService = new GroupService( rockContext );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_FINANCE_ADMINISTRATORS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_FINANCE_USERS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_BENEVOLENCE.AsGuid() ).Id );
+            var groupGuids = GetAttributeValue( AttributeKey.FinancePagesExcludedRoles ).SplitDelimitedValues().AsGuidList();
+            authorizedGroupIds.AddRange( groupService.GetByGuids( groupGuids ).Select( g => g.Id ).ToList() );
 
             var rootPage = pageService.Get( Rock.SystemGuid.Page.FINANCE.AsGuid() );
             if ( rootPage != null )
@@ -1292,8 +1311,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             var unsecuredPages = pageService.GetByIds( unsecuredPageIds ).ToList();
             return unsecuredPages;
         }
-        
-         protected void lbFinancePages_ViewClick( object sender, RowEventArgs e )
+
+        protected void lbFinancePages_ViewClick( object sender, RowEventArgs e )
         {
             if ( e.RowKeyValue != null )
             {
@@ -1367,9 +1386,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             List<int> authorizedGroupIds = new List<int>();
 
             var groupService = new GroupService( rockContext );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( Rock.SystemGuid.Group.GROUP_COMMUNICATION_ADMINISTRATORS.AsGuid() ).Id );
-            authorizedGroupIds.Add( groupService.Get( "1918E74F-C00D-4DDD-94C4-2E7209CE12C3".AsGuid() ).Id );
+            var groupGuids = GetAttributeValue( AttributeKey.AdminPagesExcludedRoles ).SplitDelimitedValues().AsGuidList();
+            authorizedGroupIds.AddRange( groupService.GetByGuids( groupGuids ).Select( g => g.Id ).ToList() );
 
             var rootPage = pageService.Get( Rock.SystemGuid.Page.ROCK_SETTINGS.AsGuid() );
             if ( rootPage != null )
@@ -1383,7 +1401,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.Bema.Reporting
             var unsecuredPages = pageService.GetByIds( unsecuredPageIds ).ToList();
             return unsecuredPages;
         }
-          protected void lbAdminPages_ViewClick( object sender, RowEventArgs e )
+
+        protected void lbAdminPages_ViewClick( object sender, RowEventArgs e )
         {
             if ( e.RowKeyValue != null )
             {
