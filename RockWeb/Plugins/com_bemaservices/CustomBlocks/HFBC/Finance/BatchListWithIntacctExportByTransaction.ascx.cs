@@ -495,10 +495,10 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             {
                 batches = new FinancialBatchService( rockContext )
                     .Queryable()
-                    .Include( b => b.Transactions )
-                    .Include( b => b.Transactions.SelectMany( t => t.TransactionDetails ) )
-                    .Include( b => b.Transactions.Select( t => t.FinancialPaymentDetail.CurrencyTypeValue ) )
-                    .Include( b => b.Transactions.Select( t => t.AuthorizedPersonAlias.Person) )
+                    //.Include( b => b.Transactions )
+                    //.Include( b => b.Transactions.SelectMany( t => t.TransactionDetails ) )
+                    //.Include( b => b.Transactions.Select( t => t.FinancialPaymentDetail.CurrencyTypeValue ) )
+                    //.Include( b => b.Transactions.Select( t => t.AuthorizedPersonAlias.Person) )
                     .Where(b => batchesSelected.Contains(b.Id))
                     .ToList();
 
@@ -828,7 +828,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
                 record.ReceiptDate = t.CreatedDateTime ?? t.TransactionDateTime ?? RockDateTime.Today;
                 record.PayMethod = string.Empty;
                 record.DocDate = t.TransactionDateTime ?? t.CreatedDateTime ?? RockDateTime.Today;
-                record.DocNumber = t.TransactionCode.Right(30);
+                record.DocNumber = t.TransactionCode;
                 record.Description = string.Empty;
                 record.DepositTo = "Undeposited funds";
                 record.BankAccountId = "MAIN-001"; // TO-DO set by export preferences
@@ -856,7 +856,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
                     detailrecord.ReceiptDate = d.CreatedDateTime ?? t.TransactionDateTime ?? RockDateTime.Today;
                     detailrecord.PayMethod = t.FinancialPaymentDetail.CurrencyTypeValue.Value;
                     detailrecord.DocDate = t.TransactionDateTime ?? d.CreatedDateTime ?? RockDateTime.Today;
-                    detailrecord.DocNumber = t.TransactionCode.Right(30);
+                    detailrecord.DocNumber = t.TransactionCode;
                     detailrecord.Description = string.Empty;
                     detailrecord.DepositTo = string.Empty;
                     detailrecord.BankAccountId = string.Empty; // TO-DO set by export preferences
