@@ -16,15 +16,7 @@
                                     <Rock:NotificationBox ID="nbAlreadyExported" runat="server" Text="You have already exported this batch to GL. Make certain that you want to re-export it before proceeding." NotificationBoxType="Warning" Visible="false" />
                                     <Rock:NotificationBox ID="nbNotClosed" runat="server" Text="The batch you are trying to export has not been closed and could be modified after you have exported to GL. You may wish to close the batch first." NotificationBoxType="Warning" Visible="false" />
                                     <Rock:DatePicker ID="dpDate" runat="server" Label="Deposit Date" Help="The date to mark the general ledger entry as deposited." Required="true" />
-                                    <Rock:RockTextBox ID="tbAccountingPeriod" runat="server" Label="Accounting Period" Help="Accounting period for this deposit." MaxLength="2" Required="true" />
-                                    <Rock:RockTextBox ID="tbJournalType" runat="server" Label="Journal Entry Type" Help="The type of journal entry for this deposit." MaxLength="2" Required="true" />
-                                    <Rock:RockDropDownList ID="rddlPaymentMethod" runat="server" Label="Payment Method" Help="Payment Method" Required="true" >
-                                        <asp:ListItem Text="Cash" Value="Cash" Selected="True"></asp:ListItem>
-                                        <asp:ListItem Text="Printed Check" Value="Printed Check"></asp:ListItem>
-                                        <asp:ListItem Text="Credit Card" Value="Credit Card"></asp:ListItem>
-                                        <asp:ListItem Text="EFT" Value="EFT"></asp:ListItem>
-                                        </Rock:RockDropDownList>
-
+                                    <Rock:DefinedValuePicker ID="dvpJournalType" DefinedTypeId="425" runat="server" Label="Journal" Help="Accounting period for this deposit" Required="true" />
                                 </div>
                             </div>
                         </ContentTemplate>
