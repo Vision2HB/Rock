@@ -303,7 +303,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 		LEFT JOIN GroupMember m2 on m2.ForeignKey = @ForeignKey 
 					and m2.ForeignId = m.Id
 		Left Join GroupMember dup on dup.PersonId = m.PersonId 
-		            and dup.GroupId = m.GroupId 
+		            and dup.GroupId = m2.GroupId 
 					and dup.GroupRoleId = m.GroupRoleId
 		Inner Join OpenXml(@docHandle, N'/root/Item', 1) 
 			With( [OldId] int, [NewId] int) roles on roles.OldId = m.GroupRoleId

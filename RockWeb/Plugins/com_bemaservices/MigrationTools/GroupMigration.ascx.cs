@@ -307,7 +307,7 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
             // Add to script
             if ( sRoleMap != String.Empty )
             {
-                script += ", @RoleMap = '<root>" + sRoleMap + "</root>'";
+                script += ", @roleMap = '<root>" + sRoleMap + "</root>'";
             }
 
             //Map attributes
@@ -338,7 +338,7 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
             }
             if ( sAttributeMap != String.Empty )
             {
-                script += ", @AttributeMap  = '<root>" + sAttributeMap + "</root>'";
+                script += ", @attributeMap  = '<root>" + sAttributeMap + "</root>'";
             }
 
             //Map group member attributes
@@ -366,7 +366,7 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
             }
             if ( sMemberAttributeMap != String.Empty )
             {
-                script += ", @MemberAttributeMap = '<root>" + sMemberAttributeMap + "</root>'";
+                script += ", @memberAttributeMap = '<root>" + sMemberAttributeMap + "</root>'";
             }
 
             tScript.Text = script;
