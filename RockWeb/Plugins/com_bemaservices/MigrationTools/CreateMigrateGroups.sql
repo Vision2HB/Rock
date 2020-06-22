@@ -179,7 +179,29 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 		, ParentGroupId = (Select ParentGroupId From [Group] Where Id =  @newParentGroupId) WHERE Id = @rootGroupId
 		Update [Group] Set ForeignKey = @foreignKey, ForeignId = @rootGroupId Where Id = @newParentGroupId
 	End
-	
+
+	/* Delete Groups after we have setup the temp file with group info and before inserting groups from the temp file. */
+	IF @deleteExistingYN = 1
+	Begin
+
+		Delete From Attendance 
+		    Where OccurrenceId in (Select Id from AttendanceOccurrence 
+				Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
+				And ForeignId in ( Select Id from #GroupIds ) ) )
+
+		Delete from AttendanceOccurrence 
+			Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id from #GroupIds ) )
+
+		Delete From GroupMember Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id From GroupMember Where GroupId in ( Select Id From [Group] Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id from #GroupIds ) ) )
+
+		Delete From [Group] Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id from #GroupIds );
+
+	End
+
 	/* Insert or Update Group Table */
 	MERGE [Group] g
 	USING @TargetGroup tg ON g.GroupTypeId = tg.GroupTypeId and g.ForeignKey = @foreignKey and g.ForeignId = tg.Id
