@@ -34,7 +34,12 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
         {
             base.OnLoad( e );
             nbSuccess.Visible = false;
-            var groupId = PageParameter( "GroupId" ).AsInteger();
+            int groupId = gpOldGroup.SelectedValueAsId().GetValueOrDefault( 0 );
+            //if ( groupId == 0 )
+            //{
+            //    groupId = PageParameter( "GroupId" ).AsInteger();
+            //}
+
             if ( groupId != 0 )
             {
                 rockContext = new RockContext();
@@ -371,6 +376,16 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
 
             tScript.Text = script;
             btnAdd.Enabled = true;
+        }
+
+        protected void gpOldGroup_ValueChanged( object sender, EventArgs e )
+        {
+
+        }
+
+        protected void gpNewParent_ValueChanged( object sender, EventArgs e )
+        {
+
         }
     }
 }

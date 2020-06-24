@@ -11,7 +11,15 @@
                 <Rock:RockLiteral ID="ltGroupTypeName" runat="server" Label="Group Type"></Rock:RockLiteral>
             </div>
         </div>
-        <Rock:GroupPicker runat="server" ID="gpNewParent" Label="New Parent Group" Required="true" />
+        <div class="row">
+            <div class="col-sm-6">
+                <Rock:GroupPicker runat="server" ID="gpOldGroup" Label="Existing Group" Required="true" OnValueChanged="gpOldGroup_ValueChanged"  />
+            </div>
+            <div class="col-sm-6">
+                
+                <Rock:GroupPicker runat="server" ID="gpNewParent" Label="New Parent Group" Required="true" OnValueChanged="gpNewParent_ValueChanged" />
+            </div>
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <Rock:RockRadioButtonList ID="rblDelete" runat="server" Label="Delete Existing Groups (Y/N)?" RepeatDirection="Horizontal">
