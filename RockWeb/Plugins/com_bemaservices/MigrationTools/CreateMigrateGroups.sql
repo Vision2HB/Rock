@@ -25,7 +25,7 @@ GO
 	<param name = 'MemberAttributeMap' dataype='nvarchar(250)'>A comma and | separated list of old attribute ids and new attribute ids like '25,100|26,102'</param>
  </doc>
 */
-CREATE PROCEDURE [dbo].[_com_bemaservices_spMigrateGroups]
+CREATE OR ALTER PROCEDURE [dbo].[_com_bemaservices_spMigrateGroups]
 (
     @rootGroupId int
 	, @oldGroupTypeId int
@@ -48,7 +48,9 @@ BEGIN
     -- Insert statements for procedure here
     DECLARE @ForeignKey nvarchar(max) = 'MigratedGroup';
 
-	With CTE as (
+    DECLARE @GroupIds TABLE ( Id int )
+
+	;With CTE as (
 		Select g.Id, g.parentGroupId
 		From [Group] g
 		Where g.Id = @rootGroupId
@@ -60,9 +62,9 @@ BEGIN
 		Join CTE on g.ParentGroupId = cte.Id
 	)
 
+    INSERT INTO @GroupIds
 	Select
 		Id
-	into #GroupIds
 	From CTE
 
 
@@ -162,7 +164,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 				and g2.ForeignKey = @foreignKey
 				and g2.GroupTypeId = @NewGroupTypeId
 	Where 
-		g.Id in ( Select Id From #GroupIds )
+		g.Id in ( Select Id From @GroupIds )
 		AND g.IsArchived = 0
 		and g2.Id is Null
 
@@ -187,18 +189,18 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 		Delete From Attendance 
 		    Where OccurrenceId in (Select Id from AttendanceOccurrence 
 				Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
-				And ForeignId in ( Select Id from #GroupIds ) ) )
+				And ForeignId in ( Select Id from @GroupIds ) ) )
 
 		Delete from AttendanceOccurrence 
 			Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
-			And ForeignId in ( Select Id from #GroupIds ) )
+			And ForeignId in ( Select Id from @GroupIds ) )
 
 		Delete From GroupMember Where ForeignKey = @ForeignKey
 			And ForeignId in ( Select Id From GroupMember Where GroupId in ( Select Id From [Group] Where ForeignKey = @ForeignKey
-			And ForeignId in ( Select Id from #GroupIds ) ) )
+			And ForeignId in ( Select Id from @GroupIds ) ) )
 
 		Delete From [Group] Where ForeignKey = @ForeignKey
-			And ForeignId in ( Select Id from #GroupIds );
+			And ForeignId in ( Select Id from @GroupIds );
 
 	End
 
@@ -329,7 +331,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 					and dup.GroupRoleId = m.GroupRoleId
 		Inner Join OpenXml(@docHandle, N'/root/Item', 1) 
 			With( [OldId] int, [NewId] int) roles on roles.OldId = m.GroupRoleId
-	Where m.GroupId in ( Select Id from #GroupIds )
+	Where m.GroupId in ( Select Id from @GroupIds )
 	and m.IsArchived = 0
 	and m2.Id is null
 	and dup.Id is null
@@ -402,7 +404,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 		From
 			GroupLocation 
 		where 
-			GroupId in ( Select Id From #GroupIds )
+			GroupId in ( Select Id From @GroupIds )
 	)
 	AND l2.Id is null
 
@@ -448,7 +450,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 	LEFT JOIN GroupLocation gl2 on gl2.ForeignKey = @ForeignKey
 				AND gl2.ForeignId = gl.Id
 	
-	where gl.GroupId in ( Select Id From #GroupIds )
+	where gl.GroupId in ( Select Id From @GroupIds )
 	AND gl2.Id is null
 
 
@@ -469,7 +471,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 				AND l.ForeignId = gl.LocationId
 	Inner JOIN GroupLocation gl2 on gl2.GroupId = g.Id
 				AND gl2.LocationId = l.Id	
-	where gl.GroupId in ( Select Id From #GroupIds )
+	where gl.GroupId in ( Select Id From @GroupIds )
 
 
 	/*
@@ -511,7 +513,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 	LEFT JOIN GroupSync gs2 on gs2.ForeignKey = @ForeignKey
 					AND gs2.ForeignId = gs.Id
 	Where 
-		gs.GroupId in ( Select Id From #GroupIds )
+		gs.GroupId in ( Select Id From @GroupIds )
 	And gs2.Id is null
 
 
@@ -535,7 +537,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 					and g2.ForeignId = g.Id
 	Inner Join OpenXml(@docHandle2, N'/root/Item', 1) 
 			With( [OldId] int, [NewId] int) attrMap on attrMap.OldId = av.AttributeId
-	Where g.id in ( Select Id From #GroupIds )
+	Where g.id in ( Select Id From @GroupIds )
 
 
 	MERGE AttributeValue AV
@@ -565,7 +567,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 					and gm2.ForeignId = gm.Id
 	Inner Join OpenXml(@docHandle3, N'/root/Item', 1) 
 			With( [OldId] int, [NewId] int) attrMap on attrMap.OldId = av.AttributeId
-	Where gm.GroupId in ( Select Id From #GroupIds )
+	Where gm.GroupId in ( Select Id From @GroupIds )
 
 
 	MERGE AttributeValue AV
@@ -652,11 +654,11 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 	From
 	AttendanceOccurrence ao
 	Inner Join [Group] g on g.ForeignId = ao.GroupId and g.ForeignKey = @ForeignKey
-	Where ao.GroupId in ( Select Id From #GroupIds )
+	Where ao.GroupId in ( Select Id From @GroupIds )
 
 
 	MERGE AttendanceOccurrence AO
-		USING @AttendanceOccurrence A ON AO.GroupId = A.GroupId AND AO.LocationId = A.LocationId And AO.SCheduleId = A.SCheduleId And AO.OccurrenceDate = A.OccurrenceDate
+		USING @AttendanceOccurrence A ON AO.GroupId = A.GroupId AND ISNULL(AO.LocationId,0) = ISNULL(A.LocationId,0) And ISNULL(AO.ScheduleId,0) = ISNULL(A.ScheduleId,0) And AO.OccurrenceDate = A.OccurrenceDate
 		WHEN MATCHED THEN
 			UPDATE SET AO.ForeignKey = @ForeignKey, AO.ForeignId = A.ID, AO.ModifiedDateTime = GetDate(), AO.ModifiedByPersonAliasId = dbo.ufnUtility_GetPrimaryPersonAliasId ( @personId )
 		WHEN NOT MATCHED BY TARGET THEN
@@ -804,7 +806,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 	Attendance a
 	Inner Join AttendanceOccurrence ao on a.OccurrenceId = ao.Id
 	Inner Join AttendanceOccurrence ao2 on ao2.ForeignId = a.OccurrenceId and ao2.ForeignKey = @ForeignKey
-	Where ao.GroupId in ( Select Id From #GroupIds )
+	Where ao.GroupId in ( Select Id From @GroupIds )
 
 
 	MERGE Attendance A
@@ -900,8 +902,6 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 
 	END
 
-	/* Clean up */
-	Drop Table #GroupIds
 
 END
 GO
