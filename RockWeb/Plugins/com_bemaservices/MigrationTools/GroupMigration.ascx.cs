@@ -84,7 +84,8 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
             ddlGroupTypes.DataBind();
         }
 
-        protected void ddlGroupTypes_SelectedIndexChanged( object sender, EventArgs e )
+
+        private void RefreshMappings()
         {
             var groupTypeId = ddlGroupTypes.SelectedValue.AsInteger();
             if ( groupTypeId != 0 && group != null )
@@ -93,8 +94,8 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
                 var newGroupType = new GroupTypeService( rockContext ).Get( groupTypeId );
 
                 BindRoles( newGroupType, group.GroupType.Roles );
-                DisplayAttributes ();
-                DisplayMemberAttributes ();
+                DisplayAttributes();
+                DisplayMemberAttributes();
 
             }
             else
@@ -380,12 +381,17 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
 
         protected void gpOldGroup_ValueChanged( object sender, EventArgs e )
         {
-
+            RefreshMappings();
         }
 
         protected void gpNewParent_ValueChanged( object sender, EventArgs e )
         {
+            RefreshMappings();
+        }
 
+        protected void ddlGroupTypes_SelectedIndexChanged( object sender, EventArgs e )
+        {
+            RefreshMappings();
         }
     }
 }
