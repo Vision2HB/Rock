@@ -87,6 +87,10 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
 
         private void RefreshMappings()
         {
+
+            // Clear Script Screen
+            tScript.Text = string.Empty;
+
             var groupTypeId = ddlGroupTypes.SelectedValue.AsInteger();
             if ( groupTypeId != 0 && group != null )
             {

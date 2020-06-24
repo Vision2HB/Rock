@@ -78,8 +78,7 @@
             <div class="panel-body">
         <div class="row">
             <div class="col-xs-12">
-                <Rock:RockTextBox runat="server" ID="tScript" Rows="12" TextMode="MultiLine">
-                </Rock:RockTextBox>
+                <Rock:CodeEditor runat="server" ID="tScript" Rows="12" TextMode="MultiLine" ReadOnly="true" EditorMode="Sql" />
             </div>
         </div>
             </div>
