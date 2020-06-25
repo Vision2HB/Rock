@@ -99,6 +99,7 @@
   <ItemGroup>
     <Folder Include="Jobs\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Reporting\DataFilter\" />
     <Folder Include="Utility\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
