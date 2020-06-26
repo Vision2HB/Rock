@@ -61,7 +61,7 @@ BEGIN
 
 		Select g.Id, g.parentGroupId
 		From [Group] g
-		Join CTE on g.ParentGroupId = cte.Id
+		Join CTE on g.ParentGroupId = cte.Id And g.IsActive = 1 and g.IsArchived = 0
 	)
 
     INSERT INTO @GroupIds
