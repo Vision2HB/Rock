@@ -95,6 +95,7 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
             if ( groupTypeId != 0 && group != null )
             {
                 btnAdd.Visible = true;
+                btnReplace.Visible = true;
                 var newGroupType = new GroupTypeService( rockContext ).Get( groupTypeId );
 
                 BindRoles( newGroupType, group.GroupType.Roles );
@@ -107,6 +108,7 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
                 pnlAttributes.Visible = false;
                 pnlRoles.Visible = false;
                 btnAdd.Visible = false;
+                btnReplace.Visible = false;
             }
         }
 
@@ -381,9 +383,16 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
 
             tScript.Text = script;
             btnAdd.Enabled = true;
+            btnReplace.Enabled = true;
         }
 
-        protected void gpOldGroup_ValueChanged( object sender, EventArgs e )
+        protected void btnReplace_Click( object sender, EventArgs e )
+        {
+            tScript.Text = String.Empty;
+            btnAdd_Click ( sender, e );
+        }
+
+            protected void gpOldGroup_ValueChanged( object sender, EventArgs e )
         {
             RefreshMappings();
         }

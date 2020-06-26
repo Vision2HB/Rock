@@ -68,6 +68,8 @@
             <div class="col-xs-12">
                 <Rock:BootstrapButton runat="server" ID="btnAdd" CssClass="btn btn-success" Text="Add to Script"
                      Visible="false" OnClick="btnAdd_Click"></Rock:BootstrapButton>
+                <Rock:BootstrapButton runat="server" ID="btnReplace" CssClass="btn btn-success" Text="Replace Script"
+                     Visible="false" OnClick="btnReplace_Click"></Rock:BootstrapButton>
             </div>
         </div>
         <br />
