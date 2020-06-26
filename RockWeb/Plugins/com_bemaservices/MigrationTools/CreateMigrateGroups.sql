@@ -47,6 +47,8 @@ BEGIN
 
     -- Insert statements for procedure here
     DECLARE @ForeignKey nvarchar(max) = 'MigratedGroup';
+	DECLARE @parentGroupName nvarchar(250);
+	DECLARE @parentParentGroupId int;
 
     DECLARE @GroupIds TABLE ( Id int )
 
@@ -66,6 +68,40 @@ BEGIN
 	Select
 		Id
 	From CTE
+
+	/* handle root group differently 
+	   If root group goes under parent, set the parent group id to the @newParentGroupId
+	   If merging the root and parent group, link the root group to the right parent and keep the name of the group the same (no disappearing groups) and ALSO
+	      put the ForeignKey and Id to point the the root group so they will properly merge.
+		STORE INFO FOR LATER USE.
+	*/
+	IF @includeRootGroup = 1
+	Begin
+	    SELECT @parentGroupName = Name From [Group] Where Id =  @newParentGroupId
+		SELECT @parentParentGroupId = ParentGroupId From [Group] Where Id =  @newParentGroupId
+	End
+
+	/* Delete Groups */
+	IF @deleteExistingYN = 1
+	Begin
+
+		Delete From Attendance 
+		    Where OccurrenceId in (Select Id from AttendanceOccurrence 
+				Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
+				And ForeignId in ( Select Id from @GroupIds ) ) )
+
+		Delete from AttendanceOccurrence 
+			Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id from @GroupIds ) )
+
+		Delete From GroupMember Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id From GroupMember Where GroupId in ( Select Id From [Group] Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id from @GroupIds ) ) )
+
+		Delete From [Group] Where ForeignKey = @ForeignKey
+			And ForeignId in ( Select Id from @GroupIds )
+
+	End
 
 
 	/*
@@ -177,31 +213,10 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 		Update @TargetGroup Set ParentGroupId = @newParentGroupId WHERE Id = @rootGroupId
 	Else
 	Begin
-	    Update @TargetGroup Set Name = (Select Name From [Group] Where Id =  @newParentGroupId)
-		, ParentGroupId = (Select ParentGroupId From [Group] Where Id =  @newParentGroupId) WHERE Id = @rootGroupId
-		Update [Group] Set ForeignKey = @foreignKey, ForeignId = @rootGroupId Where Id = @newParentGroupId
-	End
-
-	/* Delete Groups after we have setup the temp file with group info and before inserting groups from the temp file. */
-	IF @deleteExistingYN = 1
-	Begin
-
-		Delete From Attendance 
-		    Where OccurrenceId in (Select Id from AttendanceOccurrence 
-				Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
-				And ForeignId in ( Select Id from @GroupIds ) ) )
-
-		Delete from AttendanceOccurrence 
-			Where GroupId in (Select Id From [Group] Where ForeignKey = @ForeignKey
-			And ForeignId in ( Select Id from @GroupIds ) )
-
-		Delete From GroupMember Where ForeignKey = @ForeignKey
-			And ForeignId in ( Select Id From GroupMember Where GroupId in ( Select Id From [Group] Where ForeignKey = @ForeignKey
-			And ForeignId in ( Select Id from @GroupIds ) ) )
-
-		Delete From [Group] Where ForeignKey = @ForeignKey
-			And ForeignId in ( Select Id from @GroupIds );
-
+	    Update @TargetGroup Set Name = @parentGroupName
+		, ParentGroupId = @parentParentGroupId WHERE Id = @rootGroupId
+		IF @deleteExistingYN = 0
+			Update [Group] Set ForeignKey = @foreignKey, ForeignId = @rootGroupId Where Id = @newParentGroupId
 	End
 
 	/* Insert or Update Group Table */
