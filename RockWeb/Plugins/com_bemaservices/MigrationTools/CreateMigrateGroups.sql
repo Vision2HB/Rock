@@ -23,6 +23,7 @@ GO
 	<param name = 'RoleMap' datatype='nvarchar(250)'>A comma and | separated list of old role ids and new role ids like '25,100|26,102'</param>
 	<param name = 'AttributeMap' dataype='nvarchar(250)'>A comma and | separated list of old attribute ids and new attribute ids like '25,100|26,102'</param>
 	<param name = 'MemberAttributeMap' dataype='nvarchar(250)'>A comma and | separated list of old attribute ids and new attribute ids like '25,100|26,102'</param>
+    <param name = 'CopyChildrenYN' datatype='bit'>Should descendant groups be copied along with selected root group</param>
  </doc>
 */
 CREATE OR ALTER PROCEDURE [dbo].[_com_bemaservices_spMigrateGroups]
@@ -33,6 +34,7 @@ CREATE OR ALTER PROCEDURE [dbo].[_com_bemaservices_spMigrateGroups]
 	, @newParentGroupId int
 	, @copyAttendanceYN bit = 0
 	, @deleteExistingYN bit = 0
+    , @copyChildrenYN bit = 1
 	, @roleMap varchar(250) = ''
 	, @attributeMap varchar(250) = ''
 	, @memberAttributeMap varchar(250) = ''
@@ -52,6 +54,9 @@ BEGIN
 
     DECLARE @GroupIds TABLE ( Id int )
 
+    -- If copy children is Yes
+    IF @copyChildrenYN = 1
+    Begin
 	;With CTE as (
 		Select g.Id, g.parentGroupId
 		From [Group] g
@@ -68,6 +73,16 @@ BEGIN
 	Select
 		Id
 	From CTE
+    END
+
+    -- If copy children is No
+    IF @copyChildrenYN = 0
+    BEGIN
+
+    INSERT INTO @GroupIds
+    VALUES ( @rootGroupId )
+
+    END
 
 	/* handle root group differently 
 	   If root group goes under parent, set the parent group id to the @newParentGroupId

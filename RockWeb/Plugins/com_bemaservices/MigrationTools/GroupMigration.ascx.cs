@@ -300,7 +300,8 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
                 + ", @copyAttendanceYN = " + rblAttendance.SelectedValue
                 + ", @includeRootGroup = " + rblIncludeRootGroup.SelectedValue
                 + ", @personId = " + CurrentPerson.Id
-                + ", @deleteExistingYN = " + rblDelete.SelectedValue;
+                + ", @deleteExistingYN = " + rblDelete.SelectedValue
+                + ", @copyChildrenYN = " + rblCopyChildGroups.SelectedValue;
 
             //Map group roles
             var sRoleMap = String.Empty;

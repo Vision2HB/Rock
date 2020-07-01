@@ -41,7 +41,12 @@
                     <asp:ListItem Value="0" Text="No (Root Group goes under New Parent Group)" />
                 </Rock:RockRadioButtonList>
             </div>
-
+            <div class="col-md-6">
+                <Rock:RockRadioButtonList ID="rblCopyChildGroups" runat="server" Label="Copy Child Groups (Y/N)?" RepeatDirection="Horizontal">
+                    <asp:ListItem Value="1" Text="Yes" Selected="True" />
+                    <asp:ListItem Value="0" Text="No" />
+                </Rock:RockRadioButtonList>
+            </div>
         </div>
         <Rock:RockDropDownList runat="server" ID="ddlGroupTypes" Label="New Group Type" DataValueField="Id" DataTextField="Name"
             Required="true" AutoPostBack="true" OnSelectedIndexChanged="ddlGroupTypes_SelectedIndexChanged">
