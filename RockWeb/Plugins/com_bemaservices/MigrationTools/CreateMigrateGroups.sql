@@ -234,6 +234,7 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 			Update [Group] Set ForeignKey = @foreignKey, ForeignId = @rootGroupId Where Id = @newParentGroupId
 	End
 
+
 	/* Insert or Update Group Table */
 	MERGE [Group] g
 	USING @TargetGroup tg ON g.GroupTypeId = tg.GroupTypeId and g.ForeignKey = @foreignKey and g.ForeignId = tg.Id
@@ -840,31 +841,33 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 
 
 	MERGE Attendance A
-		USING @Attendance A2 ON A2.OccurrenceId = A.OccurrenceId And A2.PersonAliasId = A.PersonAliasId
-		WHEN MATCHED THEN
-			UPDATE SET [DeviceId] = A2.DeviceId
-      ,[SearchTypeValueId] = A2.SearchTypeValueId
-      ,[AttendanceCodeId] = A2.AttendanceCodeId
-      ,[QualifierValueId] = A2.QualifierValueId
-      ,[StartDateTime] = A2.StartDateTime
-      ,[EndDateTime] = A2.EndDateTime
-      ,[DidAttend] = A2.DidAttend
-      ,[Note] = A2.Note
-      ,[CampusId] = A2.CampusId
-      ,[RSVP] = A2.RSVP
-      ,[Processed] = A2.Processed
-      ,[ForeignId] = A2.ForeignId
-      ,[SearchValue] = A2.SearchValue
-      ,[SearchResultGroupId] = A2.SearchResultGroupId
-      ,[CheckedInByPersonAliasId] = A2.CheckedInByPersonAliasId
-      ,[ScheduledToAttend] = A2.ScheduledToAttend
-      ,[RequestedToAttend] = A2.RequestedToAttend
-      ,[ScheduleConfirmationSent] = A2.ScheduleConfirmationSent
-      ,[ScheduleReminderSent] = A2.ScheduleReminderSent
-      ,[RSVPDateTime] = A2.RSVPDateTime
-      ,[DeclineReasonValueId] = A2.DeclineReasonValueId
-      ,[ScheduledByPersonAliasId] = A2.ScheduledByPersonAliasId
-		, A.ModifiedDateTime = GetDate(), A.ModifiedByPersonAliasId = dbo.ufnUtility_GetPrimaryPersonAliasId ( @personId )
+		USING @Attendance A2 ON
+            ( A2.OccurrenceId = A.OccurrenceId
+            And A2.PersonAliasId = A.PersonAliasId )
+		--WHEN MATCHED THEN
+		--	UPDATE SET [DeviceId] = A2.DeviceId
+  --    ,[SearchTypeValueId] = A2.SearchTypeValueId
+  --    ,[AttendanceCodeId] = A2.AttendanceCodeId
+  --    ,[QualifierValueId] = A2.QualifierValueId
+  --    ,[StartDateTime] = A2.StartDateTime
+  --    ,[EndDateTime] = A2.EndDateTime
+  --    ,[DidAttend] = A2.DidAttend
+  --    ,[Note] = A2.Note
+  --    ,[CampusId] = A2.CampusId
+  --    ,[RSVP] = A2.RSVP
+  --    ,[Processed] = A2.Processed
+  --    ,[ForeignId] = A2.ForeignId
+  --    ,[SearchValue] = A2.SearchValue
+  --    ,[SearchResultGroupId] = A2.SearchResultGroupId
+  --    ,[CheckedInByPersonAliasId] = A2.CheckedInByPersonAliasId
+  --    ,[ScheduledToAttend] = A2.ScheduledToAttend
+  --    ,[RequestedToAttend] = A2.RequestedToAttend
+  --    ,[ScheduleConfirmationSent] = A2.ScheduleConfirmationSent
+  --    ,[ScheduleReminderSent] = A2.ScheduleReminderSent
+  --    ,[RSVPDateTime] = A2.RSVPDateTime
+  --    ,[DeclineReasonValueId] = A2.DeclineReasonValueId
+  --    ,[ScheduledByPersonAliasId] = A2.ScheduledByPersonAliasId
+		--, A.ModifiedDateTime = GetDate(), A.ModifiedByPersonAliasId = dbo.ufnUtility_GetPrimaryPersonAliasId ( @personId )
 		WHEN NOT MATCHED BY TARGET THEN
 			INSERT ([DeviceId]
       ,[SearchTypeValueId]
@@ -931,6 +934,12 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 
 
 	END
+
+    
+    /* Remove All GroupMigration ForeignIds from Groups */
+    UPDATE [Group]
+    SET ForeignId = NULL
+    WHERE ForeignKey = @ForeignKey
 
 
 END
