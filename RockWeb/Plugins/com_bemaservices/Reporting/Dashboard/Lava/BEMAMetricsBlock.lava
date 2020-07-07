@@ -1,0 +1,174 @@
+<style>
+.panel-dashboard {
+    display: inline;
+}
+</style>
+{% for metric in MetricsXData %}
+
+    {% if ShowTitle == true %}
+        {% if DetailPage != null and DetailPage != "" %}
+            <a href="{{ DetailPage }}?MetricCategoryId={{ metric.CategoryId }}"><h1>{{ metric.Title }}</h1></a>
+        {% else %}
+            <h1>{{ metric.Title }}</h1>
+        {% endif %}
+    {% endif %}
+
+    {% if ShowSubTitle == true %}
+        <h4>{{ metric.Subtitle }}</h4>
+    {% endif %}
+
+    {% if ShowDescription == true %}
+        <p>{{ metric.Description }}</p>
+    {% endif %}
+
+    <div class='row'>
+        {% if ShowIcon == true %}
+        <div class='col-md-6'>
+        {% else %}
+        <div class='col-md-12'>
+        {% endif %}
+            {% if ShowDate == true %}
+                {{ metric.LastValueDate | Date: 'MMM dd' }}
+            {% endif %}
+            {% if ShowCurrent %}
+              <span style='font-size:40px'>{{ metric.LastValue }}</span>
+            {% endif %}
+            <div class="row">
+            {% if ShowLastWeek == true %}
+                <div class="col-md-6">
+                Prev Wk {% if metric.PreviousWeekValue == null %}0{% else %}{{ metric.PreviousWeekValue }}{% endif %}
+                </div> 
+            {% endif %}
+            {% if ShowCurrent == true and ShowPreviousYear == true %}
+                <div class="col-md-6">
+                Prev Yr {% if metric.ThisWeekLastYearValue == null %}0{% else %}{{ metric.ThisWeekLastYearValue }}{% endif %}
+                </div>
+            {% endif %}
+            </div>
+        </div>
+        {% if ShowIcon == true %}
+            <div class='col-md-6'>
+                <i class='{{ metric.IconCssClass }} fa-5x'></i>
+            </div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row"><p>
+            {% if ShowYTD == true %}
+                <div class="col-md-6">
+                    {% if metric.IsCumulative %}
+                    YTD {{ metric.CumulativeValue }}
+                    {% elseif UseDateCountForAverage == true And metric.CumulativeValueDateCount > 0 %}
+                    AVG {{ metric.CumulativeValue | DividedBy:metric.CumulativeValueDateCount | Plus:'.5' | Floor }}
+                    {% elseif UseDateCountForAverage == false And metric.CumulativeValueWeekCount > 0 %}
+                    AVG {{ metric.CumulativeValue | DividedBy:metric.CumulativeValueWeekCount | Plus:'.5' | Floor }}
+                    {% else %}
+                    AVG {{ metric.CumulativeValue }}
+                    {% endif %}
+
+                    {% if ShowPercent == true %}
+                    {% if metric.PreviousYearCumulativeValue > 0 %}
+                    {% if metric.IsCumulative %}
+                    {% assign percent = metric.CumulativeValue | Minus:metric.PreviousYearCumulativeValue | Times:100 | DividedBy:metric.PreviousYearCumulativeValue | Plus:'.5' | Floor %}
+                    {% elseif UseDateCountForAverage == true And metric.CumulativeValueDateCount > 0 %}
+                    {% assign thisAvg = metric.CumulativeValue | DividedBy:metric.CumulativeValueDateCount | Plus:'.5' | Floor %}
+                    {% assign lastAvg = metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueDateCount | Plus:'.5' | Floor %}
+                    {% assign percent = thisAvg | Minus:lastAvg | Times:100 | DividedBy:lastAvg | Plus:'.5' | Floor %}
+                    {% elseif UseDateCountForAverage == false And metric.CumulativeValueWeekCount > 0 %}
+                    {% assign thisAvg = metric.CumulativeValue | DividedBy:metric.CumulativeValueWeekCount | Plus:'.5' | Floor %}
+                    {% assign lastAvg = metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueWeekCount | Plus:'.5' | Floor %}
+                    {% assign percent = thisAvg | Minus:lastAvg | Times:100 | DividedBy:lastAvg | Plus:'.5' | Floor %}
+                    {% endif %}
+                    {% if percent > 0 %}
+                    <i class="fa fa-long-arrow-up" style="font-size:16px;color:green"></i>
+                            <font color="green" size="4">({{percent | Format:'.0'}}%)</font>
+                        {% elseif percent < 0 %}
+                            <i class="fa fa-long-arrow-down" style="font-size:16px;color:red"></i>
+                            <font color="red" size="4">({{percent | Format:'.0'}}%)</font>
+                        {% elseif percent == 0 %}
+                            <font size="4">(0%)</font>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+
+                {% if ShowGoal == true and metric.GoalValue != null and metric.GoalValue != empty %}
+                    GOAL {{ metric.GoalValue }}
+                {% endif %}
+
+                </p></div>
+
+                {% if ShowPreviousYear == true %}
+                    <div class="col-md-6">
+                    {% if metric.IsCumulative %}
+                        Prev YTD {{ metric.PreviousYearCumulativeValue }}
+                    {% elseif UseDateCountForAverage == true And metric.PreviousYearCumulativeValueDateCount > 0 %}
+                        Prev AVG {{ metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueDateCount | Plus:'.5' | Floor }}
+                    {% elseif UseDateCountForAverage == false And metric.PreviousYearCumulativeValueWeekCount > 0 %}
+                        Prev AVG {{ metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueWeekCount | Plus:'.5' | Floor }}
+                    {% else %}
+                        Prev AVG {{ metric.PreviousYearCumulativeValue }}
+                    {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+            </div>
+
+
+            <div class="row">
+            {% if Show52w == true %}
+                <div class="col-md-6">
+                    {% if metric.IsCumulative %}
+                    52w Tot {{ metric.Weeks52Value }}
+                    {% elseif UseDateCountForAverage == true And metric.Weeks52ValueDateCount > 0 %}
+                    52w AVG {{ metric.Weeks52Value | DividedBy:metric.Weeks52ValueDateCount | Plus:'.5' | Floor }}
+                    {% elseif UseDateCountForAverage == false And metric.Weeks52ValueWeekCount > 0 %}
+                    52w AVG {{ metric.Weeks52Value | DividedBy:metric.Weeks52ValueWeekCount | Plus:'.5' | Floor }}
+                    {% else %}
+                    52w AVG {{ metric.Weeks52Value }}
+                    {% endif %}
+                    {% if ShowPercent == true %}
+                    {% if metric.PreviousWeeks52Value > 0 %}
+                    {% if metric.IsCumulative %}
+                    {% assign percent = metric.Weeks52Value | Minus:metric.PreviousWeeks52Value | Times:100 | DividedBy:metric.PreviousWeeks52Value | Plus:'.5' | Floor %}
+                    {% elseif UseDateCountForAverage == true And metric.Weeks52ValueDateCount > 0 %}
+                    {% assign thisAvg = metric.Weeks52Value | DividedBy:metric.Weeks52ValueDateCount | Plus:'.5' | Floor %}
+                    {% assign lastAvg = metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueDateCount | Plus:'.5' | Floor %}
+                    {% assign percent = thisAvg | Minus:lastAvg | Times:100 | DividedBy:lastAvg | Plus:'.5' | Floor %}
+                    {% elseif UseDateCountForAverage == false And metric.Weeks52ValueWeekCount > 0 %}
+                    {% assign thisAvg = metric.Weeks52Value | DividedBy:metric.Weeks52ValueWeekCount | Plus:'.5' | Floor %}
+                    {% assign lastAvg = metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueWeekCount | Plus:'.5' | Floor %}
+                    {% assign percent = thisAvg | Minus:lastAvg | Times:100 | DividedBy:lastAvg | Plus:'.5' | Floor %}
+                    {% endif %}
+                    {% if percent > 0 %}
+                    <i class="fa fa-long-arrow-up" style="font-size:16px;color:green"></i>
+                            <font color="green" size="4">({{percent | Format:'.0'}}%)</font>
+                        {% elseif percent < 0 %}
+                            <i class="fa fa-long-arrow-down" style="font-size:16px;color:red"></i>
+                            <font color="red" size="4">({{percent | Format:'.0'}}%)</font>
+                        {% elseif percent == 0 %}
+                            <font size="4">(0%)</font>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                </div>
+
+                {% if ShowPreviousYear == true %}
+                    <div class="col-md-6">
+                    {% if metric.IsCumulative %}
+                        Prev 52w {{ metric.PreviousWeeks52Value }}
+                    {% elseif UseDateCountForAverage == true And metric.PreviousWeeks52ValueDateCount > 0 %}
+                        Prev 52w {{ metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueDateCount | Plus:'.5' | Floor }}
+                    {% elseif UseDateCountForAverage == false And metric.PreviousWeeks52ValueWeekCount > 0 %}
+                        Prev 52w {{ metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueWeekCount | Plus:'.5' | Floor }}
+                    {% else %}
+                        Prev 52w {{ metric.PreviousWeeks52Value }}
+                    {% endif %}
+                    </div>
+                {% endif %}
+            {% endif %}
+            </div>        
+        </div>
+    </div>
+{% endfor %}
+

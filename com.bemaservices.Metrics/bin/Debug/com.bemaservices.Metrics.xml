@@ -1,0 +1,283 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>com.bemaservices.Metrics</name>
+    </assembly>
+    <members>
+        <member name="T:com_bemaservices.Rest.Controllers.MetricsXController">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:com_bemaservices.Rest.Controllers.MetricsXController.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:com_bemaservices.Rest.Controllers.MetricsXController"/> class.
+            </summary>
+        </member>
+        <member name="M:com_bemaservices.Rest.Controllers.MetricsXController.GetHtmlForBlock(System.Int32,System.String,System.String,System.String,System.String)">
+            <summary>
+            Gets the HTML for a LiquidDashboardWidget block
+            </summary>
+            <param name="blockId">The block identifier.</param>
+            <param name="metricIds">The entity type identifier.</param>
+            <param name="entityTypeEntityIds">The entity identifier.</param>
+            <param name="options">The entity identifier.</param>
+            <param name="dateRange">The entity identifier.</param>
+            <returns></returns>
+        </member>
+        <member name="T:com_bemaservices.Rest.Controllers.EntityPair">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:com_bemaservices.Rest.Controllers.EntityPair.EntityTypeId">
+            <summary>
+            The Entity Type
+            </summary>
+        </member>
+        <member name="F:com_bemaservices.Rest.Controllers.EntityPair.EntityIds">
+            <summary>
+            The list of Entity Ids of the given type
+            </summary>
+        </member>
+        <member name="M:com_bemaservices.Rest.Controllers.EntityPair.#ctor(System.Nullable{System.Int32},System.String)">
+            <summary>
+            Construtor from type and string which containc a list of integers
+            </summary>
+        </member>
+        <member name="T:com_bemaservices.Rest.Controllers.MetricsXData">
+            <summary>
+            Class that extends Metric to include the output values
+            </summary>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.LastValue">
+            <summary>
+            Gets or sets the last value.
+            </summary>
+            <value>
+            The last value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.LastValueDate">
+            <summary>
+            Gets or sets the last value date.
+            </summary>
+            <value>
+            The last value date.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.PreviousWeekValue">
+            <summary>
+            Gets or sets the previous weeks value.
+            </summary>
+            <value>
+            The previous weeks value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.ThisWeekLastYearValue">
+            <summary>
+            Gets or sets the same week last year value.
+            </summary>
+            <value>
+            The value for the current week in the previous year.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.CumulativeValue">
+            <summary>
+            Gets or sets the cumulative value.
+            </summary>
+            <value>
+            The cumulative value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.CumulativeValueDateCount">
+            <summary>
+            Gets or sets the YTD weeks value.
+            </summary>
+            <value>
+            The number of weeks so far this year value. (so you can calculate averages)
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.CumulativeValueWeekCount">
+            <summary>
+            Gets or sets the YTD weeks value.
+            </summary>
+            <value>
+            The number of weeks so far this year value. (so you can calculate averages)
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.PreviousYearCumulativeValue">
+            <summary>
+            Gets or sets the YTD value for the same period last year.
+            </summary>
+            <value>
+            The previous year YTD value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.PreviousYearCumulativeValueDateCount">
+            <summary>
+            Gets or sets the YTD weeks value.
+            </summary>
+            <value>
+            The number of weeks so far this year value. (so you can calculate averages)
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.PreviousYearCumulativeValueWeekCount">
+            <summary>
+            Gets or sets the YTD weeks value.
+            </summary>
+            <value>
+            The number of weeks so far this year value. (so you can calculate averages)
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.Weeks52Value">
+            <summary>
+            Gets or sets the 52 week total value.
+            </summary>
+            <value>
+            The 52 week total value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.Weeks52ValueDateCount">
+            <summary>
+            Gets or sets the 52 week total value.
+            </summary>
+            <value>
+            The 52 week total value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.Weeks52ValueWeekCount">
+            <summary>
+            Gets or sets the 52 week total value.
+            </summary>
+            <value>
+            The 52 week total value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.PreviousWeeks52Value">
+            <summary>
+            Gets or sets the previous 52 week value.
+            </summary>
+            <value>
+            The total value for the previous 52 weeks.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.PreviousWeeks52ValueDateCount">
+            <summary>
+            Gets or sets the previous 52 week value.
+            </summary>
+            <value>
+            The total value for the previous 52 weeks.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.PreviousWeeks52ValueWeekCount">
+            <summary>
+            Gets or sets the previous 52 week value.
+            </summary>
+            <value>
+            The total value for the previous 52 weeks.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.GoalValue">
+            <summary>
+            Gets or sets the goal value.
+            </summary>
+            <value>
+            The goal value.
+            </value>
+        </member>
+        <member name="P:com_bemaservices.Rest.Controllers.MetricsXData.CategoryId">
+            <summary>
+            Gets or sets the MetricCategoryId value.
+            </summary>
+            <value>
+            The goal value.
+            </value>
+        </member>
+        <member name="T:com_bemaservices.Reporting.Dashboard.MetricWidget">
+            <summary>
+            NOTE: Most of the logic for processing the Attributes is in Rock.Rest.MetricsController.GetHtmlForBlock
+            </summary>
+            <seealso cref="T:Rock.Reporting.Dashboard.DashboardWidget" />
+        </member>
+        <member name="P:com_bemaservices.Reporting.Dashboard.MetricWidget.MetricCategoryIds">
+            <summary>
+            Gets the metric identifier.
+            </summary>
+            <value>
+            The metric identifier.
+            </value>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.GetPartitionsFromPageParameters(System.String)">
+            <summary>
+            Handles the Click event of the lbEdit control.
+            </summary>
+            <param name="metricIds">'|' separated list of Ids.</param>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.OnLoad(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Web.UI.Control.Load" /> event.
+            </summary>
+            <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
+        </member>
+        <member name="P:com_bemaservices.Reporting.Dashboard.MetricWidget.SettingsToolTip">
+            <summary>
+            Gets the settings tool tip.
+            </summary>
+            <value>
+            The settings tool tip.
+            </value>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.GetAdministrateControls(System.Boolean,System.Boolean)">
+            <summary>
+            Adds icons to the configuration area of a <see cref="T:Rock.Model.Block" /> instance.  Can be overridden to
+            add additional icons
+            </summary>
+            <param name="canConfig">A <see cref="T:System.Boolean" /> flag that indicates if the user can configure the <see cref="T:Rock.Model.Block" /> instance.
+            This value will be <c>true</c> if the user is allowed to configure the <see cref="T:Rock.Model.Block" /> instance; otherwise <c>false</c>.</param>
+            <param name="canEdit">A <see cref="T:System.Boolean" /> flag that indicates if the user can edit the <see cref="T:Rock.Model.Block" /> instance.
+            This value will be <c>true</c> if the user is allowed to edit the <see cref="T:Rock.Model.Block" /> instance; otherwise <c>false</c>.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.List`1" /> containing all the icon <see cref="T:System.Web.UI.Control">controls</see>
+            that will be available to the user in the configuration area of the block instance.
+            </returns>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.lbEdit_Click(System.Object,System.EventArgs)">
+            <summary>
+            Handles the Click event of the lbEdit control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.ShowSettings">
+            <summary>
+            Shows the settings.
+            </summary>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.mdEdit_SaveClick(System.Object,System.EventArgs)">
+            <summary>
+            Handles the SaveClick event of the mdEdit control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.mpMetricCategoryPicker_SelectItem(System.Object,System.EventArgs)">
+            <summary>
+            Handles the SelectItem event of the mpMetricCategoryPicker control.
+            </summary>
+            <param name="sender">The source of the event.</param>
+            <param name="e">The <see cref="T:System.EventArgs"/> instance containing the event data.</param>
+        </member>
+        <member name="M:com_bemaservices.Reporting.Dashboard.MetricWidget.CreateDynamicControls(System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Creates the dynamic controls.
+            </summary>
+        </member>
+        <member name="F:com.bemaservices.Promotion.Version.SUPPORT_CURRENT_VERSION">
+            <summary>
+            Used to track the current version of the support plugin.  Whenever a new version is 
+            released, we will need to increment the version. 
+            </summary>
+        </member>
+    </members>
+</doc>
