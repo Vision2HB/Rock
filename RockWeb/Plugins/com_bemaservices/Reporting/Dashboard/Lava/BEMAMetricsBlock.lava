@@ -3,7 +3,7 @@
     display: inline;
 }
 </style>
-{% for metric in Metrics %}
+{% for metric in MetricsXData %}
 
     {% if ShowTitle == true %}
         {% if DetailPage != null and DetailPage != "" %}

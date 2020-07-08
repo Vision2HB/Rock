@@ -3,7 +3,7 @@
     display: inline;
 }
 </style>
-{% for metric in Metrics %}
+{% for metric in MetricsXData %}
 
     <div class='row'>
         <div class='col-md-4'>
@@ -153,5 +153,6 @@
             &nbsp;
     </div>
 {% endfor %}
+
 
 
