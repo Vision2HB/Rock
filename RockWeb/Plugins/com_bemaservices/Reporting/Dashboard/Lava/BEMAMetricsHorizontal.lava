@@ -4,7 +4,7 @@
     }
 </style>
 <div class='row'>
-    {% for metric in MetricsXData %}
+    {% for metric in Metrics %}
     <div class='col-md-4'>
         <div class='row'>
             <div class='col-md-6'>
@@ -18,7 +18,7 @@
 
                 {% if ShowTitle == true %}
                     {% if DetailPage != null and DetailPage != "" %}
-                        <a href="{{ DetailPage }}?MetricCategoryId={{ metric.CategoryId }}">{{ metric.Title }}</a><br/>
+                        <a href="{{ DetailPage }}?MetricCategoryId={{ metric.Id }}">{{ metric.Title }}</a><br/>
                     {% else %}
                         {{ metric.Title }}
                     {% endif %}
@@ -38,25 +38,25 @@
                 {% endif %}
 
                 {% if ShowGoal == true and metric.GoalValue != null and metric.GoalValue != empty %}
-                    GOAL - {{ metric.GoalValue }}<br/>
+                    GOAL: {{ metric.GoalValue }}<br/>
                 {% endif %}
 
                 {% if ShowLastWeek == true %}
-                    &nbsp;Prev Wk - {% if metric.PreviousWeekValue == null %}0{% else %}{{ metric.PreviousWeekValue }}{% endif %}<br/>
+                    &nbsp;Prev Wk: {% if metric.PreviousWeekValue == null %}0{% else %}{{ metric.PreviousWeekValue }}{% endif %}<br/>
                 {% endif %}
                 {% if ShowCurrent == true and ShowPreviousYear == true %}
-                    &nbsp;Prev Yr - {% if metric.ThisWeekLastYearValue == null %}0{% else %}{{ metric.ThisWeekLastYearValue }}{% endif %}<br/>
+                    &nbsp;Prev Yr: {% if metric.ThisWeekLastYearValue == null %}0{% else %}{{ metric.ThisWeekLastYearValue }}{% endif %}<br/>
                 {% endif %}
 
                 {% if ShowYTD == true %}
                 {% if metric.IsCumulative %}
-                YTD - {{ metric.CumulativeValue }}
+                YTD: {{ metric.CumulativeValue }}
                 {% elseif UseDateCountForAverage == true And metric.CumulativeValueDateCount > 0 %}
-                YTD AVG - {{ metric.CumulativeValue | DividedBy:metric.CumulativeValueDateCount | Plus:'.5' | Floor }}
+                YTD AVG: {{ metric.CumulativeValue | DividedBy:metric.CumulativeValueDateCount | Plus:'.5' | Floor }}
                 {% elseif UseDateCountForAverage == false And metric.CumulativeValueWeekCount > 0 %}
-                YTD AVG - {{ metric.CumulativeValue | DividedBy:metric.CumulativeValueWeekCount | Plus:'.5' | Floor }}
+                YTD AVG: {{ metric.CumulativeValue | DividedBy:metric.CumulativeValueWeekCount | Plus:'.5' | Floor }}
                 {% else %}
-                YTD AVG - {{ metric.CumulativeValue }}
+                YTD AVG: {{ metric.CumulativeValue }}
                 {% endif %}
 
                 {% if ShowPercent == true %}
@@ -87,26 +87,26 @@
 
                     {% if ShowPreviousYear == true %}
                         {% if metric.IsCumulative %}
-                            &nbsp;Prev YTD - {{ metric.PreviousYearCumulativeValue }}<br/>
+                            &nbsp;Prev YTD: {{ metric.PreviousYearCumulativeValue }}<br/>
                         {% elseif UseDateCountForAverage == true And metric.PreviousYearCumulativeValueDateCount > 0 %}
-                            &nbsp;Prev AVG - {{ metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueDateCount | Plus:'.5' | Floor }}<br/>
+                            &nbsp;Prev AVG: {{ metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueDateCount | Plus:'.5' | Floor }}<br/>
                         {% elseif UseDateCountForAverage == false And metric.PreviousYearCumulativeValueWeekCount > 0 %}
-                            &nbsp;Prev AVG - {{ metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueWeekCount | Plus:'.5' | Floor }}<br/>
+                            &nbsp;Prev AVG: {{ metric.PreviousYearCumulativeValue | DividedBy:metric.PreviousYearCumulativeValueWeekCount | Plus:'.5' | Floor }}<br/>
                         {% else %}
-                            &nbsp;Prev AVG - {{ metric.PreviousYearCumulativeValue }}<br/>
+                            &nbsp;Prev AVG: {{ metric.PreviousYearCumulativeValue }}<br/>
                                 {% endif %}
                                 {% endif %}
                                 {% endif %}
 
                                 {% if Show52w == true %}
                                 {% if metric.IsCumulative %}
-                                52w Tot - {{ metric.Weeks52Value }}
+                                52w Tot: {{ metric.Weeks52Value }}
                                 {% elseif UseDateCountForAverage == true And metric.Weeks52ValueDateCount > 0 %}
-                                52w AVG - {{ metric.Weeks52Value | DividedBy:metric.Weeks52ValueDateCount | Plus:'.5' | Floor }}
+                                52w AVG: {{ metric.Weeks52Value | DividedBy:metric.Weeks52ValueDateCount | Plus:'.5' | Floor }}
                                 {% elseif UseDateCountForAverage == false And metric.Weeks52ValueWeekCount > 0 %}
-                                52w AVG - {{ metric.Weeks52Value | DividedBy:metric.Weeks52ValueWeekCount | Plus:'.5' | Floor }}
+                                52w AVG: {{ metric.Weeks52Value | DividedBy:metric.Weeks52ValueWeekCount | Plus:'.5' | Floor }}
                                 {% else %}
-                                52w AVG - {{ metric.Weeks52Value }}
+                                52w AVG: {{ metric.Weeks52Value }}
                                 {% endif %}
 
                                 {% if ShowPercent == true %}
@@ -137,13 +137,13 @@
 
                     {% if ShowPreviousYear == true %}
                         {% if metric.IsCumulative %}
-                            &nbsp;Prev 52w - {{ metric.PreviousWeeks52Value }}<br/>
+                            &nbsp;Prev 52w: {{ metric.PreviousWeeks52Value }}<br/>
                         {% elseif UseDateCountForAverage == true And metric.PreviousWeeks52ValueDateCount > 0 %}
-                            &nbsp;Prev 52w - {{ metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueDateCount | Plus:'.5' | Floor }}<br/>
+                            &nbsp;Prev 52w: {{ metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueDateCount | Plus:'.5' | Floor }}<br/>
                         {% elseif UseDateCountForAverage == false And metric.PreviousWeeks52ValueWeekCount > 0 %}
-                            &nbsp;Prev 52w - {{ metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueWeekCount | Plus:'.5' | Floor }}<br/>
+                            &nbsp;Prev 52w: {{ metric.PreviousWeeks52Value | DividedBy:metric.PreviousWeeks52ValueWeekCount | Plus:'.5' | Floor }}<br/>
                         {% else %}
-                            &nbsp;Prev 52w - {{ metric.PreviousWeeks52Value }}<br/>
+                            &nbsp;Prev 52w: {{ metric.PreviousWeeks52Value }}<br/>
                         {% endif %}
                     {% endif %}
                 {% endif %}

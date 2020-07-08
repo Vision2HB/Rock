@@ -3,11 +3,11 @@
     display: inline;
 }
 </style>
-{% for metric in MetricsXData %}
+{% for metric in Metrics %}
 
     {% if ShowTitle == true %}
         {% if DetailPage != null and DetailPage != "" %}
-            <a href="{{ DetailPage }}?MetricCategoryId={{ metric.CategoryId }}"><h1>{{ metric.Title }}</h1></a>
+            <a href="{{ DetailPage }}?MetricCategoryId={{ metric.Id }}"><h1>{{ metric.Title }}</h1></a>
         {% else %}
             <h1>{{ metric.Title }}</h1>
         {% endif %}
