@@ -318,7 +318,7 @@ namespace com_bemaservices.Reporting.Dashboard
 
                 var entityTypeList = new List<EntityPair> ();
 
-                string metricPartitions = GetPartitionsFromPageParameters ( string.Join ( "|", MetricCategoryIds.Select ( n => n.ToString () ).ToArray () ) );
+                string metricPartitions = GetPartitionsFromPageParameters ( metricId.ToString () );
                 if ( metricPartitions == null || metricPartitions == "" )
                 {
                     metricPartitions = GetAttributeValue ( "MetricEntityTypeEntityIds" );
