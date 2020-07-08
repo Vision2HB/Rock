@@ -96,8 +96,8 @@ namespace com_bemaservices.Rest.Controllers
                     currentDateTime = dateRange.Split ( ',' ).LastOrDefault ().AsDateTime ().Value;
                 }
                 currentDateTime = new DateTime ( currentDateTime.Year, currentDateTime.Month, currentDateTime.Day);
-                DateTime firstDayOfNextYear = new DateTime( RockDateTime.Now.Year + 1, 1, 1 );
-                DateTime firstDayOfLastYear = new DateTime ( RockDateTime.Now.Year - 1, 1, 1 );
+                DateTime firstDayOfNextYear = new DateTime( currentDateTime.Year + 1, 1, 1 );
+                DateTime firstDayOfLastYear = new DateTime ( currentDateTime.Year - 1, 1, 1 );
                 DateTime currentDayOfLastYear = new DateTime ( currentDateTime.Year - 1, currentDateTime.Month, currentDateTime.Day );
                 DateTime firstDayOf52w = currentDateTime.AddDays( -52 * 7 );
                 DateTime firstDayOfPrev52w = currentDateTime.AddDays ( -104 * 7 );
@@ -118,7 +118,8 @@ namespace com_bemaservices.Rest.Controllers
                             {
                                 metricsXData.CategoryId = metric.MetricCategories.FirstOrDefault ().Id;
                             }
-                            var endDate = new DateTime ( currentDateTime.Year, currentDateTime.Month, currentDateTime.Day + 1 );
+                            var endDate = new DateTime ( currentDateTime.Year, currentDateTime.Month, currentDateTime.Day );
+                            endDate = endDate.AddDays ( 1 );
 
                             var qryMeasureValues = metricValueService.Queryable()
                                 .Where( a => a.MetricId == metricsXData.Id )

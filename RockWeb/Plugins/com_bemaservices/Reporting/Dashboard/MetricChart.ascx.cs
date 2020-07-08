@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Web.UI;
+using System.Web.Mvc;
 
 using Rock;
 using Rock.Attribute;
@@ -26,7 +28,6 @@ using Rock.Data;
 using Rock.Model;
 using Rock.Web.Cache;
 using Rock.Web.UI.Controls;
-
 
 namespace com_bemaservices.Reporting.Dashboard
 {
@@ -42,6 +43,8 @@ namespace com_bemaservices.Reporting.Dashboard
     [CustomDropdownListField ( "Chart Type", "", "Line,Bar,Pie", false, "Line", order: 9 )]
     [DecimalField ( "Pie Inner Radius", "If this is a pie chart, specific the inner radius to have a donut hole. For example, specify: 0.75 to have the inner radius as 75% of the outer radius.", false, 0, order: 10 )]
     [BooleanField ( "Pie Show Labels", "If this is a pie chart, specify if labels show be shown", true, "", order: 11 )]
+    [OutputCache ( NoStore = true, Duration = 0, Location = System.Web.UI.OutputCacheLocation.None, VaryByParam = "*" )]
+
     public partial class MetricChart : MetricWidget
     {
         /// <summary>
@@ -63,6 +66,7 @@ namespace com_bemaservices.Reporting.Dashboard
         /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
         protected override void OnLoad( EventArgs e )
         {
+
             base.OnLoad ( e );
 
             if ( PageParameter ( "GetChartData" ).AsBoolean () && ( PageParameter ( "GetChartDataBlockId" ).AsInteger () == this.BlockId ) && PageParameter ( "MetricId" ).AsInteger () > 0 )
@@ -83,7 +87,17 @@ namespace com_bemaservices.Reporting.Dashboard
                 pageReference.QueryString.Add ( "GetChartData", "true" );
                 pageReference.QueryString.Add ( "GetChartDataBlockId", this.BlockId.ToString () );
                 pageReference.QueryString.Add ( "TimeStamp", RockDateTime.Now.ToJavascriptMilliseconds ().ToString () );
-                var dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( GetAttributeValue ( "DateRange" ) );
+
+                DateRange dateRange;
+                var pageDateRange = PageParameter ( "DateRange" );
+                if ( pageDateRange != null & pageDateRange != "" )
+                {
+                    dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( pageDateRange );
+                }
+                else
+                {
+                    dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( GetAttributeValue ( "DateRange" ) );
+                }
 
                 var metrics = PageParameter ( "MetricIds" );
                 List<int> metricIds;
@@ -308,7 +322,16 @@ namespace com_bemaservices.Reporting.Dashboard
                 MetricValueService metricValueService = new MetricValueService ( rockContext );
                 var metric = metricService.Get ( metricId );
 
-                var dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( GetAttributeValue ( "DateRange" ) );
+                DateRange dateRange;
+                var pageDateRange = PageParameter ( "DateRange" );
+                if ( pageDateRange != null & pageDateRange != "" )
+                {
+                    dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( pageDateRange );
+                }
+                else
+                {
+                    dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( GetAttributeValue ( "DateRange" ) );
+                }
 
                 var qryMeasureValues = metricValueService.Queryable ()
                     .Where ( a => a.MetricId == metric.Id );
@@ -319,6 +342,7 @@ namespace com_bemaservices.Reporting.Dashboard
                 var entityTypeList = new List<EntityPair> ();
 
                 string metricPartitions = GetPartitionsFromPageParameters ( metricId.ToString () );
+
                 if ( metricPartitions == null || metricPartitions == "" )
                 {
                     metricPartitions = GetAttributeValue ( "MetricEntityTypeEntityIds" );

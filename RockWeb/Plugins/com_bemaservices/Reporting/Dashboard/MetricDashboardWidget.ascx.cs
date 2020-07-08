@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+using System.Web.Mvc;
 using System.Linq;
 using Rock;
 using Rock.Attribute;
@@ -41,6 +42,7 @@ namespace com_bemaservices.Reporting.Dashboard
     [Description( "Dashboard Widget from Lava using YTD, Last Year, 52 Week, Last Week metric values" )]
     [CodeEditorField ( "Lava Template", "The text (or html) to display as a dashboard widget", CodeEditorMode.Lava, CodeEditorTheme.Rock, 200, Order = 6, DefaultValue =
 @"{% include '~/PlugIns/com_bemaservices/Reporting/Dashboard/Lava/BEMAMetricsBlock.lava' %}" )]
+    [OutputCache ( NoStore = true, Duration = 0, Location = System.Web.UI.OutputCacheLocation.None, VaryByParam = "*" )]
 
 
     public partial class MetricDashboardWidget : MetricWidget
@@ -84,7 +86,17 @@ namespace com_bemaservices.Reporting.Dashboard
                         result += string.Format ( "&options={0}", options );
                     }
 
-                    var dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues(GetAttributeValue ( "DateRange" ));
+                    DateRange dateRange;
+                    var pageDateRange = PageParameter ( "DateRange" );
+                    if ( pageDateRange != null && pageDateRange != "")
+                    {
+                        dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( pageDateRange );
+                    }
+                    else
+                    {
+                        dateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues ( GetAttributeValue ( "DateRange" ) );
+                    }
+
                     if ( dateRange != null )
                     {
                         if (dateRange.End > RockDateTime.Now)
