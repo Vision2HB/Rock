@@ -937,9 +937,9 @@ DECLARE @TargetGroup TABLE(Id int NOT NULL,
 
     
     /* Remove All GroupMigration ForeignIds from Groups */
-    UPDATE [Group]
-    SET ForeignId = NULL
-    WHERE ForeignKey = @ForeignKey
+    --UPDATE [Group]
+    --SET ForeignId = NULL
+    --WHERE ForeignKey = @ForeignKey
 
 
 END
