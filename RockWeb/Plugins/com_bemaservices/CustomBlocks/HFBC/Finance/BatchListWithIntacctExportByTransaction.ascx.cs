@@ -19,12 +19,12 @@ using System.Text;
 
 namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 {
-    [DisplayName( "Batch List with Intacct Export By Transaction" )]
-    [Category( "BEMA Services > Finance" )]
-    [Description( "Financial batch list that supports GL exports." )]
-    [LinkedPage( "Detail Page", order: 0 )]
-    [BooleanField( "Show Accounting Code", "Should the accounting code column be displayed.", false, "", 1 )]
-    public partial class BatchListWithIntacctExportByTransaction : Rock.Web.UI.RockBlock, IPostBackEventHandler
+    [DisplayName("Batch List with Intacct Export")]
+    [Category("BEMA Services > Finance")]
+    [Description("Financial batch list that supports GL exports.")]
+    [LinkedPage("Detail Page", order: 0)]
+    [BooleanField("Show Accounting Code", "Should the accounting code column be displayed.", false, "", 1)]
+    public partial class BatchListWithIntacctExport : Rock.Web.UI.RockBlock, IPostBackEventHandler
     {
         #region Fields
 
@@ -40,13 +40,13 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// Raises the <see cref="E:System.Web.UI.Control.Init" /> event.
         /// </summary>
         /// <param name="e">An <see cref="T:System.EventArgs" /> object that contains the event data.</param>
-        protected override void OnInit( EventArgs e )
+        protected override void OnInit(EventArgs e)
         {
-            base.OnInit( e );
+            base.OnInit(e);
 
             // this event gets fired after block settings are updated. it's nice to repaint the screen if these settings would alter it
             this.BlockUpdated += Block_BlockUpdated;
-            this.AddConfigurationUpdateTrigger( upnlContent );
+            this.AddConfigurationUpdateTrigger(upnlContent);
 
             gfBatchFilter.ApplyFilterClick += gfBatchFilter_ApplyFilterClick;
             gfBatchFilter.ClearFilterClick += gfBatchFilter_ClearFilterClick;
@@ -63,9 +63,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             ddlAction = new RockDropDownList();
             ddlAction.ID = "ddlAction";
             ddlAction.CssClass = "pull-left input-width-lg";
-            ddlAction.Items.Add( new ListItem( "-- Select Action --", string.Empty ) );
-            ddlAction.Items.Add( new ListItem( "Open Selected Batches", "OPEN" ) );
-            ddlAction.Items.Add( new ListItem( "Close Selected Batches", "CLOSE" ) );
+            ddlAction.Items.Add(new ListItem("-- Select Action --", string.Empty));
+            ddlAction.Items.Add(new ListItem("Open Selected Batches", "OPEN"));
+            ddlAction.Items.Add(new ListItem("Close Selected Batches", "CLOSE"));
             string deleteScript = @"
     $('table.js-grid-batch-list a.grid-delete-button').click(function( e ){
         var $btn = $(this);
@@ -85,7 +85,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         });
     });
 ";
-            ScriptManager.RegisterStartupScript( gBatchList, gBatchList.GetType(), "deleteBatchScript", deleteScript, true );
+            ScriptManager.RegisterStartupScript(gBatchList, gBatchList.GetType(), "deleteBatchScript", deleteScript, true);
 
             btnGLExport = new BootstrapButton();
             btnGLExport.ID = "btnGLExport";
@@ -94,8 +94,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             btnGLExport.ToolTip = "GL Export";
             btnGLExport.Click += btnGLExport_Click;
 
-            gBatchList.Actions.AddCustomActionControl( ddlAction );
-            gBatchList.Actions.AddCustomActionControl( btnGLExport );
+            gBatchList.Actions.AddCustomActionControl(ddlAction);
+            gBatchList.Actions.AddCustomActionControl(btnGLExport);
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void gfBatchFilter_ClearFilterClick( object sender, EventArgs e )
+        protected void gfBatchFilter_ClearFilterClick(object sender, EventArgs e)
         {
             gfBatchFilter.DeleteUserPreferences();
             BindFilter();
@@ -113,18 +113,18 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// Raises the <see cref="E:System.Web.UI.Control.Load" /> event.
         /// </summary>
         /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
-        protected override void OnLoad( EventArgs e )
+        protected override void OnLoad(EventArgs e)
         {
             nbResult.Visible = false;
 
-            if ( !Page.IsPostBack )
+            if (!Page.IsPostBack)
             {
                 SetVisibilityOption();
                 BindFilter();
                 BindGrid();
             }
 
-            ScriptManager.GetCurrent( this.Page ).RegisterPostBackControl( lbDownload );
+            ScriptManager.GetCurrent(this.Page).RegisterPostBackControl(lbDownload);
         }
 
         /// <summary>
@@ -152,8 +152,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             }}
         }}
     }});";
-            string script = string.Format( scriptFormat, ddlAction.ClientID, gBatchList.ClientID, Page.ClientScript.GetPostBackEventReference( this, "StatusUpdate" ) );
-            ScriptManager.RegisterStartupScript( ddlAction, ddlAction.GetType(), "ConfirmStatusChange", script, true );
+            string script = string.Format(scriptFormat, ddlAction.ClientID, gBatchList.ClientID, Page.ClientScript.GetPostBackEventReference(this, "StatusUpdate"));
+            ScriptManager.RegisterStartupScript(ddlAction, ddlAction.GetType(), "ConfirmStatusChange", script, true);
         }
 
         #endregion
@@ -165,7 +165,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void Block_BlockUpdated( object sender, EventArgs e )
+        protected void Block_BlockUpdated(object sender, EventArgs e)
         {
             SetVisibilityOption();
             BindGrid();
@@ -176,9 +176,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="Rock.Web.UI.Controls.GridFilter.DisplayFilterValueArgs"/> instance containing the event data.</param>
-        protected void gfBatchFilter_DisplayFilterValue( object sender, Rock.Web.UI.Controls.GridFilter.DisplayFilterValueArgs e )
+        protected void gfBatchFilter_DisplayFilterValue(object sender, Rock.Web.UI.Controls.GridFilter.DisplayFilterValueArgs e)
         {
-            switch ( e.Key )
+            switch (e.Key)
             {
                 case "Row Limit":
                     {
@@ -189,14 +189,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 
                 case "Date Range":
                     {
-                        e.Value = DateRangePicker.FormatDelimitedValues( e.Value );
+                        e.Value = DateRangePicker.FormatDelimitedValues(e.Value);
                         break;
                     }
 
                 case "Status":
                     {
                         var status = e.Value.ConvertToEnumOrNull<BatchStatus>();
-                        if ( status.HasValue )
+                        if (status.HasValue)
                         {
                             e.Value = status.ConvertToString();
                         }
@@ -211,9 +211,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
                 case "Contains Transaction Type":
                     {
                         var transactionTypeValueId = e.Value.AsIntegerOrNull();
-                        if ( transactionTypeValueId.HasValue )
+                        if (transactionTypeValueId.HasValue)
                         {
-                            var transactionTypeValue = DefinedValueCache.Read( transactionTypeValueId.Value );
+                            var transactionTypeValue = DefinedValueCache.Read(transactionTypeValueId.Value);
                             e.Value = transactionTypeValue != null ? transactionTypeValue.ToString() : string.Empty;
                         }
                         else
@@ -226,8 +226,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 
                 case "Campus":
                     {
-                        var campus = CampusCache.Read( e.Value.AsInteger() );
-                        if ( campus != null )
+                        var campus = CampusCache.Read(e.Value.AsInteger());
+                        if (campus != null)
                         {
                             e.Value = campus.Name;
                         }
@@ -246,18 +246,18 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void gfBatchFilter_ApplyFilterClick( object sender, EventArgs e )
+        protected void gfBatchFilter_ApplyFilterClick(object sender, EventArgs e)
         {
-            gfBatchFilter.SaveUserPreference( "Date Range", drpBatchDate.DelimitedValues );
-            gfBatchFilter.SaveUserPreference( "Title", tbTitle.Text );
-            if ( tbAccountingCode.Visible )
+            gfBatchFilter.SaveUserPreference("Date Range", drpBatchDate.DelimitedValues);
+            gfBatchFilter.SaveUserPreference("Title", tbTitle.Text);
+            if (tbAccountingCode.Visible)
             {
-                gfBatchFilter.SaveUserPreference( "Accounting Code", tbAccountingCode.Text );
+                gfBatchFilter.SaveUserPreference("Accounting Code", tbAccountingCode.Text);
             }
 
-            gfBatchFilter.SaveUserPreference( "Status", ddlStatus.SelectedValue );
-            gfBatchFilter.SaveUserPreference( "Campus", campCampus.SelectedValue );
-            gfBatchFilter.SaveUserPreference( "Contains Transaction Type", ddlTransactionType.SelectedValue );
+            gfBatchFilter.SaveUserPreference("Status", ddlStatus.SelectedValue);
+            gfBatchFilter.SaveUserPreference("Campus", campCampus.SelectedValue);
+            gfBatchFilter.SaveUserPreference("Contains Transaction Type", ddlTransactionType.SelectedValue);
 
             BindGrid();
         }
@@ -267,41 +267,41 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-        protected void gBatchList_Delete( object sender, RowEventArgs e )
+        protected void gBatchList_Delete(object sender, RowEventArgs e)
         {
             var rockContext = new RockContext();
-            var batchService = new FinancialBatchService( rockContext );
-            var transactionService = new FinancialTransactionService( rockContext );
-            var batch = batchService.Get( e.RowKeyId );
-            if ( batch != null )
+            var batchService = new FinancialBatchService(rockContext);
+            var transactionService = new FinancialTransactionService(rockContext);
+            var batch = batchService.Get(e.RowKeyId);
+            if (batch != null)
             {
-                if ( UserCanEdit || batch.IsAuthorized( Rock.Security.Authorization.EDIT, CurrentPerson ) )
+                if (UserCanEdit || batch.IsAuthorized(Rock.Security.Authorization.EDIT, CurrentPerson))
                 {
                     string errorMessage;
-                    if ( !batchService.CanDelete( batch, out errorMessage ) )
+                    if (!batchService.CanDelete(batch, out errorMessage))
                     {
-                        mdGridWarning.Show( errorMessage, ModalAlertType.Information );
+                        mdGridWarning.Show(errorMessage, ModalAlertType.Information);
                         return;
                     }
 
-                    rockContext.WrapTransaction( () =>
+                    rockContext.WrapTransaction(() =>
                     {
-                        foreach ( var txn in transactionService.Queryable()
-                            .Where( t => t.BatchId == batch.Id ) )
+                        foreach (var txn in transactionService.Queryable()
+                            .Where(t => t.BatchId == batch.Id))
                         {
-                            transactionService.Delete( txn );
+                            transactionService.Delete(txn);
                         }
                         HistoryService.SaveChanges(
                             rockContext,
-                            typeof( FinancialBatch ),
+                            typeof(FinancialBatch),
                             Rock.SystemGuid.Category.HISTORY_FINANCIAL_BATCH.AsGuid(),
                             batch.Id,
-                            new List<string> { "Deleted the batch" } );
+                            new List<string> { "Deleted the batch" });
 
-                        batchService.Delete( batch );
+                        batchService.Delete(batch);
 
                         rockContext.SaveChanges();
-                    } );
+                    });
                 }
             }
 
@@ -313,23 +313,23 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="GridViewRowEventArgs"/> instance containing the event data.</param>
-        protected void gBatchList_RowDataBound( object sender, GridViewRowEventArgs e )
+        protected void gBatchList_RowDataBound(object sender, GridViewRowEventArgs e)
         {
-            if ( e.Row.RowType == DataControlRowType.DataRow )
+            if (e.Row.RowType == DataControlRowType.DataRow)
             {
                 var batchRow = e.Row.DataItem as BatchRow;
                 var deleteField = gBatchList.Columns.OfType<DeleteField>().First();
-                var cell = ( e.Row.Cells[gBatchList.Columns.IndexOf( deleteField )] as DataControlFieldCell ).Controls[0];
+                var cell = (e.Row.Cells[gBatchList.Columns.IndexOf(deleteField)] as DataControlFieldCell).Controls[0];
 
-                if ( batchRow != null )
+                if (batchRow != null)
                 {
-                    if ( batchRow.TransactionCount > 0 )
+                    if (batchRow.TransactionCount > 0)
                     {
-                        e.Row.AddCssClass( "js-has-transactions" );
+                        e.Row.AddCssClass("js-has-transactions");
                     }
 
                     // Hide delete button if the batch is closed.
-                    if ( batchRow.Status == BatchStatus.Closed && cell != null )
+                    if (batchRow.Status == BatchStatus.Closed && cell != null)
                     {
                         cell.Visible = false;
                     }
@@ -342,9 +342,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-        protected void gBatchList_Edit( object sender, RowEventArgs e )
+        protected void gBatchList_Edit(object sender, RowEventArgs e)
         {
-            NavigateToLinkedPage( "DetailPage", "batchId", e.RowKeyId );
+            NavigateToLinkedPage("DetailPage", "batchId", e.RowKeyId);
         }
 
         /// <summary>
@@ -352,9 +352,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void gBatchList_Add( object sender, EventArgs e )
+        protected void gBatchList_Add(object sender, EventArgs e)
         {
-            NavigateToLinkedPage( "DetailPage", "batchId", 0 );
+            NavigateToLinkedPage("DetailPage", "batchId", 0);
         }
 
         /// <summary>
@@ -362,73 +362,73 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private void gBatchList_GridRebind( object sender, GridRebindEventArgs e )
+        private void gBatchList_GridRebind(object sender, GridRebindEventArgs e)
         {
-            BindGrid( e.IsExporting );
+            BindGrid(e.IsExporting);
         }
 
         /// <summary>
         /// When implemented by a class, enables a server control to process an event raised when a form is posted to the server.
         /// </summary>
         /// <param name="eventArgument">A <see cref="T:System.String" /> that represents an optional event argument to be passed to the event handler.</param>
-        public void RaisePostBackEvent( string eventArgument )
+        public void RaisePostBackEvent(string eventArgument)
         {
-            if ( eventArgument == "StatusUpdate" &&
+            if (eventArgument == "StatusUpdate" &&
                 ddlAction != null &&
                 ddlAction.SelectedValue != null &&
-                !string.IsNullOrWhiteSpace( ddlAction.SelectedValue ) )
+                !string.IsNullOrWhiteSpace(ddlAction.SelectedValue))
             {
                 var batchesSelected = new List<int>();
 
-                gBatchList.SelectedKeys.ToList().ForEach( b => batchesSelected.Add( b.ToString().AsInteger() ) );
+                gBatchList.SelectedKeys.ToList().ForEach(b => batchesSelected.Add(b.ToString().AsInteger()));
 
-                if ( batchesSelected.Any() )
+                if (batchesSelected.Any())
                 {
                     var newStatus = ddlAction.SelectedValue == "OPEN" ? BatchStatus.Open : BatchStatus.Closed;
 
                     var rockContext = new RockContext();
-                    var batchService = new FinancialBatchService( rockContext );
+                    var batchService = new FinancialBatchService(rockContext);
                     var batchesToUpdate = batchService.Queryable()
-                        .Where( b =>
-                            batchesSelected.Contains( b.Id ) &&
-                            b.Status != newStatus )
+                        .Where(b =>
+                           batchesSelected.Contains(b.Id) &&
+                           b.Status != newStatus)
                         .ToList();
 
-                    foreach ( var batch in batchesToUpdate )
+                    foreach (var batch in batchesToUpdate)
                     {
                         var changes = new List<string>();
-                        History.EvaluateChange( changes, "Status", batch.Status, newStatus );
+                        History.EvaluateChange(changes, "Status", batch.Status, newStatus);
                         batch.Status = newStatus;
 
-                        if ( !batch.IsValid )
+                        if (!batch.IsValid)
                         {
-                            string message = string.Format( "Unable to update status for the selected batches.<br/><br/>{0}", batch.ValidationResults.AsDelimited( "<br/>" ) );
-                            maWarningDialog.Show( message, ModalAlertType.Warning );
+                            string message = string.Format("Unable to update status for the selected batches.<br/><br/>{0}", batch.ValidationResults.AsDelimited("<br/>"));
+                            maWarningDialog.Show(message, ModalAlertType.Warning);
                             return;
                         }
 
                         HistoryService.SaveChanges(
                             rockContext,
-                            typeof( FinancialBatch ),
+                            typeof(FinancialBatch),
                             Rock.SystemGuid.Category.HISTORY_FINANCIAL_BATCH.AsGuid(),
                             batch.Id,
                             changes,
-                            false );
+                            false);
                     }
 
                     rockContext.SaveChanges();
 
                     nbResult.Text = string.Format(
                         "{0} batches were {1}.",
-                        batchesToUpdate.Count().ToString( "N0" ),
-                        newStatus == BatchStatus.Open ? "opened" : "closed" );
+                        batchesToUpdate.Count().ToString("N0"),
+                        newStatus == BatchStatus.Open ? "opened" : "closed");
 
                     nbResult.NotificationBoxType = NotificationBoxType.Success;
                     nbResult.Visible = true;
                 }
                 else
                 {
-                    nbResult.Text = string.Format( "There were not any batches selected." );
+                    nbResult.Text = string.Format("There were not any batches selected.");
                     nbResult.NotificationBoxType = NotificationBoxType.Warning;
                     nbResult.Visible = true;
                 }
@@ -443,9 +443,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private void btnGLExport_Click( object sender, EventArgs e )
+        private void btnGLExport_Click(object sender, EventArgs e)
         {
-            if ( gBatchList.SelectedKeys.Any() )
+            if (gBatchList.SelectedKeys.Any())
             {
                 dpDate.SelectedDate = RockDateTime.Now;
 
@@ -454,7 +454,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             }
             else
             {
-                nbResult.Text = string.Format( "There were not any batches selected." );
+                nbResult.Text = string.Format("There were not any batches selected.");
                 nbResult.NotificationBoxType = NotificationBoxType.Warning;
                 nbResult.Visible = true;
             }
@@ -465,14 +465,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void lbExportSave_Click( object sender, EventArgs e )
+        protected void lbExportSave_Click(object sender, EventArgs e)
         {
 
             pnlExportModal.Visible = false;
             mdExport.Hide();
 
-            string script = string.Format( "document.getElementById('{0}').click();", lbDownload.ClientID );
-            ScriptManager.RegisterStartupScript( Page, Page.GetType(), "PerformExport", script, true );
+            string script = string.Format("document.getElementById('{0}').click();", lbDownload.ClientID);
+            ScriptManager.RegisterStartupScript(Page, Page.GetType(), "PerformExport", script, true);
         }
 
         /// <summary>
@@ -480,8 +480,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void lbDownload_Click( object sender, EventArgs e )
-        { 
+        protected void lbDownload_Click(object sender, EventArgs e)
+        {
             var rockContext = new RockContext();
             var batches = new List<FinancialBatch>();
 
@@ -489,33 +489,36 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             List<GLRecord> records = new List<GLRecord>();
             var batchesSelected = new List<int>();
 
-            gBatchList.SelectedKeys.ToList().ForEach( b => batchesSelected.Add( b.ToString().AsInteger() ) );
+            gBatchList.SelectedKeys.ToList().ForEach(b => batchesSelected.Add(b.ToString().AsInteger()));
 
-            if ( batchesSelected.Any() )
+            if (batchesSelected.Any())
             {
-                batches = new FinancialBatchService( rockContext )
+                batches = new FinancialBatchService(rockContext)
                     .Queryable()
-                    //.Include( b => b.Transactions )
-                    //.Include( b => b.Transactions.SelectMany( t => t.TransactionDetails ) )
-                    //.Include( b => b.Transactions.Select( t => t.FinancialPaymentDetail.CurrencyTypeValue ) )
-                    //.Include( b => b.Transactions.Select( t => t.AuthorizedPersonAlias.Person) )
                     .Where(b => batchesSelected.Contains(b.Id))
                     .ToList();
 
-                records.AddRange( GLRecordsForBatch( batches, dpDate.SelectedDate.Value ) );
+                if (dvpJournalType.SelectedDefinedValueId.HasValue)
+                {
+                    var journalValue = DefinedValueCache.Get(dvpJournalType.SelectedDefinedValueId.Value);
+                    if (journalValue != null)
+                    {
+                        records.AddRange(GLRecordsForBatch(batches, dpDate.SelectedDate.Value, journalValue.Value));
+                    }
+                }
             }
 
-            if ( !UserCanEdit )
+            if (!UserCanEdit)
             {
                 return;
             }
 
             // Update the batch to reflect that it has been exported.
-            foreach ( var batch in batches )
+            foreach (var batch in batches)
             {
                 batch.LoadAttributes();
-                batch.SetAttributeValue( "GLExported", "true" );
-                batch.SaveAttributeValues( rockContext );
+                batch.SetAttributeValue("GLExported", "true");
+                batch.SaveAttributeValues(rockContext);
             }
             rockContext.SaveChanges();
 
@@ -524,10 +527,10 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             Page.EnableViewState = false;
             Page.Response.Clear();
             Page.Response.ContentType = "text/csv";
-            Page.Response.AppendHeader( "Content-Disposition", "attachment; filename=GLINTACCT.csv" );
-            Page.Response.Write( @"DONOTIMPORT,RECEIPT_DATE,PAYMETHOD,DOCDATE,DOCNUMBER,DESCRIPTION,DEPOSITTO,BANKACCOUNTID,DEPOSITDATE,UNDEPACCTNO,LINE_NO,ACCT_NO,AMOUNT,DEPT_ID,LOCATION_ID,ITEM_MEMO,OTHERRECEIPTSENTRY_PROJECTID,OTHERRECEIPTSENTRY_CLASSID,PAYER_NAME" );
+            Page.Response.AppendHeader("Content-Disposition", "attachment; filename=GLINTACCT.csv");
+            Page.Response.Write(@"DONOTIMPORT,JOURNAL,DATE,DESCRIPTION,LINE_NO,ACCT_NO,DEBIT,CREDIT,LOCATION_ID,GLENTRY_PROJECTID,GLENTRY_CLASSID,DEPT_ID,MEMO,ROCK_TRX");
             Page.Response.Write("\r\n");
-            Page.Response.Write( string.Join( "\r\n", records.Select( r => r.ToString() ).ToArray() ) );
+            Page.Response.Write(string.Join("\r\n", records.Select(r => r.ToString()).ToArray()));
             Page.Response.Flush();
             Page.Response.End();
         }
@@ -538,14 +541,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 
         private void SetVisibilityOption()
         {
-            bool showAccountingCode = GetAttributeValue( "ShowAccountingCode" ).AsBoolean();
+            bool showAccountingCode = GetAttributeValue("ShowAccountingCode").AsBoolean();
             tbAccountingCode.Visible = showAccountingCode;
             gBatchList.Columns[4].Visible = showAccountingCode;
 
-            if ( showAccountingCode )
+            if (showAccountingCode)
             {
-                string accountingCode = gfBatchFilter.GetUserPreference( "Accounting Code" );
-                tbAccountingCode.Text = !string.IsNullOrWhiteSpace( accountingCode ) ? accountingCode : string.Empty;
+                string accountingCode = gfBatchFilter.GetUserPreference("Accounting Code");
+                tbAccountingCode.Text = !string.IsNullOrWhiteSpace(accountingCode) ? accountingCode : string.Empty;
             }
         }
 
@@ -554,35 +557,35 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         private void BindFilter()
         {
-            string titleFilter = gfBatchFilter.GetUserPreference( "Title" );
-            tbTitle.Text = !string.IsNullOrWhiteSpace( titleFilter ) ? titleFilter : string.Empty;
+            string titleFilter = gfBatchFilter.GetUserPreference("Title");
+            tbTitle.Text = !string.IsNullOrWhiteSpace(titleFilter) ? titleFilter : string.Empty;
 
-            if ( tbAccountingCode.Visible )
+            if (tbAccountingCode.Visible)
             {
-                string accountingCode = gfBatchFilter.GetUserPreference( "Accounting Code" );
-                tbAccountingCode.Text = !string.IsNullOrWhiteSpace( accountingCode ) ? accountingCode : string.Empty;
+                string accountingCode = gfBatchFilter.GetUserPreference("Accounting Code");
+                tbAccountingCode.Text = !string.IsNullOrWhiteSpace(accountingCode) ? accountingCode : string.Empty;
             }
 
             ddlStatus.BindToEnum<BatchStatus>();
-            ddlStatus.Items.Insert( 0, Rock.Constants.All.ListItem );
-            string statusFilter = gfBatchFilter.GetUserPreference( "Status" );
-            if ( string.IsNullOrWhiteSpace( statusFilter ) )
+            ddlStatus.Items.Insert(0, Rock.Constants.All.ListItem);
+            string statusFilter = gfBatchFilter.GetUserPreference("Status");
+            if (string.IsNullOrWhiteSpace(statusFilter))
             {
                 statusFilter = BatchStatus.Open.ConvertToInt().ToString();
             }
 
-            ddlStatus.SetValue( statusFilter );
+            ddlStatus.SetValue(statusFilter);
 
-            var definedTypeTransactionTypes = DefinedTypeCache.Read( Rock.SystemGuid.DefinedType.FINANCIAL_TRANSACTION_TYPE.AsGuid() );
-            ddlTransactionType.BindToDefinedType( definedTypeTransactionTypes, true );
-            ddlTransactionType.SetValue( gfBatchFilter.GetUserPreference( "Contains Transaction Type" ) );
+            var definedTypeTransactionTypes = DefinedTypeCache.Read(Rock.SystemGuid.DefinedType.FINANCIAL_TRANSACTION_TYPE.AsGuid());
+            ddlTransactionType.BindToDefinedType(definedTypeTransactionTypes, true);
+            ddlTransactionType.SetValue(gfBatchFilter.GetUserPreference("Contains Transaction Type"));
 
             var campusi = CampusCache.All();
             campCampus.Campuses = campusi;
             campCampus.Visible = campusi.Any();
-            campCampus.SetValue( gfBatchFilter.GetUserPreference( "Campus" ) );
+            campCampus.SetValue(gfBatchFilter.GetUserPreference("Campus"));
 
-            drpBatchDate.DelimitedValues = gfBatchFilter.GetUserPreference( "Date Range" );
+            drpBatchDate.DelimitedValues = gfBatchFilter.GetUserPreference("Date Range");
         }
 
         /// <summary>
@@ -590,7 +593,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// </summary>
         /// <param name="value">The value.</param>
         /// <returns></returns>
-        public string FormatValueAsCurrency( decimal value )
+        public string FormatValueAsCurrency(decimal value)
         {
             return value.FormatAsCurrency();
         }
@@ -598,25 +601,25 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// <summary>
         /// Binds the grid.
         /// </summary>
-        private void BindGrid( bool isExporting = false )
+        private void BindGrid(bool isExporting = false)
         {
 
-            var txnCountCol = gBatchList.ColumnsOfType<RockBoundField>().FirstOrDefault( c => c.DataField == "TransactionCount" );
-            if ( txnCountCol != null )
+            var txnCountCol = gBatchList.ColumnsOfType<RockBoundField>().FirstOrDefault(c => c.DataField == "TransactionCount");
+            if (txnCountCol != null)
             {
                 txnCountCol.HeaderText = isExporting ? "Transaction Count" :
                     "<span class='hidden-print'>Transaction Count</span><span class='visible-print-inline'>Txns</span>";
             }
 
-            var txnAmountCol = gBatchList.ColumnsOfType<CurrencyField>().FirstOrDefault( c => c.DataField == "TransactionAmount" );
-            if ( txnAmountCol != null )
+            var txnAmountCol = gBatchList.ColumnsOfType<CurrencyField>().FirstOrDefault(c => c.DataField == "TransactionAmount");
+            if (txnAmountCol != null)
             {
                 txnAmountCol.HeaderText = isExporting ? "Transaction Amount" :
                     "<span class='hidden-print'>Transaction Total</span><span class='visible-print-inline'>Txn Total</span>";
             }
 
-            var accountsCol = gBatchList.ColumnsOfType<RockBoundField>().FirstOrDefault( c => c.HeaderText == "Accounts" );
-            if ( accountsCol != null )
+            var accountsCol = gBatchList.ColumnsOfType<RockBoundField>().FirstOrDefault(c => c.HeaderText == "Accounts");
+            if (accountsCol != null)
             {
                 accountsCol.DataField = isExporting ? "AccountSummaryText" : "AccountSummaryHtml";
             }
@@ -624,55 +627,55 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             try
             {
                 var qry = GetQuery().AsNoTracking();
-                var batchRowQry = qry.Select( b => new BatchRow
+                var batchRowQry = qry.Select(b => new BatchRow
                 {
                     Id = b.Id,
                     BatchStartDateTime = b.BatchStartDateTime.Value,
                     Name = b.Name,
                     AccountingSystemCode = b.AccountingSystemCode,
                     TransactionCount = b.Transactions.Count(),
-                    TransactionAmount = b.Transactions.Sum( t => ( decimal? ) ( t.TransactionDetails.Sum( d => ( decimal? ) d.Amount ) ?? 0.0M ) ) ?? 0.0M,
+                    TransactionAmount = b.Transactions.Sum(t => (decimal?)(t.TransactionDetails.Sum(d => (decimal?)d.Amount) ?? 0.0M)) ?? 0.0M,
                     ControlAmount = b.ControlAmount,
                     CampusName = b.Campus != null ? b.Campus.Name : "",
                     Status = b.Status,
-                    UnMatchedTxns = b.Transactions.Any( t => !t.AuthorizedPersonAliasId.HasValue ),
+                    UnMatchedTxns = b.Transactions.Any(t => !t.AuthorizedPersonAliasId.HasValue),
                     BatchNote = b.Note,
                     AccountSummaryList = b.Transactions
-                        .SelectMany( t => t.TransactionDetails )
-                        .GroupBy( d => d.AccountId )
-                        .Select( s => new BatchAccountSummary
-                        {
-                            AccountId = s.Key,
-                            AccountOrder = s.Max( d => d.Account.Order ),
-                            AccountName = s.Max( d => d.Account.Name ),
-                            Amount = s.Sum( d => ( decimal? ) d.Amount ) ?? 0.0M
-                        } )
-                        .OrderBy( s => s.AccountOrder )
-                        .ToList()
-                } );
+                       .SelectMany(t => t.TransactionDetails)
+                       .GroupBy(d => d.AccountId)
+                       .Select(s => new BatchAccountSummary
+                       {
+                           AccountId = s.Key,
+                           AccountOrder = s.Max(d => d.Account.Order),
+                           AccountName = s.Max(d => d.Account.Name),
+                           Amount = s.Sum(d => (decimal?)d.Amount) ?? 0.0M
+                       })
+                       .OrderBy(s => s.AccountOrder)
+                       .ToList()
+                });
 
-                gBatchList.SetLinqDataSource( batchRowQry.AsNoTracking() );
+                gBatchList.SetLinqDataSource(batchRowQry.AsNoTracking());
                 gBatchList.EntityTypeId = EntityTypeCache.Read<Rock.Model.FinancialBatch>().Id;
                 gBatchList.DataBind();
 
                 RegisterJavaScriptForGridActions();
 
-                var qryTransactionDetails = qry.SelectMany( a => a.Transactions ).SelectMany( a => a.TransactionDetails );
-                var accountSummaryQry = qryTransactionDetails.GroupBy( a => a.Account ).Select( a => new
+                var qryTransactionDetails = qry.SelectMany(a => a.Transactions).SelectMany(a => a.TransactionDetails);
+                var accountSummaryQry = qryTransactionDetails.GroupBy(a => a.Account).Select(a => new
                 {
                     a.Key.Name,
                     a.Key.Order,
-                    TotalAmount = ( decimal? ) a.Sum( d => d.Amount )
-                } ).OrderBy( a => a.Order );
+                    TotalAmount = (decimal?)a.Sum(d => d.Amount)
+                }).OrderBy(a => a.Order);
 
                 var summaryList = accountSummaryQry.ToList();
-                var grandTotalAmount = ( summaryList.Count > 0 ) ? summaryList.Sum( a => a.TotalAmount ?? 0 ) : 0;
-                string currencyFormat = GlobalAttributesCache.Value( "CurrencySymbol" ) + "{0:n}";
-                lGrandTotal.Text = string.Format( currencyFormat, grandTotalAmount );
-                rptAccountSummary.DataSource = summaryList.Select( a => new { a.Name, TotalAmount = string.Format( currencyFormat, a.TotalAmount ) } ).ToList();
+                var grandTotalAmount = (summaryList.Count > 0) ? summaryList.Sum(a => a.TotalAmount ?? 0) : 0;
+                string currencyFormat = GlobalAttributesCache.Value("CurrencySymbol") + "{0:n}";
+                lGrandTotal.Text = string.Format(currencyFormat, grandTotalAmount);
+                rptAccountSummary.DataSource = summaryList.Select(a => new { a.Name, TotalAmount = string.Format(currencyFormat, a.TotalAmount) }).ToList();
                 rptAccountSummary.DataBind();
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
                 nbWarningMessage.Text = ex.Message;
             }
@@ -687,83 +690,83 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         private IOrderedQueryable<FinancialBatch> GetQuery()
         {
             var rockContext = new RockContext();
-            var batchService = new FinancialBatchService( rockContext );
+            var batchService = new FinancialBatchService(rockContext);
             rockContext.Database.CommandTimeout = 90;
             var qry = batchService.Queryable()
-                .Where( b => b.BatchStartDateTime.HasValue );
+                .Where(b => b.BatchStartDateTime.HasValue);
 
             // filter by date
-            string dateRangeValue = gfBatchFilter.GetUserPreference( "Date Range" );
-            if ( !string.IsNullOrWhiteSpace( dateRangeValue ) )
+            string dateRangeValue = gfBatchFilter.GetUserPreference("Date Range");
+            if (!string.IsNullOrWhiteSpace(dateRangeValue))
             {
                 var drp = new DateRangePicker();
                 drp.DelimitedValues = dateRangeValue;
-                if ( drp.LowerValue.HasValue )
+                if (drp.LowerValue.HasValue)
                 {
-                    qry = qry.Where( b => b.BatchStartDateTime >= drp.LowerValue.Value );
+                    qry = qry.Where(b => b.BatchStartDateTime >= drp.LowerValue.Value);
                 }
 
-                if ( drp.UpperValue.HasValue )
+                if (drp.UpperValue.HasValue)
                 {
-                    var endOfDay = drp.UpperValue.Value.AddDays( 1 );
-                    qry = qry.Where( b => b.BatchStartDateTime < endOfDay );
+                    var endOfDay = drp.UpperValue.Value.AddDays(1);
+                    qry = qry.Where(b => b.BatchStartDateTime < endOfDay);
                 }
             }
 
             // filter by status
-            var status = gfBatchFilter.GetUserPreference( "Status" ).ConvertToEnumOrNull<BatchStatus>();
-            if ( status.HasValue )
+            var status = gfBatchFilter.GetUserPreference("Status").ConvertToEnumOrNull<BatchStatus>();
+            if (status.HasValue)
             {
-                qry = qry.Where( b => b.Status == status );
+                qry = qry.Where(b => b.Status == status);
             }
 
             // filter by batches that contain transactions of the specified transaction type
-            var transactionTypeValueId = gfBatchFilter.GetUserPreference( "Contains Transaction Type" ).AsIntegerOrNull();
-            if ( transactionTypeValueId.HasValue )
+            var transactionTypeValueId = gfBatchFilter.GetUserPreference("Contains Transaction Type").AsIntegerOrNull();
+            if (transactionTypeValueId.HasValue)
             {
-                qry = qry.Where( a => a.Transactions.Any( t => t.TransactionTypeValueId == transactionTypeValueId.Value ) );
+                qry = qry.Where(a => a.Transactions.Any(t => t.TransactionTypeValueId == transactionTypeValueId.Value));
             }
 
             // filter by title
-            string title = gfBatchFilter.GetUserPreference( "Title" );
-            if ( !string.IsNullOrEmpty( title ) )
+            string title = gfBatchFilter.GetUserPreference("Title");
+            if (!string.IsNullOrEmpty(title))
             {
-                qry = qry.Where( batch => batch.Name.StartsWith( title ) );
+                qry = qry.Where(batch => batch.Name.StartsWith(title));
             }
 
             // filter by accounting code
-            if ( tbAccountingCode.Visible )
+            if (tbAccountingCode.Visible)
             {
-                string accountingCode = gfBatchFilter.GetUserPreference( "Accounting Code" );
-                if ( !string.IsNullOrEmpty( accountingCode ) )
+                string accountingCode = gfBatchFilter.GetUserPreference("Accounting Code");
+                if (!string.IsNullOrEmpty(accountingCode))
                 {
-                    qry = qry.Where( batch => batch.AccountingSystemCode.StartsWith( accountingCode ) );
+                    qry = qry.Where(batch => batch.AccountingSystemCode.StartsWith(accountingCode));
                 }
             }
 
             // filter by campus
-            var campus = CampusCache.Read( gfBatchFilter.GetUserPreference( "Campus" ).AsInteger() );
-            if ( campus != null )
+            var campus = CampusCache.Read(gfBatchFilter.GetUserPreference("Campus").AsInteger());
+            if (campus != null)
             {
-                qry = qry.Where( b => b.CampusId == campus.Id );
+                qry = qry.Where(b => b.CampusId == campus.Id);
             }
 
             IOrderedQueryable<FinancialBatch> sortedQry = null;
 
             SortProperty sortProperty = gBatchList.SortProperty;
-            if ( sortProperty != null )
+            if (sortProperty != null)
             {
-                switch ( sortProperty.Property )
+                switch (sortProperty.Property)
                 {
                     case "TransactionCount":
                         {
-                            if ( sortProperty.Direction == SortDirection.Ascending )
+                            if (sortProperty.Direction == SortDirection.Ascending)
                             {
-                                sortedQry = qry.OrderBy( b => b.Transactions.Count() );
+                                sortedQry = qry.OrderBy(b => b.Transactions.Count());
                             }
                             else
                             {
-                                sortedQry = qry.OrderByDescending( b => b.Transactions.Count() );
+                                sortedQry = qry.OrderByDescending(b => b.Transactions.Count());
                             }
 
                             break;
@@ -771,13 +774,13 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 
                     case "TransactionAmount":
                         {
-                            if ( sortProperty.Direction == SortDirection.Ascending )
+                            if (sortProperty.Direction == SortDirection.Ascending)
                             {
-                                sortedQry = qry.OrderBy( b => b.Transactions.Sum( t => ( decimal? ) ( t.TransactionDetails.Sum( d => ( decimal? ) d.Amount ) ?? 0.0M ) ) ?? 0.0M );
+                                sortedQry = qry.OrderBy(b => b.Transactions.Sum(t => (decimal?)(t.TransactionDetails.Sum(d => (decimal?)d.Amount) ?? 0.0M)) ?? 0.0M);
                             }
                             else
                             {
-                                sortedQry = qry.OrderByDescending( b => b.Transactions.Sum( t => ( decimal? ) ( t.TransactionDetails.Sum( d => ( decimal? ) d.Amount ) ?? 0.0M ) ) ?? 0.0M );
+                                sortedQry = qry.OrderByDescending(b => b.Transactions.Sum(t => (decimal?)(t.TransactionDetails.Sum(d => (decimal?)d.Amount) ?? 0.0M)) ?? 0.0M);
                             }
 
                             break;
@@ -785,7 +788,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 
                     default:
                         {
-                            sortedQry = qry.Sort( sortProperty );
+                            sortedQry = qry.Sort(sortProperty);
                             break;
                         }
                 }
@@ -793,8 +796,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             else
             {
                 sortedQry = qry
-                    .OrderByDescending( b => b.BatchStartDateTime )
-                    .ThenBy( b => b.Name );
+                    .OrderByDescending(b => b.BatchStartDateTime)
+                    .ThenBy(b => b.Name);
             }
 
             return sortedQry;
@@ -809,130 +812,137 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
         /// <param name="accountingPeriod">Accounting period as defined in the GL system.</param>
         /// <param name="journalType">The type of journal entry to create as defined in the GL system.</param>
         /// <returns>A collection of GLRecord objects to be imported into the GL system.</returns>
-        List<GLRecord> GLRecordsForBatch( List<FinancialBatch> batches, DateTime date )
+        List<GLRecord> GLRecordsForBatch(List<FinancialBatch> batches, DateTime date, string journal)
         {
             List<GLRecord> records = new List<GLRecord>();
 
-            // Load all the transaction details, load their attributes and then group
-            // by the account attributes, GLBankAccount+GLCompany+GLFund.
-            var transactions = batches
-                .SelectMany( t => t.Transactions )
-                .OrderBy( t => t.TransactionDateTime )
-                .ToList();
-            foreach ( var t in transactions )
+            var accountList = new List<FinancialAccount>();
+            foreach (var account in new FinancialAccountService(new RockContext()).Queryable().AsNoTracking())
             {
-                int i = 1;
+                account.LoadAttributes();
+                accountList.Add(account);
+            }
+
+            var projectList = DefinedTypeCache.Get("C244D4C4-636F-4BCA-8E7C-1907933ABB74").DefinedValues;
+
+            // Get the Sum of All Transactions in All Batches.
+            var transactionListAll = batches.SelectMany(b => b.Transactions.SelectMany(ft => ft.TransactionDetails).Select(ftd => new TransactionInfo
+            {
+                DebitAccount = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.DEBITACCOUNTNO"),
+                CreditAccount = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.ACCOUNTNO"),
+                Amount = ftd.Amount,
+                LocationId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.LOCATION"),
+                ProjectId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("Project"), //changed from rocks.kfs.Intacct.PROJECTID to Project 6/29/20 RTJ
+                ClassId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.CLASSID"),
+                DepartmentId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.DEPARTMENT")
+            })).ToList();
+
+            var debitBatches = transactionListAll.GroupBy(t => t.DebitAccount);
+            var debitLineNumber = 1;
+            var creditLineNumber = debitBatches.Count() + 1;
+
+            foreach (var debitBatch in debitBatches)
+            {
                 //Create debit GL record for transaction
                 GLRecord record = new GLRecord();
 
-                record.ReceiptDate = t.CreatedDateTime ?? t.TransactionDateTime ?? RockDateTime.Today;
-                record.PayMethod = string.Empty;
-                record.DocDate = t.TransactionDateTime ?? t.CreatedDateTime ?? RockDateTime.Today;
-                record.DocNumber = t.TransactionCode;
-                record.Description = string.Empty;
-                record.DepositTo = "Undeposited funds";
-                record.BankAccountId = "MAIN-001"; // TO-DO set by export preferences
-                record.DepositDate = date;
-                record.UndepAccountNumber = string.Empty;
-                record.LineNumber = i;
-                record.AccountNumber = "40000"; // TO-DO set by export preferences
-                record.Amount = t.TransactionDetails.Sum( d => d.Amount );
-                record.DepartmentId = string.Empty;
-                record.LocationId = string.Empty;
-                record.ItemMemo = string.Empty;
-                record.OtherReceiptsEntryProjectId = string.Empty;
-                record.OtherReceiptsEntryClassId = string.Empty;
-                record.PayerName = string.Empty;
+                record.Journal = journal;
+                record.Date = date;
+                record.Description = "Debit-" + date.ToString("yyyy-MM-dd"); //batch.Name;
+                record.LineNumber = debitLineNumber;
+                record.AccountNumber = debitBatch.Key;
+                record.Debit = debitBatch.Sum(d => d.Amount);
+                record.Credit = null;
+                record.LocationId = "10"; //debitBatch.Max( d => d.LocationId ); 
+                record.ProjectId = "";
+                record.ClassId = "";
+                record.DepartmentId = "";
+                record.ItemMemo = "";
+                record.ROCK_TRX = "T";
                 records.Add(record);
-                i++;
-                // For loop for transaction details in transaction
-                foreach( var d in t.TransactionDetails )
-                {
-                    //Create credit GL record for each detail
-                    GLRecord detailrecord = new GLRecord();
-
-                    d.Account.LoadAttributes();
-
-                    detailrecord.ReceiptDate = d.CreatedDateTime ?? t.TransactionDateTime ?? RockDateTime.Today;
-                    detailrecord.PayMethod = t.FinancialPaymentDetail.CurrencyTypeValue.Value;
-                    detailrecord.DocDate = t.TransactionDateTime ?? d.CreatedDateTime ?? RockDateTime.Today;
-                    detailrecord.DocNumber = t.TransactionCode;
-                    detailrecord.Description = string.Empty;
-                    detailrecord.DepositTo = string.Empty;
-                    detailrecord.BankAccountId = string.Empty; // TO-DO set by export preferences
-                    detailrecord.DepositDate = date;
-                    detailrecord.UndepAccountNumber = string.Empty;
-                    detailrecord.LineNumber = i;
-                    detailrecord.AccountNumber = d.Account.GetAttributeValue("GLRevenueAccount"); 
-                    detailrecord.Amount = d.Amount;
-                    detailrecord.DepartmentId = d.Account.GetAttributeValue("GLRevenueDepartment");
-                    detailrecord.LocationId = string.Empty;
-                    detailrecord.ItemMemo = string.Empty;
-                    detailrecord.OtherReceiptsEntryProjectId = string.Empty;
-                    detailrecord.OtherReceiptsEntryClassId = d.Account.GetAttributeValue("GLFund");
-                    detailrecord.PayerName = t.AuthorizedPersonAlias.Person.FullName;
-                    records.Add(detailrecord);
-                    i++;
-                }
-
-
-                // Return list
             }
 
 
-            //var accounts = transactions.GroupBy( d => new
-            //{
-            //    GLBankAccount = d.Account.GetAttributeValue( "GLBankAccount" ),
-            //    GLCompany = d.Account.GetAttributeValue( "GLCompany" ),
-            //    GLFund = d.Account.GetAttributeValue( "GLFund" )
-            //}, d => d )
-            //    .OrderBy( g => g.Key.GLBankAccount.AsIntegerOrNull() )
-            //               .ThenBy( g => g.Key.GLFund.AsIntegerOrNull() );
 
 
-            
-                //int i = 1;
-                //// Go through each group and build the line items.
-                //foreach ( var grp in accounts.ToList() )
+            // Load all the transaction details, load their attributes and then group
+            // by the account attributes, GLBankAccount+GLCompany+GLFund.
+            foreach (var batch in batches)
+            {
+                var transactionList = batch.Transactions.SelectMany(ft => ft.TransactionDetails).Select(ftd => new TransactionInfo
+                {
+                    DebitAccount = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.DEBITACCOUNTNO"),
+                    CreditAccount = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.ACCOUNTNO"),
+                    Amount = ftd.Amount,
+                    LocationId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.LOCATION"),
+                    ProjectId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("Project"), //changed from rocks.kfs.Intacct.PROJECTID to Project 6/29/20 RTJ
+                    ClassId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.CLASSID"),
+                    DepartmentId = accountList.Where(a => a.Id == ftd.AccountId).First().GetAttributeValue("rocks.kfs.Intacct.DEPARTMENT")
+                }).ToList();
+
+                //var debitBatches = transactionList.GroupBy( t => t.DebitAccount );
+                //var debitLineNumber = 1;
+                //var creditLineNumber = debitBatches.Count() + 1;
+                /*
+                                foreach ( var debitBatch in debitBatches )
+                                {
+                                    //Create debit GL record for transaction
+                                    GLRecord record = new GLRecord();
+
+                                    record.Journal = journal;
+                                    record.Date = date;
+                                    record.Description = batch.Name;
+                                    record.LineNumber = debitLineNumber;
+                                    record.AccountNumber = debitBatch.Key;
+                                    record.Debit = debitBatch.Sum( d => d.Amount );
+                                    record.Credit = null;
+                                    record.LocationId = "10";//debitBatch.Max( d => d.LocationId );
+                                    record.ProjectId = "";
+                                    record.ClassId = "";
+                                    record.DepartmentId = "";
+                                    record.ItemMemo = "";
+                                    record.ROCK_TRX = "T";
+                                    records.Add( record );
+
+                                    debitLineNumber++;
+                                }
+                */
+                //foreach ( var debitBatch in debitBatches )
                 //{
-                //    GLRecord record = new GLRecord();
+                foreach (var creditBatch in /*debitBatch*/ transactionList.GroupBy(d => new
+                {
+                    CreditAccount = d.CreditAccount,
+                    LocationId = d.LocationId,
+                    ProjectId = d.ProjectId,
+                    ClassId = d.ClassId,
+                    DepartmentId = d.DepartmentId
+                }))
+                {
+                    //Create credit GL record for transaction
+                    GLRecord record = new GLRecord();
 
+                    record.Journal = journal;
+                    record.Date = date;
+                    record.Description = batch.Name;
+                    record.LineNumber = creditLineNumber;
+                    record.AccountNumber = creditBatch.Key.CreditAccount;
+                    record.Debit = null;
+                    record.Credit = creditBatch.Sum(d => d.Amount);
+                    record.LocationId = creditBatch.Key.LocationId;
+                    record.ProjectId = creditBatch.Key.ProjectId; //creditBatch.Key.ProjectId.IsNotNullOrWhiteSpace() ? ( DefinedValueCache.Get( creditBatch.Key.ProjectId.AsGuid() ) != null ? DefinedValueCache.Get( creditBatch.Key.ProjectId.AsGuid() ).Value : "" ) : "";
+                    record.ClassId = creditBatch.Key.ClassId;
+                    record.DepartmentId = creditBatch.Key.DepartmentId;
+                    record.ItemMemo = "";
+                    record.ROCK_TRX = "T";
+                    records.Add(record);
 
-                //    // Build the bank account deposit line item.
-                //    record.AccountNumber = grp.Key.GLBankAccount;
-                //    record.Amount = grp.Sum( d => d.Amount );
-                //    record.Company = grp.Key.GLCompany;
-                //    record.Date = date;
-                //    record.Department = string.Empty;
-                //    record.Fund = grp.Key.GLFund;
-                //    record.Journal = "0";
+                    creditLineNumber++;
+                }
 
-                //    record.Project = string.Empty;
-                //    record.LineCount = i;
-                //    records.Add( record );
-                //    i++;
-                //    // Build each of the revenue fund withdrawls.
-                //    foreach ( var grpTransactions in grp.GroupBy( t => t.AccountId, t => t )
-                //        .OrderBy( o => o.First().Account.GetAttributeValue( "GLRevenueDepartment" ).AsIntegerOrNull() )
-                //        .ThenBy( o => o.First().Account.GetAttributeValue( "GLRevenueAccount" ).AsIntegerOrNull() ) )
-                //    {
-                //        record = new GLRecord();
-
-                //        record.AccountNumber = grpTransactions.First().Account.GetAttributeValue( "GLRevenueAccount" );
-                //        record.Amount = -( grpTransactions.Sum( t => t.Amount ) );
-                //        record.Company = grp.Key.GLCompany;
-                //        record.Date = date;
-                //        record.Department = grpTransactions.First().Account.GetAttributeValue( "GLRevenueDepartment" );
-                //        record.Fund = grp.Key.GLFund;
-                //        record.Journal = "0";
-                //        record.Project = string.Empty;
-                //        record.LineCount = i;
-                //        records.Add( record );
-                //        i++;
-                //    }
                 //}
 
-                return records;
+            }
+            return records;
         }
 
         #endregion
@@ -947,7 +957,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             public decimal Amount { get; set; }
             public override string ToString()
             {
-                return string.Format( "{0}: {1}", AccountName, Amount.FormatAsCurrency() );
+                return string.Format("{0}: {1}", AccountName, Amount.FormatAsCurrency());
             }
         }
 
@@ -979,8 +989,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
                 get
                 {
                     var summary = new List<string>();
-                    AccountSummaryList.ForEach( a => summary.Add( a.ToString() ) );
-                    return summary.AsDelimited( Environment.NewLine );
+                    AccountSummaryList.ForEach(a => summary.Add(a.ToString()));
+                    return summary.AsDelimited(Environment.NewLine);
                 }
             }
 
@@ -989,8 +999,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
                 get
                 {
                     var summary = new List<string>();
-                    AccountSummaryList.ForEach( a => summary.Add( a.ToString() ) );
-                    return "<small>" + summary.AsDelimited( "<br/>" ) + "</small>";
+                    AccountSummaryList.ForEach(a => summary.Add(a.ToString()));
+                    return "<small>" + summary.AsDelimited("<br/>") + "</small>";
                 }
             }
 
@@ -1007,7 +1017,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             {
                 get
                 {
-                    switch ( Status )
+                    switch (Status)
                     {
                         case BatchStatus.Closed:
                             return "label label-default";
@@ -1027,20 +1037,20 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
                 {
                     var notes = new StringBuilder();
 
-                    switch ( Status )
+                    switch (Status)
                     {
                         case BatchStatus.Open:
                             {
-                                if ( UnMatchedTxns )
+                                if (UnMatchedTxns)
                                 {
-                                    notes.Append( "<span class='label label-warning'>Unmatched Transactions</span><br/>" );
+                                    notes.Append("<span class='label label-warning'>Unmatched Transactions</span><br/>");
                                 }
 
                                 break;
                             }
                     }
 
-                    notes.Append( BatchNote );
+                    notes.Append(BatchNote);
 
                     return notes.ToString();
                 }
@@ -1049,57 +1059,55 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 
         class GLRecord
         {
-            public DateTime ReceiptDate { get; set; } //need
-            public string PayMethod { get; set; }
-            public DateTime DocDate { get; set; }
-            public string DocNumber { get; set; }
+            public string Journal { get; set; }
+            public DateTime Date { get; set; }
             public string Description { get; set; }
-            public string DepositTo { get; set; }
-            public string BankAccountId { get; set; } //need
-            public DateTime DepositDate { get; set; }
-            public string UndepAccountNumber { get; set; }
             public int LineNumber { get; set; }
             public string AccountNumber { get; set; }
-            public decimal Amount { get; set; } //need
-            public string DepartmentId { get; set; } //need
-            public string LocationId { get; set;  }
+            public decimal? Debit { get; set; }
+            public decimal? Credit { get; set; }
+            public string LocationId { get; set; }
+            public string ProjectId { get; set; }
+            public string ClassId { get; set; }
+            public string DepartmentId { get; set; }
             public string ItemMemo { get; set; }
-            public string OtherReceiptsEntryProjectId { get; set; }
-            public string OtherReceiptsEntryClassId { get; set; }
-            public string PayerName { get; set; }
-
+            public string ROCK_TRX { get; set; }
 
             public override string ToString()
             {
                 List<string> strList = new List<string>();
 
-                strList.Add("");                                //Do Not Import
-                strList.Add(ReceiptDate.ToString("yyyy-MM-dd")); //REceipt Date - Deposit Date
-                strList.Add(PayMethod ?? string.Empty);         //Pay Method
-                strList.Add(DocDate.ToString("yyyy-MM-dd"));       //Doc Date              Deposit Date
-                strList.Add(DocNumber ?? string.Empty);                      //Doc Number            None
-                strList.Add(Description ?? string.Empty);                      //Description           None
-                strList.Add(DepositTo ?? string.Empty);                //Deposit To            Undeposited Funds
-                strList.Add(BankAccountId ?? string.Empty);                      //Bank Account Id       blank
-                strList.Add(DepositDate.ToString("yyyy-MM-dd"));                      //Deposit Date          blank
-                strList.Add(UndepAccountNumber ?? string.Empty);                      //UndepacctNo           blank
-                strList.Add(LineNumber.ToString());              //Line No               auto-increment
-                strList.Add(AccountNumber ?? string.Empty);     //Account Number        Account Number
-                strList.Add(Amount.ToString( "0" ));             //Amount                Amount
-                strList.Add(DepartmentId ?? string.Empty);        //Department Id         Department
-                strList.Add(LocationId ?? string.Empty);                     //Location Id           not required
-                strList.Add(ItemMemo ?? string.Empty);                      //Item Memo             not required
-                strList.Add(OtherReceiptsEntryProjectId ?? string.Empty);   //Other receipts entry project id   not required       
-                strList.Add(OtherReceiptsEntryClassId ?? string.Empty);     //Other receipts entry class id     not required        
-                strList.Add(PayerName ?? string.Empty);                     //Payer Name            blank string                     
+                strList.Add(""); //Do Not Import
+                strList.Add(Journal ?? string.Empty);
+                strList.Add(Date.ToString("yyyy-MM-dd"));
+                strList.Add(Description ?? string.Empty);
+                strList.Add(LineNumber.ToString());
+                strList.Add(AccountNumber ?? string.Empty);
+                strList.Add(Debit == null ? "" : Debit.Value.ToString("0.00"));
+                strList.Add(Credit == null ? "" : Credit.Value.ToString("0.00"));
+                strList.Add(LocationId ?? string.Empty);
+                strList.Add(ProjectId ?? string.Empty);
+                strList.Add(ClassId ?? string.Empty);
+                strList.Add(DepartmentId ?? string.Empty);
+                strList.Add(ItemMemo ?? string.Empty);
+                strList.Add(ROCK_TRX ?? string.Empty);
                 return strList.AsDelimited(",");
-
             }
         }
+        class TransactionInfo
+        {
+            public string DebitAccount { get; set; }
+            public string CreditAccount { get; set; }
+            public decimal Amount { get; set; }
+            public string LocationId { get; set; }
+            public string ProjectId { get; set; }
+            public string ClassId { get; set; }
+            public string DepartmentId { get; set; }
 
+        }
         #endregion 
     }
-
+    /*
     static class StringExtensions
     {
         public static string TrimLength( this string value, int maxLength )
@@ -1112,4 +1120,5 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
             return value.Length <= maxLength ? value : value.Substring( 0, maxLength );
         }
     }
+    */
 }

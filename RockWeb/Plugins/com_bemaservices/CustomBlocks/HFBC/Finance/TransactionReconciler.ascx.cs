@@ -102,6 +102,8 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                 var batch = financialBatchService.GetNoTracking( batchId );
                 if ( batch != null )
                 {
+                    //var matchingFund = newBatch.Funds.Where( x => transactionDetail.AccountId != null && x.FundName == transactionDetail.Account.Name ); Line 130 TransacationReconciler.ascx.cs
+
                     List<string> transactionIds = batch.Transactions.Where( x => !string.IsNullOrEmpty( x.TransactionCode ) ).Select( x => x.TransactionCode ).ToList();
                     List<NMITransaction> nmiTransactions = GetTransactionsFromNMI( transactionIds );
 
@@ -127,7 +129,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                             // looping through transaction details
                             foreach ( var transactionDetail in transaction.TransactionDetails )
                             {
-                                var matchingFund = newBatch.Funds.Where( x => x.FundName == transactionDetail.Account.Name );
+                                var matchingFund = newBatch.Funds.Where(x => transactionDetail.AccountId != null && x.FundName == transactionDetail.Account.Name); Line 130 TransacationReconciler.ascx.cs
                                 if ( matchingFund.Any() )
                                 {
                                     if ( transactionDetail.Amount < 0 )
