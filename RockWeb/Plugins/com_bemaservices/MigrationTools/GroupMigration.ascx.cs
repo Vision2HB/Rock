@@ -114,6 +114,17 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
             if ( roles.Any() && newGroupType != null )
             {
                 pnlRoles.Visible = true;
+                Dictionary<string, int> existingSelectedRoles = new Dictionary<string, int>();
+                // Copy into dictionary the existing selections
+                foreach ( var role in roles )
+                {
+                    var ddlRole = ( RockDropDownList ) phRoles.FindControl( role.Id.ToString() + "_ddlRole" );
+                    if ( ddlRole != null && ddlRole.SelectedValue != "0" )
+                    {
+                        existingSelectedRoles.Add( role.Id.ToString() + "_ddlRole", ddlRole.SelectedValue.AsInteger() );
+                    }
+                }
+
                 phRoles.Controls.Clear();
 
                 foreach ( var role in roles )
@@ -127,6 +138,14 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
                     };
                     BindRoleDropDown( newGroupType, ddlRole );
                     ddlRole.Required = false;
+                    if ( existingSelectedRoles.ContainsKey( ddlRole.ID ) )
+                    {
+                        // If current selected new role Id is an available option, select it by default. 
+                        if( ddlRole.Items.FindByValue( existingSelectedRoles[ddlRole.ID].ToString() ) != null )
+                        {
+                            ddlRole.SelectedValue = existingSelectedRoles[ddlRole.ID].ToString();
+                        }
+                    }
                     phRoles.Controls.Add( ddlRole );
                 }
             }
@@ -286,7 +305,7 @@ namespace RockWeb.Plugins.com_bemaservices.MigrationTools
             ddlRole.DataSource = newGroupType.Roles;
             ddlRole.DataBind();
             var emptyItem = new ListItem ( "(Not Mapped)", "0" );
-            ddlRole.Items.Add ( emptyItem );
+            ddlRole.Items.Insert( 0, emptyItem );
             ddlRole.SelectedValue = "0";
         }
 
