@@ -127,6 +127,9 @@ namespace RockWeb.Plugins.com_bemaservices.RemoteCheckDeposit
             }
             ddlStatus.SetValue( statusFilter );
 
+            dvpCurrencyTypes.DefinedTypeId = DefinedTypeCache.GetId( Rock.SystemGuid.DefinedType.FINANCIAL_CURRENCY_TYPE.AsGuid() );
+            dvpCurrencyTypes.SetValue( gfBatches.GetUserPreference( "Currency Types" ) );
+
             var campuses = CampusCache.All();
             campCampus.Campuses = campuses;
             campCampus.Visible = campuses.Any();
@@ -187,7 +190,7 @@ namespace RockWeb.Plugins.com_bemaservices.RemoteCheckDeposit
             string title = gfBatches.GetUserPreference( "Title" );
             if ( !string.IsNullOrEmpty( title ) )
             {
-                qry = qry.Where( batch => batch.Name.Contains( title ) );
+                qry = qry.Where( b => b.Name.Contains( title ) );
             }
 
             // filter by campus
@@ -195,6 +198,13 @@ namespace RockWeb.Plugins.com_bemaservices.RemoteCheckDeposit
             if ( campus != null )
             {
                 qry = qry.Where( b => b.CampusId == campus.Id );
+            }
+
+            // filter by currency type
+            List<int> currencyTypes = gfBatches.GetUserPreference( "Currency Types" ).StringToIntList().ToList();
+            if ( currencyTypes.Any() )
+            {
+                qry = qry.Where( b => b.Transactions.Any( t => t.FinancialPaymentDetail.CurrencyTypeValueId.HasValue && currencyTypes.Contains( t.FinancialPaymentDetail.CurrencyTypeValueId.Value ) ) );
             }
 
             var deposited = gfBatches.GetUserPreference( "Deposited" ).ConvertToEnumOrNull<IsDeposited>();
@@ -523,6 +533,7 @@ namespace RockWeb.Plugins.com_bemaservices.RemoteCheckDeposit
             gfBatches.SaveUserPreference( "Date Range", drpBatchDate.DelimitedValues );
             gfBatches.SaveUserPreference( "Title", tbTitle.Text );
             gfBatches.SaveUserPreference( "Status", ddlStatus.SelectedValue );
+            gfBatches.SaveUserPreference( "Currency Types", dvpCurrencyTypes.SelectedValue );
             gfBatches.SaveUserPreference( "Campus", campCampus.SelectedValue );
             gfBatches.SaveUserPreference( "Deposited", ddlDeposited.SelectedValue );
 
@@ -559,6 +570,15 @@ namespace RockWeb.Plugins.com_bemaservices.RemoteCheckDeposit
                     {
                         var status = e.Value.ConvertToEnumOrNull<BatchStatus>();
                         e.Value = status.HasValue ? status.ConvertToString() : string.Empty;
+                        break;
+                    }
+
+                case "Currency Types":
+                    {
+                        var valueIds = e.Value.StringToIntList();
+                        var currencyTypes = DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.FINANCIAL_CURRENCY_TYPE.AsGuid() )
+                            .DefinedValues.Where( dv => valueIds.Contains( dv.Id ) ).ToList();
+                        e.Value = currencyTypes.Select( dv => dv.Value ).ToList().AsDelimited(", ");
                         break;
                     }
 

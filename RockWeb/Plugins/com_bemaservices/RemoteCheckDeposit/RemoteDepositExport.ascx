@@ -23,6 +23,7 @@
                         <Rock:GridFilter ID="gfBatches" runat="server" OnApplyFilterClick="gfBatches_ApplyFilterClick" OnClearFilterClick="gfBatches_ClearFilterClick" OnDisplayFilterValue="gfBatches_DisplayFilterValue">
                             <Rock:RockDropDownList ID="ddlStatus" runat="server" Label="Status" />
                             <Rock:DateRangePicker ID="drpBatchDate" runat="server" Label="Date Range" />
+                            <Rock:DefinedValuesPicker ID="dvpCurrencyTypes" runat="server" Label="Currency Types" DataValueField="Value" DataTextField="Text" DisplayAsCheckList="true" /> 
                             <Rock:CampusPicker ID="campCampus" runat="server" />
                             <Rock:RockTextBox ID="tbTitle" runat="server" Label="Title"></Rock:RockTextBox>
                             <Rock:RockDropDownList ID="ddlDeposited" runat="server" Label="Deposited" />
