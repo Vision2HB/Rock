@@ -14,7 +14,7 @@ GO
 	<param name = 'NewParentGroupId' datatype='Int'>The parent group id to place new groups under</param>
 </doc>
 */
-CREATE PROCEDURE [dbo].[_com_bemaservices_spChangeGroupType]
+CREATE OR ALTER PROCEDURE [dbo].[_com_bemaservices_spChangeGroupType]
 (
     @rootGroupId int
 	, @newGroupTypeId int
@@ -78,8 +78,8 @@ BEGIN
     MERGE GroupTypeRole GTR 
     USING @GroupRoleNames N ON GTR.[Name] = N.[Name] AND GTR.Id IN ( Select Id From @GroupRoleIds )
     WHEN NOT MATCHED
-        THEN INSERT ( IsSystem, GroupTypeId, [Name], IsLeader, [Guid], CreatedDateTime, ModifiedDateTime, CanView, CanEdit, ReceiveRequirementsNotifications, CanManageMembers )
-        VALUES ( 0, @newGroupTypeId, N.[Name], 0, NewId(), GetDate(), GetDate(), 0, 0, 0, 0 )
+        THEN INSERT ( IsSystem, GroupTypeId, [Order], [Name], IsLeader, [Guid], CreatedDateTime, ModifiedDateTime, CanView, CanEdit, ReceiveRequirementsNotifications, CanManageMembers )
+        VALUES ( 0, @newGroupTypeId, 0, N.[Name], 0, NewId(), GetDate(), GetDate(), 0, 0, 0, 0 )
     ;
 
     DECLARE @NewGroupTypeRoles TABLE ( Id int, [Name] nvarchar(200) )
@@ -98,5 +98,6 @@ BEGIN
    WHERE GM.GroupId IN ( Select Id FROM @GroupIds )
 
 END
+
 
 GO
