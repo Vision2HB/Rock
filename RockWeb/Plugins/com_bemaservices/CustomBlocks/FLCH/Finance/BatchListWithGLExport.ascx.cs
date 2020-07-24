@@ -231,7 +231,7 @@ namespace RockWeb.Plugins.com_bemadev.Finance
                         var transactionTypeValueId = e.Value.AsIntegerOrNull();
                         if ( transactionTypeValueId.HasValue )
                         {
-                            var transactionTypeValue = DefinedValueCache.Read( transactionTypeValueId.Value );
+                            var transactionTypeValue = DefinedValueCache.Get( transactionTypeValueId.Value );
                             e.Value = transactionTypeValue != null ? transactionTypeValue.ToString() : string.Empty;
                         }
                         else
@@ -244,7 +244,7 @@ namespace RockWeb.Plugins.com_bemadev.Finance
 
                 case "Campus":
                     {
-                        var campus = CampusCache.Read( e.Value.AsInteger() );
+                        var campus = CampusCache.Get( e.Value.AsInteger() );
                         if ( campus != null )
                         {
                             e.Value = campus.Name;
@@ -310,12 +310,6 @@ namespace RockWeb.Plugins.com_bemadev.Finance
                         {
                             transactionService.Delete( txn );
                         }
-                        HistoryService.SaveChanges(
-                            rockContext,
-                            typeof( FinancialBatch ),
-                            Rock.SystemGuid.Category.HISTORY_FINANCIAL_BATCH.AsGuid(),
-                            batch.Id,
-                            new List<string> { "Deleted the batch" } );
 
                         batchService.Delete( batch );
 
@@ -416,7 +410,6 @@ namespace RockWeb.Plugins.com_bemadev.Finance
                     foreach ( var batch in batchesToUpdate )
                     {
                         var changes = new List<string>();
-                        History.EvaluateChange( changes, "Status", batch.Status, newStatus );
                         batch.Status = newStatus;
 
                         if ( !batch.IsValid )
@@ -425,14 +418,6 @@ namespace RockWeb.Plugins.com_bemadev.Finance
                             maWarningDialog.Show( message, ModalAlertType.Warning );
                             return;
                         }
-
-                        HistoryService.SaveChanges(
-                            rockContext,
-                            typeof( FinancialBatch ),
-                            Rock.SystemGuid.Category.HISTORY_FINANCIAL_BATCH.AsGuid(),
-                            batch.Id,
-                            changes,
-                            false );
                     }
 
                     rockContext.SaveChanges();
@@ -610,7 +595,7 @@ namespace RockWeb.Plugins.com_bemadev.Finance
 
             ddlStatus.SetValue( statusFilter );
 
-            var definedTypeTransactionTypes = DefinedTypeCache.Read( Rock.SystemGuid.DefinedType.FINANCIAL_TRANSACTION_TYPE.AsGuid() );
+            var definedTypeTransactionTypes = DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.FINANCIAL_TRANSACTION_TYPE.AsGuid() );
             ddlTransactionType.BindToDefinedType( definedTypeTransactionTypes, true );
             ddlTransactionType.SetValue( gfBatchFilter.GetUserPreference( "Contains Transaction Type" ) );
 
@@ -689,7 +674,7 @@ namespace RockWeb.Plugins.com_bemadev.Finance
                 } );
 
                 gBatchList.SetLinqDataSource( batchRowQry.AsNoTracking() );
-                gBatchList.EntityTypeId = EntityTypeCache.Read<Rock.Model.FinancialBatch>().Id;
+                gBatchList.EntityTypeId = EntityTypeCache.Get<Rock.Model.FinancialBatch>().Id;
                 gBatchList.DataBind();
 
                 RegisterJavaScriptForGridActions();
@@ -779,7 +764,7 @@ namespace RockWeb.Plugins.com_bemadev.Finance
             }
 
             // filter by campus
-            var campus = CampusCache.Read( gfBatchFilter.GetUserPreference( "Campus" ).AsInteger() );
+            var campus = CampusCache.Get( gfBatchFilter.GetUserPreference( "Campus" ).AsInteger() );
             if ( campus != null )
             {
                 qry = qry.Where( b => b.CampusId == campus.Id );

@@ -2686,7 +2686,7 @@ sendCountTerm.PluralizeIf( sendCount != 1 ) );
                 recipient.MediumEntityTypeId = Rock.Model.Communication.DetermineMediumEntityTypeId(
                     emailMediumEntityType.Id,
                     smsMediumEntityType.Id,
-                    communication.CommunicationType,
+                    communication.CommunicationType.ConvertToInt(),
                     groupMemberPreference,
                     recipientPreference );
             }

@@ -1151,24 +1151,6 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                             /* BEMA.FE1.Start */
                             var oldPerson = new PersonAliasService( rockContext ).Get( txn.AuthorizedPersonAliasId.Value );
                             var newPerson = new PersonAliasService( rockContext ).Get( personAliasId.Value );
-
-                            if ( oldPerson.Id != newPerson.Id )
-                            {
-                                string changes = string.Format( "Modified <span class='field-name'>Person</span>  value from <span class='field-name'>{0}</span> to <span class='field-name'>{1}</span> (Updated From Transaction List #{2}#)", oldPerson.Person.FullName, newPerson.Person.FullName, txn.Id );
-
-                                HistoryService.SaveChanges(
-                                    rockContext
-                                    , typeof( FinancialBatch )
-                                    , Rock.SystemGuid.Category.HISTORY_FINANCIAL_TRANSACTION.AsGuid()
-                                    , txn.BatchId.Value
-                                    , new List<string> { changes }
-                                    , string.Format( "Transaction Id:{0}", txn.Id )
-                                    , typeof( FinancialTransaction )
-                                    , txn.Id
-                                    , true
-                                    , CurrentPersonAliasId
-                                    );
-                            }
                             /* BEMA.FE1.End */
 
                             txn.AuthorizedPersonAliasId = personAliasId.Value;
@@ -1194,34 +1176,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
                                 if ( txn.Account.PublicName != account.PublicName )
                                 {
-                                    string changes = string.Format( "Deleted <span class='field-name'>{0}</span> value of <span class='field-name'>{1}</span>. (Updated From Transaction List #{2}#)", txn.Account.PublicName, txn.Transaction.TotalAmount, txn.Account.Id );
-                                    HistoryService.SaveChanges(
-                                        rockContext
-                                        , typeof( FinancialBatch )
-                                        , Rock.SystemGuid.Category.HISTORY_FINANCIAL_TRANSACTION.AsGuid()
-                                        , txn.Transaction.BatchId.Value
-                                        , new List<string> { changes }
-                                        , string.Format( "Transaction Id:{0}", txn.Transaction.Id )
-                                        , typeof( FinancialTransaction )
-                                        , txn.Transaction.Id
-                                        , true
-                                        , CurrentPersonAliasId
-                                        );
-
-                                    changes = string.Format( "Added <span class='field-name'>{0}</span> value of <span class='field-name'>{1}</span>. (Updated From Transaction List #{2}#)", account.PublicName, txn.Transaction.TotalAmount, account.Id );
-
-                                    HistoryService.SaveChanges(
-                                            rockContext
-                                            , typeof( FinancialBatch )
-                                            , Rock.SystemGuid.Category.HISTORY_FINANCIAL_TRANSACTION.AsGuid()
-                                            , txn.Transaction.BatchId.Value
-                                            , new List<string> { changes }
-                                            , string.Format( "Transaction Id:{0}", txn.Transaction.Id )
-                                            , typeof( FinancialTransaction )
-                                            , txn.Transaction.Id
-                                            , true
-                                            , CurrentPersonAliasId
-                                            );
+                                 
                                     idsToUpdate.Add( txn.Transaction.Id.ToString() );
                                 }
 
