@@ -33,7 +33,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -554,7 +554,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 _attendanceSettingState = new AttendanceSetting();
                 _attendanceSettingState.GroupId = groupId.Value;
                 _attendanceSettingState.ScheduleId = scheduleId.Value;
-                _attendanceSettingState.LocationId = locationId.Value;
+                _attendanceSettingState.GroupLocationId = locationId.Value;
                 _attendanceSettingState.AttendanceDate = attedanceDate.Value;
                 CreateRapidAttendanceCookie( _attendanceSettingState );
                 ShowMainPanel( SelectedPersonId );
@@ -677,7 +677,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             var attendanceService = new AttendanceService( rockContext );
 
             var group = new GroupService( rockContext ).Get( _attendanceSettingState.GroupId );
-            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
             var personService = new PersonService( rockContext );
 
             for ( int i = 0; i < rcbAttendance.Items.Count; i++ )
@@ -851,11 +851,18 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 Group group = null;
                 Schedule schedule = null;
                 Location location = null;
+
                 if ( _attendanceSettingState != null )
                 {
                     group = new GroupService( rockContext ).Get( _attendanceSettingState.GroupId );
                     schedule = new ScheduleService( rockContext ).Get( _attendanceSettingState.ScheduleId );
-                    location = new LocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+
+                    var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
+
+                    if ( groupLocation != null )
+                    {
+                        location = groupLocation.Location;
+                    }
                 }
                 var personWorkflows = rcbWorkFlowTypes.SelectedValues.AsGuidList();
                 foreach ( var workflowType in personWorkflows )
@@ -1398,7 +1405,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             HttpCookie httpcookie = new HttpCookie( ROCK_RAPIDATTENDANCEENTRY );
             httpcookie.Expires = RockDateTime.Now.AddMinutes( 480 );
             httpcookie.Values.Add( GROUP_ID, attendanceSetting.GroupId.ToString() );
-            httpcookie.Values.Add( LOCATION_ID, attendanceSetting.LocationId.ToString() );
+            httpcookie.Values.Add( LOCATION_ID, attendanceSetting.GroupLocationId.ToString() );
             httpcookie.Values.Add( SCHEDULE_ID, attendanceSetting.ScheduleId.ToString() );
             httpcookie.Values.Add( ATTENDANCE_DATE, attendanceSetting.AttendanceDate.ToString() );
             Response.Cookies.Add( httpcookie );
@@ -1414,7 +1421,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             {
                 AttendanceSetting attendanceSetting = new AttendanceSetting();
                 attendanceSetting.GroupId = rapidAttendanceEntryCookie.Values[GROUP_ID].AsInteger();
-                attendanceSetting.LocationId = rapidAttendanceEntryCookie.Values[LOCATION_ID].AsInteger();
+                attendanceSetting.GroupLocationId = rapidAttendanceEntryCookie.Values[LOCATION_ID].AsInteger();
                 attendanceSetting.ScheduleId = rapidAttendanceEntryCookie.Values[SCHEDULE_ID].AsInteger();
                 attendanceSetting.AttendanceDate = rapidAttendanceEntryCookie.Values[ATTENDANCE_DATE].AsDateTime() ?? RockDateTime.Now;
                 return attendanceSetting;
@@ -1634,7 +1641,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                     }
                 }
 
-                UpdateLocations( attendanceSetting.LocationId );
+                UpdateLocations( attendanceSetting.GroupLocationId );
                 UpdateSchedules( attendanceSetting.ScheduleId );
             }
             else if ( isDefaultSelected )
@@ -1659,7 +1666,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 var attendanceService = new AttendanceService( rockContext );
                 IEnumerable<Attendance> attendance = new List<Attendance>();
 
-                var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+                var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
                 var schedule = new ScheduleService( rockContext ).Get( _attendanceSettingState.ScheduleId );
 
                 attendance = attendanceService.Queryable()
@@ -1675,7 +1682,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 {
                     var qryParams = new Dictionary<string, string>();
                     qryParams.Add( "GroupId", _attendanceSettingState.GroupId.ToString() );
-                    qryParams.Add( "LocationId", _attendanceSettingState.LocationId.ToString() );
+                    qryParams.Add( "LocationId", _attendanceSettingState.GroupLocationId.ToString() );
                     qryParams.Add( "ScheduleId", _attendanceSettingState.ScheduleId.ToString() );
                     qryParams.Add( "AttendanceDate", _attendanceSettingState.AttendanceDate.ToShortDateString() );
                     string url = LinkedPageUrl( AttributeKey.AttendanceListPage, qryParams );
@@ -1796,7 +1803,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
         private List<int> GetAttendedPersonIds( RockContext rockContext = null, List<int> personIds = null )
         {
             rockContext = rockContext ?? new RockContext();
-            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
             var attendanceService = new AttendanceService( rockContext );
             var attendanceQry = attendanceService.Queryable()
                             .Where( a =>
@@ -2241,7 +2248,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             /// <value>
             /// The location identifier.
             /// </value>
-            public int LocationId { get; set; }
+            public int GroupLocationId { get; set; }
 
             /// <summary>
             /// Gets or sets the schedule identifier.

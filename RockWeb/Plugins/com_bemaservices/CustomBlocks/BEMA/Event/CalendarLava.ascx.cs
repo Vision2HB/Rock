@@ -36,7 +36,7 @@ using Rock.Security;
 using DDay.iCal;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  *
  * Additional Features:
@@ -80,9 +80,9 @@ namespace RockWeb.Plugins.com_bemaservices.Event
 
     [BooleanField( "Set Page Title", "Determines if the block should set the page title with the calendar name.", false, order: 18 )]
 
-    [TextField( "Campus Parameter Name", "The page parameter name that contains the id of the campus entity.", false, "campusId", order: 19 )]
-    [TextField( "Category Parameter Name", "The page parameter name that contains the id of the category entity.", false, "categoryId", order: 20 )]
-    [TextField( "Date Parameter Name", "The page parameter name that contains the selected date.", false, "date", order: 21 )]
+    [TextField( "Campus Parameter Name", "The page parameter name that contains the id of the campus entity.", false, "CampusId", order: 19 )]
+    [TextField( "Category Parameter Name", "The page parameter name that contains the id of the category entity.", false, "CategoryId", order: 20 )]
+    [TextField( "Date Parameter Name", "The page parameter name that contains the selected date.", false, "Date", order: 21 )]
 
     /* BEMA.FE1.Start */
     [BooleanField(

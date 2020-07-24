@@ -31,7 +31,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -46,6 +46,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
     [DisplayName( "Person Bio" )]
     [Category( "BEMA Services > Person Detail" )]
     [Description( "Person biographic/demographic information and picture (Person detail page)." )]
+
+    #region Block Attributes
 
     [BadgesField(
         "Badges",
@@ -65,15 +67,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
     [CodeEditorField(
         "Additional Custom Actions",
         Key = AttributeKey.AdditionalCustomActions,
-        Description = @"
-Additional custom actions (will be displayed after the list of workflow actions). Any instance of '{0}' will be replaced with the current person's id.
-Because the contents of this setting will be rendered inside a &lt;ul&gt; element, it is recommended to use an 
-&lt;li&gt; element for each available action.  Example:
-<pre>
-    &lt;li&gt;&lt;a href='~/WorkflowEntry/4?PersonId={0}' tabindex='0'&gt;Fourth Action&lt;/a&gt;&lt;/li&gt;
-</pre>",
-        EditorMode = Rock.Web.UI.Controls.CodeEditorMode.Html,
-        EditorTheme = Rock.Web.UI.Controls.CodeEditorTheme.Rock,
+        Description = BlockAttributeDescription.AdditionalCustomActions,
+        EditorMode = CodeEditorMode.Html,
+        EditorTheme = CodeEditorTheme.Rock,
         EditorHeight = 200,
         IsRequired = false,
         Order = 2 )]
@@ -106,7 +102,8 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
         IsRequired = false,
         Order = 6 )]
 
-    [BooleanField( "Display Country Code",
+    [BooleanField(
+        "Display Country Code",
         Key = AttributeKey.DisplayCountryCode,
         Description = "When enabled prepends the country code to all phone numbers.",
         DefaultBooleanValue = false,
@@ -118,40 +115,46 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
         DefaultBooleanValue = false,
         Order = 8 )]
 
-    [CodeEditorField( "Custom Content",
+    [CodeEditorField(
+        "Custom Content",
         Key = AttributeKey.CustomContent,
         Description = "Custom Content will be rendered after the person's demographic information <span class='tip tip-lava'></span>.",
-        EditorMode = Rock.Web.UI.Controls.CodeEditorMode.Lava,
-        EditorTheme = Rock.Web.UI.Controls.CodeEditorTheme.Rock,
+        EditorMode = CodeEditorMode.Lava,
+        EditorTheme = CodeEditorTheme.Rock,
         EditorHeight = 200,
         IsRequired = false,
         Order = 9 )]
 
-    [BooleanField( "Allow Following",
+    [BooleanField(
+        "Allow Following",
         Key = AttributeKey.AllowFollowing,
         Description = "Should people be able to follow a person by selecting the star on the person's photo?",
         DefaultBooleanValue = true,
         Order = 10 )]
 
-    [BooleanField( "Display Tags",
+    [BooleanField(
+        "Display Tags",
         Key = AttributeKey.DisplayTags,
         Description = "Should tags be displayed?",
         DefaultBooleanValue = true,
         Order = 11 )]
 
-    [BooleanField( "Display Graduation",
+    [BooleanField(
+        "Display Graduation",
         Key = AttributeKey.DisplayGraduation,
         Description = "Should the Grade/Graduation be displayed?",
         DefaultBooleanValue = true,
         Order = 12 )]
 
-    [BooleanField( "Display Anniversary Date",
+    [BooleanField(
+        "Display Anniversary Date",
         Key = AttributeKey.DisplayAnniversaryDate,
         Description = "Should the Anniversary Date be displayed?",
         DefaultBooleanValue = true,
         Order = 13 )]
 
-    [CategoryField( "Tag Category",
+    [CategoryField(
+        "Tag Category",
         Key = AttributeKey.TagCategory,
         Description = "Optional category to limit the tags to. If specified all new personal tags will be added with this category.",
         AllowMultiple = false,
@@ -159,7 +162,8 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
         IsRequired = false,
         Order = 14 )]
 
-    [AttributeCategoryField( "Social Media Category",
+    [AttributeCategoryField(
+        "Social Media Category",
         Key = AttributeKey.SocialMediaCategory,
         Description = "The Attribute Category to display attributes from.",
         AllowMultiple = false,
@@ -168,13 +172,15 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
         DefaultValue = Rock.SystemGuid.Category.PERSON_ATTRIBUTES_SOCIAL,
         Order = 15 )]
 
-    [BooleanField( "Enable Call Origination",
+    [BooleanField(
+        "Enable Call Origination",
         Key = AttributeKey.EnableCallOrigination,
         Description = "Should click-to-call links be added to phone numbers.",
         DefaultBooleanValue = true,
         Order = 16 )]
 
-    [LinkedPage( "Communication Page",
+    [LinkedPage(
+        "Communication Page",
         Key = AttributeKey.CommunicationPage,
         Description = "The communication page to use for when the person's email address is clicked. Leave this blank to use the default.",
         IsRequired = false,
@@ -187,6 +193,8 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
         IsRequired = false,
         Order = 18 )]
     /* BEMA.FE1.End */
+	
+	#endregion Block Attributes
 
     public partial class Bio : PersonBlock
     {
@@ -195,7 +203,7 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
         /// <summary>
         /// Keys to use for Block Attributes
         /// </summary>
-        protected static class AttributeKey
+        private static class AttributeKey
         {
             public const string Badges = "Badges";
             public const string WorkflowActions = "WorkflowActions";
@@ -217,11 +225,22 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
             public const string CommunicationPage = "CommunicationPage";
         }
 
-        protected static class PageParameterKey
+        private static class PageParameterKey
         {
             public const string PersonId = "PersonId";
             public const string BusinessId = "BusinessId";
             public const string NamelessPersonId = "NamelessPersonId";
+        }
+
+        private static class BlockAttributeDescription
+        {
+            public const string AdditionalCustomActions = @"
+Additional custom actions (will be displayed after the list of workflow actions). Any instance of '{0}' will be replaced with the current person's id.
+Because the contents of this setting will be rendered inside a &lt;ul&gt; element, it is recommended to use an 
+&lt;li&gt; element for each available action.  Example:
+<pre>
+    &lt;li&gt;&lt;a href='~/WorkflowEntry/4?PersonId={0}' tabindex='0'&gt;Fourth Action&lt;/a&gt;&lt;/li&gt;
+</pre>";
         }
 
         /* BEMA.Start */
@@ -232,7 +251,6 @@ Because the contents of this setting will be rendered inside a &lt;ul&gt; elemen
         /* BEMA.End */
 
         #endregion Attribute Keys
-
 
         #region Fields
 

@@ -29,7 +29,7 @@ using Rock.Web.Cache;
 using Rock.Web.UI;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -43,17 +43,67 @@ namespace RockWeb.Plugins.com_bemaservices.Core
     [DisplayName( "Campus Context Setter" )]
     [Category( "BEMA Services > Core" )]
     [Description( "Block that can be used to set the default campus context for the site or page." )]
-    [CustomRadioListField( "Context Scope", "The scope of context to set", "Site,Page", true, "Site", order: 0 )]
-    [TextField( "Current Item Template", "Lava template for the current item. The only merge field is {{ CampusName }}.", true, "{{ CampusName }}", order: 1 )]
-    [TextField( "Dropdown Item Template", "Lava template for items in the dropdown. The only merge field is {{ CampusName }}.", true, "{{ CampusName }}", order: 2 )]
-    [TextField( "No Campus Text", "The text displayed when no campus context is selected.", true, "Select Campus", order: 3 )]
-    [TextField( "Clear Selection Text", "The text displayed when a campus can be unselected. This will not display when the text is empty.", false, "", order: 4 )]
-    [BooleanField( "Display Query Strings", "Select to always display query strings. Default behavior will only display the query string when it's passed to the page.", false, "", order: 5 )]
-    [BooleanField( "Include Inactive Campuses", "Should inactive campuses be listed as well?", false, "", order: 6 )]
-    [BooleanField( "Default To Current User's Campus", "Will use the campus of the current user if no context is provided.", order: 7, key: "DefaultToCurrentUser" )]
-    [CustomDropdownListField( "Alignment", "Determines the alignment of the dropdown.", "1^Left,2^Right", true, "1", order: 8 )]
-    
-     /* BEMA.FE1.Start */
+    [CustomRadioListField( "Context Scope",
+        Description = "The scope of context to set",
+        ListSource = "Site,Page",
+        IsRequired = true,
+        DefaultValue = "Site",
+        Order = 0,
+        Key = AttributeKey.ContextScope )]
+
+    [TextField( "Current Item Template",
+        Description = "Lava template for the current item. The only merge field is {{ CampusName }}.",
+        IsRequired = true,
+        DefaultValue = "{{ CampusName }}",
+        Order = 1,
+        Key = AttributeKey.CurrentItemTemplate )]
+
+    [TextField( "Dropdown Item Template",
+        Description = "Lava template for items in the dropdown. The only merge field is {{ CampusName }}.",
+        IsRequired = true,
+        DefaultValue = "{{ CampusName }}",
+        Order = 2,
+        Key = AttributeKey.DropdownItemTemplate )]
+
+    [TextField( "No Campus Text",
+        Description = "The text displayed when no campus context is selected.",
+        IsRequired = true,
+        DefaultValue = "Select Campus",
+        Order = 3,
+        Key = AttributeKey.NoCampusText )]
+
+    [TextField( "Clear Selection Text",
+        Description = "The text displayed when a campus can be unselected. This will not display when the text is empty.",
+        IsRequired = false,
+        Order = 4,
+        Key = AttributeKey.ClearSelectionText )]
+
+    [BooleanField( "Display Query Strings",
+        Description = "Select to always display query strings. Default behavior will only display the query string when it's passed to the page.",
+        DefaultValue = "false",
+        Order = 5,
+        Key = AttributeKey.DisplayQueryStrings )]
+
+    [BooleanField( "Include Inactive Campuses",
+        Description = "Should inactive campuses be listed as well?",
+        DefaultValue = "false",
+        Order = 6,
+        Key = AttributeKey.IncludeInactiveCampuses )]
+
+    [BooleanField( "Default To Current User's Campus",
+        Description = "Will use the campus of the current user if no context is provided.",
+        Order = 7,
+        Key = AttributeKey.DefaultToCurrentUser )]
+
+    [CustomDropdownListField( "Alignment",
+        Description = "Determines the alignment of the dropdown.",
+        ListSource = "1^Left,2^Right",
+        IsRequired = true,
+        DefaultValue = "1",
+        Order = 8,
+        Key = AttributeKey.Alignment )]
+		
+	/* BEMA.FE1.Start */
       [AttributeField( "Display Campus Boolean Attribute",
         Key = BemaAttributeKey.DisplayCampusBooleanAttribute,
         EntityTypeGuid = "00096BED-9587-415E-8AD4-4E076AE8FBF0",
@@ -61,10 +111,23 @@ namespace RockWeb.Plugins.com_bemaservices.Core
         IsRequired = false,
         Order = 4,
         Category = "BEMA Additional Features" )]
-    /* BEMA.FE1.End */
+    /* BEMA.FE1.End */	
 
     public partial class CampusContextSetter : RockBlock
     {
+        public static class AttributeKey
+        {
+            public const string ContextScope = "ContextScope";
+            public const string CurrentItemTemplate = "CurrentItemTemplate";
+            public const string DropdownItemTemplate = "DropdownItemTemplate";
+            public const string NoCampusText = "NoCampusText";
+            public const string ClearSelectionText = "ClearSelectionText";
+            public const string DisplayQueryStrings = "DisplayQueryStrings";
+            public const string IncludeInactiveCampuses = "IncludeInactiveCampuses";
+            public const string DefaultToCurrentUser = "DefaultToCurrentUser";
+            public const string Alignment = "Alignment";
+        }
+		
          /* BEMA.Start */
         #region Bema Attribute Keys
         private static class BemaAttributeKey
@@ -102,7 +165,7 @@ namespace RockWeb.Plugins.com_bemaservices.Core
 
             LoadDropdowns();
 
-            if ( GetAttributeValue( "Alignment" ) == "2" )
+            if ( GetAttributeValue( AttributeKey.Alignment ) == "2" )
             {
                 ulDropdownMenu.AddCssClass( "dropdown-menu-right" );
             }
@@ -130,7 +193,7 @@ namespace RockWeb.Plugins.com_bemaservices.Core
             var campusEntityType = EntityTypeCache.Get( typeof( Campus ) );
             var currentCampus = RockPage.GetCurrentContext( campusEntityType ) as Campus;
 
-            var campusIdString = Request.QueryString["campusId"];
+            var campusIdString = Request.QueryString["CampusId"];
             if ( campusIdString != null )
             {
                 var campusId = campusIdString.AsInteger();
@@ -141,7 +204,7 @@ namespace RockWeb.Plugins.com_bemaservices.Core
             }
 
             // if the currentCampus isn't determined yet, and DefaultToCurrentUser, and the person has a CampusId, use that as the campus context
-            if ( currentCampus == null && GetAttributeValue( "DefaultToCurrentUser" ).AsBoolean() && CurrentPerson != null )
+            if ( currentCampus == null && GetAttributeValue( AttributeKey.DefaultToCurrentUser ).AsBoolean() && CurrentPerson != null )
             {
                 var campusId = CurrentPerson.GetFamily().CampusId;
                 if ( campusId.HasValue )
@@ -154,14 +217,14 @@ namespace RockWeb.Plugins.com_bemaservices.Core
             {
                 var mergeObjects = new Dictionary<string, object>();
                 mergeObjects.Add( "CampusName", currentCampus.Name );
-                lCurrentSelection.Text = GetAttributeValue( "CurrentItemTemplate" ).ResolveMergeFields( mergeObjects );
+                lCurrentSelection.Text = GetAttributeValue( AttributeKey.CurrentItemTemplate ).ResolveMergeFields( mergeObjects );
             }
             else
             {
-                lCurrentSelection.Text = GetAttributeValue( "NoCampusText" );
+                lCurrentSelection.Text = GetAttributeValue( AttributeKey.NoCampusText );
             }
 
-            bool includeInactive = GetAttributeValue( "IncludeInactiveCampuses" ).AsBoolean();
+            bool includeInactive = GetAttributeValue( AttributeKey.IncludeInactiveCampuses ).AsBoolean();
             var campusList = CampusCache.All( includeInactive )
                 .Select( a => new CampusItem { Name = a.Name, Id = a.Id } )
                 .ToList();
@@ -182,7 +245,7 @@ namespace RockWeb.Plugins.com_bemaservices.Core
             /* BEMA.FE1.End */
 
             // run lava on each campus
-            string dropdownItemTemplate = GetAttributeValue( "DropdownItemTemplate" );
+            string dropdownItemTemplate = GetAttributeValue( AttributeKey.DropdownItemTemplate );
             if ( !string.IsNullOrWhiteSpace( dropdownItemTemplate ) )
             {
                 foreach ( var campus in campusList )
@@ -194,11 +257,11 @@ namespace RockWeb.Plugins.com_bemaservices.Core
             }
 
             // check if the campus can be unselected
-            if ( !string.IsNullOrEmpty( GetAttributeValue( "ClearSelectionText" ) ) )
+            if ( !string.IsNullOrEmpty( GetAttributeValue( AttributeKey.ClearSelectionText ) ) )
             {
                 var blankCampus = new CampusItem
                 {
-                    Name = GetAttributeValue( "ClearSelectionText" ),
+                    Name = GetAttributeValue( AttributeKey.ClearSelectionText ),
                     Id = Rock.Constants.All.Id
                 };
 
@@ -217,14 +280,14 @@ namespace RockWeb.Plugins.com_bemaservices.Core
         /// <returns></returns>
         protected Campus SetCampusContext( int campusId, bool refreshPage = false )
         {
-            bool pageScope = GetAttributeValue( "ContextScope" ) == "Page";
+            bool pageScope = GetAttributeValue( AttributeKey.ContextScope ) == "Page";
             var campus = new CampusService( new RockContext() ).Get( campusId );
             if ( campus == null )
             {
                 // clear the current campus context
                 campus = new Campus()
                 {
-                    Name = GetAttributeValue( "NoCampusText" ),
+                    Name = GetAttributeValue( AttributeKey.NoCampusText ),
                     Guid = Guid.Empty
                 };
             }
@@ -235,10 +298,10 @@ namespace RockWeb.Plugins.com_bemaservices.Core
             // Only redirect if refreshPage is true
             if ( refreshPage )
             {
-                if ( !string.IsNullOrWhiteSpace( PageParameter( "campusId" ) ) || GetAttributeValue( "DisplayQueryStrings" ).AsBoolean() )
+                if ( !string.IsNullOrWhiteSpace( PageParameter( "CampusId" ) ) || GetAttributeValue( AttributeKey.DisplayQueryStrings ).AsBoolean() )
                 {
                     var queryString = HttpUtility.ParseQueryString( Request.QueryString.ToStringSafe() );
-                    queryString.Set( "campusId", campusId.ToString() );
+                    queryString.Set( "CampusId", campusId.ToString() );
                     Response.Redirect( string.Format( "{0}?{1}", Request.Url.AbsolutePath, queryString ), false );
                 }
                 else

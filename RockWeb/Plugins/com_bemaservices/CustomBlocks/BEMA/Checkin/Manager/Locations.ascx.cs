@@ -33,7 +33,7 @@ using Rock.Web.Cache;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -817,21 +817,21 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn.Manager
     var options = {2};
     $.plot( $('#{0}'), data, options );
 
-    $('.js-threshold-btn-edit').click(function(e){{
+    $('.js-threshold-btn-edit').on('click', function(e){{
         var $parentDiv = $(this).closest('div.js-threshold');
         $parentDiv.find('.js-threshold-nb').val($parentDiv.find('.js-threshold-hf').val());
         $parentDiv.find('.js-threshold-view').hide();
         $parentDiv.find('.js-threshold-edit').show();
     }});
 
-    $('a.js-threshold-edit').click(function(e){{
+    $('a.js-threshold-edit').on('click', function(e){{
         var $parentDiv = $(this).closest('div.js-threshold');
         $parentDiv.find('.js-threshold-edit').hide();
         $parentDiv.find('.js-threshold-view').show();
         return true;
     }});
 
-    $('.js-threshold').click(function(e){{
+    $('.js-threshold').on('click', function(e){{
         e.stopPropagation();
     }});
 ",

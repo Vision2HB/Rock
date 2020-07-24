@@ -31,7 +31,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -505,7 +505,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             drpDates.DelimitedValues = gfPledges.GetUserPreference( "Date Range" );
             drpLastModifiedDates.DelimitedValues = gfPledges.GetUserPreference( "Last Modified" );
             apFilterAccount.SetValues( gfPledges.GetUserPreference( "Accounts" ).Split( ',' ).AsIntegerList() );
-
+           
         }
 
         /* BEMA.FE1.Start */
@@ -554,7 +554,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void gPledges_Add( object sender, EventArgs e )
         {
-            NavigateToLinkedPage( "DetailPage", "pledgeId", 0 );
+            NavigateToLinkedPage( "DetailPage", "PledgeId", 0 );
         }
 
         /// <summary>
@@ -564,7 +564,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
         protected void gPledges_Edit( object sender, RowEventArgs e )
         {
-            NavigateToLinkedPage( "DetailPage", "pledgeId", e.RowKeyId );
+            NavigateToLinkedPage( "DetailPage", "PledgeId", e.RowKeyId );
         }
 
         /// <summary>

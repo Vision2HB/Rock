@@ -32,7 +32,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  *
  * Additional Features:
@@ -48,72 +48,110 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
     [Category( "BEMA Services > Person Detail" )]
     [Description( "Allows you to edit a group that person belongs to." )]
 
-    [DefinedValueField( Rock.SystemGuid.DefinedType.PERSON_CONNECTION_STATUS,
-        name: "Default Connection Status",
-        description: "The connection status that should be set by default",
-        required: false,
-        allowMultiple: false,
-        defaultValue: Rock.SystemGuid.DefinedValue.PERSON_CONNECTION_STATUS_VISITOR,
-        order: 0,
-        key: "DefaultConnectionStatus" )]
-    [BooleanField( "Require Campus",
-        description: "Determines if a campus is required.",
-        defaultValue: true,
-        order: 1,
-        key: "RequireCampus" )]
-    [BooleanField( "Require Birthdate",
-        description: "Determines if a birthdate should be required.",
-        defaultValue: false,
-        order: 2,
-        key: "RequireBirthdate" )]
-    [BooleanField( "Hide Title",
-        description: "Should Title field be hidden when entering new people?.",
-        defaultValue: false,
-        order: 3,
-        key: "HideTitle" )]
-    [BooleanField( "Hide Suffix",
-        description: "Should Suffix field be hidden when entering new people?.",
-        defaultValue: false,
-        order: 4,
-        key: "HideSuffix" )]
-    [BooleanField( "Hide Grade",
-        description: "Should Grade field be hidden when entering new people?.",
-        defaultValue: false,
-        order: 5,
-        key: "HideGrade" )]
-    [BooleanField( "Show Age",
-        description: "Should Age of Family Members be displayed?.",
-        defaultValue: false,
-        order: 6,
-        key: "ShowAge" )]
-    [BooleanField( "Show County",
-        description: "Should County be displayed when editing an address?",
-        defaultValue: false,
-        order: 7,
-        key: "ShowCounty" )]
-    [DefinedValueField( Rock.SystemGuid.DefinedType.PERSON_PHONE_TYPE,
-        name: "New Person Phone",
-        description: "The Phone Type to prompt for when adding a new person to family (if any).",
-        required: false,
-        allowMultiple: false,
-        order: 8,
-        key: "NewPersonPhone" )]
-    [BooleanField( "New Person Email",
-        description: "Should an Email field be displayed when adding a new person to the family?",
-        defaultValue: false,
-        order: 9,
-        key: "NewPersonEmail" )]
+    #region Block Attributes
 
-    /* BEMA.FE1.Start */
+    [DefinedValueField(
+        "Default Connection Status",
+        Key = AttributeKey.DefaultConnectionStatus,
+        Description = "The connection status that should be set by default",
+        DefinedTypeGuid = Rock.SystemGuid.DefinedType.PERSON_CONNECTION_STATUS,
+        IsRequired = false,
+        AllowMultiple = false,
+        DefaultValue = Rock.SystemGuid.DefinedValue.PERSON_CONNECTION_STATUS_VISITOR,
+        Order = 0 )]
+
+    [BooleanField(
+        "Require Campus",
+        Key = AttributeKey.RequireCampus,
+        Description = "Determines if a campus is required.",
+        DefaultBooleanValue = true,
+        Order = 1 )]
+
+    [BooleanField(
+        "Require Birthdate",
+        Key = AttributeKey.RequireBirthdate,
+        Description = "Determines if a birthdate should be required.",
+        DefaultBooleanValue = false,
+        Order = 2 )]
+
+    [BooleanField(
+        "Hide Title",
+        Key = AttributeKey.HideTitle,
+        Description = "Should Title field be hidden when entering new people?.",
+        DefaultBooleanValue = false,
+        Order = 3 )]
+
+    [BooleanField(
+        "Hide Suffix",
+        Key = AttributeKey.HideSuffix,
+        Description = "Should Suffix field be hidden when entering new people?.",
+        DefaultBooleanValue = false,
+        Order = 4 )]
+
+    [BooleanField(
+        "Hide Grade",
+        Key = AttributeKey.HideGrade,
+        Description = "Should Grade field be hidden when entering new people?.",
+        DefaultBooleanValue = false,
+        Order = 5 )]
+
+    [BooleanField(
+        "Show Age",
+        Key = AttributeKey.ShowAge,
+        Description = "Should Age of Family Members be displayed?.",
+        DefaultBooleanValue = false,
+        Order = 6 )]
+
+    [BooleanField(
+        "Show County",
+        Key = AttributeKey.ShowCounty,
+        Description = "Should County be displayed when editing an address?",
+        DefaultBooleanValue = false,
+        Order = 7 )]
+
+    [DefinedValueField(
+        "New Person Phone",
+        Key = AttributeKey.NewPersonPhone,
+        Description = "The Phone Type to prompt for when adding a new person to family (if any).",
+        DefinedTypeGuid = Rock.SystemGuid.DefinedType.PERSON_PHONE_TYPE,
+        IsRequired = false,
+        AllowMultiple = false,
+        Order = 8 )]
+
+    [BooleanField(
+        "New Person Email",
+        Key = AttributeKey.NewPersonEmail,
+        Description = "Should an Email field be displayed when adding a new person to the family?",
+        DefaultBooleanValue = false,
+        Order = 9 )]
+
+	/* BEMA.FE1.Start */
     [LinkedPage( "Person Detail Page",
         Key = BemaAttributeKey.PersonDetailPage,
         Description = "The page to navigate to when the Save button is clicked. Leave this blank to use the default.",
         IsRequired = false,
         Order = 10 )]
     /* BEMA.FE1.End */
-	
+    #endregion Block Attributes
+
     public partial class EditGroup : PersonBlock
     {
+        #region Attribute Keys
+        private static class AttributeKey
+        {
+            public const string DefaultConnectionStatus = "DefaultConnectionStatus";
+            public const string RequireCampus = "RequireCampus";
+            public const string RequireBirthdate = "RequireBirthdate";
+            public const string HideTitle = "HideTitle";
+            public const string HideSuffix = "HideSuffix";
+            public const string HideGrade = "HideGrade";
+            public const string ShowAge = "ShowAge";
+            public const string ShowCounty = "ShowCounty";
+            public const string NewPersonPhone = "NewPersonPhone";
+            public const string NewPersonEmail = "NewPersonEmail";
+        }
+        #endregion Attribute Keys
+		
         /* BEMA.Start */
         protected static class BemaAttributeKey
         {
@@ -195,7 +233,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
         {
             base.OnInit( e );
 
-            _showAge = GetAttributeValue( "ShowAge" ).AsBoolean();
+            _showAge = GetAttributeValue( AttributeKey.ShowAge ).AsBoolean();
 
             var rockContext = new RockContext();
 
@@ -252,7 +290,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
 
             if ( _isFamilyGroupType )
             {
-                cpCampus.Required = GetAttributeValue( "RequireCampus" ).AsBoolean( true );
+                cpCampus.Required = GetAttributeValue( AttributeKey.RequireCampus ).AsBoolean( true );
 
                 dvpRecordStatus.Visible = true;
                 dvpRecordStatus.DefinedTypeId = DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.PERSON_RECORD_STATUS.AsGuid() ).Id;
@@ -307,9 +345,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
             btnSave.OnClientClick = string.Format( "javascript:$('#{0}').val('');return true;", confirmExit.ClientID );
             btnCancel.OnClientClick = string.Format( "javascript:$('#{0}').val('');return true;", confirmExit.ClientID );
 
-            _showEmail = GetAttributeValue( "NewPersonEmail" ).AsBoolean();
-            _showPhoneType = DefinedValueCache.Get( GetAttributeValue( "NewPersonPhone" ).AsGuid() );
-            _showCounty = GetAttributeValue( "ShowCounty" ).AsBoolean();
+            _showEmail = GetAttributeValue( AttributeKey.NewPersonEmail ).AsBoolean();
+            _showPhoneType = DefinedValueCache.Get( GetAttributeValue( AttributeKey.NewPersonPhone ).AsGuid() );
+            _showCounty = GetAttributeValue( AttributeKey.ShowCounty ).AsBoolean();
             this.BlockUpdated += Block_BlockUpdated;
         }
 
@@ -712,7 +750,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
             rblNewPersonRole.Required = true;
             rblNewPersonGender.Required = true;
             dvpNewPersonConnectionStatus.Required = true;
-            var connectionStatusGuid = GetAttributeValue( "DefaultConnectionStatus" ).AsGuidOrNull();
+            var connectionStatusGuid = GetAttributeValue( AttributeKey.DefaultConnectionStatus ).AsGuidOrNull();
             if ( connectionStatusGuid.HasValue )
             {
                 var defaultConnectionStatus = DefinedValueCache.Get( connectionStatusGuid.Value );
@@ -728,7 +766,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
             ppPerson.SetValue( null );
 
             dvpNewPersonTitle.SelectedIndex = 0;
-            dvpNewPersonTitle.Visible = !GetAttributeValue( "HideTitle" ).AsBoolean();
+            dvpNewPersonTitle.Visible = !GetAttributeValue( AttributeKey.HideTitle ).AsBoolean();
 
             tbNewPersonFirstName.Text = string.Empty;
 
@@ -744,7 +782,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
             }
 
             dvpNewPersonSuffix.SelectedIndex = 0;
-            dvpNewPersonSuffix.Visible = !GetAttributeValue( "HideSuffix" ).AsBoolean();
+            dvpNewPersonSuffix.Visible = !GetAttributeValue( AttributeKey.HideSuffix ).AsBoolean();
 
             foreach ( ListItem li in rblNewPersonRole.Items )
             {
@@ -758,10 +796,10 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
             }
 
             dpNewPersonBirthDate.SelectedDate = null;
-            dpNewPersonBirthDate.Required = GetAttributeValue( "RequireBirthdate" ).AsBoolean( true );
+            dpNewPersonBirthDate.Required = GetAttributeValue( AttributeKey.RequireBirthdate ).AsBoolean( true );
 
             ddlGradePicker.SelectedIndex = 0;
-            ddlGradePicker.Visible = !GetAttributeValue( "HideGrade" ).AsBoolean();
+            ddlGradePicker.Visible = !GetAttributeValue( AttributeKey.HideGrade ).AsBoolean();
 
             tbNewPersonEmail.Visible = _showEmail;
             pnNewPersonPhoneNumber.Visible = _showPhoneType != null;
@@ -790,7 +828,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Crm.PersonDetail
                 {
                     isValid = false;
                 }
-                else if ( dpNewPersonBirthDate.IsValid && !birthdate.HasValue && GetAttributeValue( "RequireBirthdate" ).AsBoolean() )
+                else if ( dpNewPersonBirthDate.IsValid && !birthdate.HasValue && GetAttributeValue( AttributeKey.RequireBirthdate ).AsBoolean() )
                 {
                     validationMessages.Add( "Birthdate is Required." );
                     isValid = false;

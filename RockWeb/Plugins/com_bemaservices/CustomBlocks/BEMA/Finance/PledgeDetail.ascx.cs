@@ -33,7 +33,7 @@ using Rock.Web.Cache;
 using Rock.Web.UI;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -105,7 +105,7 @@ namespace Rock.Plugins.com_bemaservices.Finance
 
             nbInvalid.Visible = false;
 
-            var pledgeId = PageParameter( "pledgeId" ).AsInteger();
+            var pledgeId = PageParameter( "PledgeId" ).AsInteger();
             if ( !IsPostBack )
             {
                 ShowDetail( pledgeId );

@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
@@ -34,7 +33,7 @@ using Rock.Web.UI.Controls;
 
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -316,6 +315,14 @@ Thank you for logging in, however, we need to confirm the email associated with 
                             CheckUser( userLogin, Request.QueryString["returnurl"], cbRememberMe.Checked );
                             return;
                         }
+                        else if ( component.Authenticate( userLogin, tbPassword.Text ) )
+                        {
+                            // If the password authenticates, check to see if this user is locked out.
+                            if ( CheckUserLockout( userLogin ) )
+                            {
+                                return;
+                            }
+                        }
                     }
                 }
             }
@@ -373,26 +380,56 @@ Thank you for logging in, however, we need to confirm the email associated with 
                 }
                 else
                 {
-                    var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( RockPage, CurrentPerson );
-
-                    if ( userLogin.IsLockedOut ?? false )
-                    {
-                        lLockedOutCaption.Text = GetAttributeValue( "LockedOutCaption" ).ResolveMergeFields( mergeFields );
-
-                        pnlLogin.Visible = false;
-                        pnlLockedOut.Visible = true;
-                    }
-                    else
-                    {
-                        SendConfirmation( userLogin );
-
-                        lConfirmCaption.Text = GetAttributeValue( "ConfirmCaption" ).ResolveMergeFields( mergeFields );
-
-                        pnlLogin.Visible = false;
-                        pnlConfirmation.Visible = true;
-                    }
+                    CheckUserLockoutAndConfirmation( userLogin );
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks to see if the user is locked out and then verifies that their account has been confirmed.
+        /// </summary>
+        /// <param name="userLogin">The user login.</param>
+        private void CheckUserLockoutAndConfirmation( UserLogin userLogin )
+        {
+            var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( RockPage, CurrentPerson );
+
+            if ( CheckUserLockout( userLogin, mergeFields ) )
+            {
+                return;
+            }
+            else
+            {
+                SendConfirmation( userLogin );
+
+                lConfirmCaption.Text = GetAttributeValue( "ConfirmCaption" ).ResolveMergeFields( mergeFields );
+                pnlLogin.Visible = false;
+                pnlConfirmation.Visible = true;
+            }
+        }
+
+        /// <summary>
+        /// Checks to see if the user is locked out and shows an appropriate message if they are.
+        /// </summary>
+        /// <param name="userLogin">The user login.</param>
+        /// <param name="mergeFields">The merge fields.</param>
+        /// <returns>True if the user is locked out.</returns>
+        private bool CheckUserLockout( UserLogin userLogin, Dictionary<string, object> mergeFields = null )
+        {
+            if ( mergeFields == null )
+            {
+                mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( RockPage, CurrentPerson );
+            }
+
+            bool isLockedOut = ( userLogin.IsLockedOut ?? false );
+
+            if ( isLockedOut )
+            {
+                lLockedOutCaption.Text = GetAttributeValue( "LockedOutCaption" ).ResolveMergeFields( mergeFields );
+                pnlLogin.Visible = false;
+                pnlLockedOut.Visible = true;
+            }
+
+            return isLockedOut;
         }
 
         /// <summary>

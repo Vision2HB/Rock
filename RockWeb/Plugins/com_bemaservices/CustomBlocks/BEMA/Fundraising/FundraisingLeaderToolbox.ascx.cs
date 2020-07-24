@@ -31,7 +31,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.0.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -51,7 +51,7 @@ namespace RockWeb.Plugins.com_bemaservices.Fundraising
 {% assign dateRangePartsSize = dateRangeParts | Size %}
 {% if dateRangePartsSize == 2 %}
     {{ dateRangeParts[0] | Date:'MMMM dd, yyyy' }} to {{ dateRangeParts[1] | Date:'MMMM dd, yyyy' }}<br/>
-{% elsif dateRangePartsSize == 1  %}      
+{% elsif dateRangePartsSize == 1 %}
     {{ dateRangeParts[0] | Date:'MMMM dd, yyyy' }}
 {% endif %}
 {{ Group | Attribute:'OpportunityLocation' }}
