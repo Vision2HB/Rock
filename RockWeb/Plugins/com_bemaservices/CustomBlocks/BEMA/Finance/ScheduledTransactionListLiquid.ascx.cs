@@ -25,6 +25,7 @@ using Rock.Data;
 using Rock.Financial;
 using Rock.Lava;
 using Rock.Model;
+using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
@@ -260,7 +261,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                 var nonEditableGatewayIds = GetAttributeValue( BemaAttributeKeys.NonEditableGateways ).SplitDelimitedValues().AsIntegerList();
                 if ( transactionSchedule.FinancialGatewayId.HasValue && nonEditableGatewayIds.Contains( transactionSchedule.FinancialGatewayId.Value ) )
                 {
-                    Button btnEdit = ( Button ) e.Item.FindControl( "btnEdit" );
+                    btnEdit = ( Button ) e.Item.FindControl( "btnEdit" );
                     btnEdit.Visible = false;
                 }
                 /* BEMA.FE2.End */

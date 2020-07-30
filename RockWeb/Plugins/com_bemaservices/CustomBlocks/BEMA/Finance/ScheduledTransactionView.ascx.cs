@@ -27,6 +27,7 @@ using Rock.Data;
 using Rock.Financial;
 using Rock.Model;
 using Rock.Web;
+using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 

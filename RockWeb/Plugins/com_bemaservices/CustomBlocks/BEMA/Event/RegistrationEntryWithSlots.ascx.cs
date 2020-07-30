@@ -4756,7 +4756,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     }
                     else
                     {
-                        CreateAttributeField( hasDependantVisibilityRule, field, setValues, value, GetAttributeValue( "ShowFieldDescriptions" ).AsBoolean(), BlockValidationGroup, phRegistrantControls );
+                        CreateAttributeField( hasDependantVisibilityRule, field, setValues, value, GetAttributeValue( "ShowFieldDescriptions" ).AsBoolean(), BlockValidationGroup, phRegistrantControls, DynamicControlPostbackMethod );
 
                         /* BEMA.FE1.Start */
                         DisplayOpenSlots( field, setValues, value );
