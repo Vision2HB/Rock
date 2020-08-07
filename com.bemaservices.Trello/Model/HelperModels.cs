@@ -39,6 +39,7 @@ namespace com.bemaservices.TrelloSync.Model
 
         public Card Card { get; set; }
         public List<Comment> Comments { get; set; }
+        public List<UpdateCheckItemStateOnCardAction> Tasks { get; set; }
 
     }
 

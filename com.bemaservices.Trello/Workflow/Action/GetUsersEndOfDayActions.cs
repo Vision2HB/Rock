@@ -119,6 +119,8 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                         {
                                             var trelloActions = trelloApi.GetUserEndOfDayActions( trelloUser, since );
 
+                                            var trelloTasks = trelloApi.GetUserEndOfDayTasks( trelloUser, since );
+
                                             string groupAttributeValue = GetAttributeValue( action, ORGANIZATION_ATTRIBUTE_KEY );
                                             Guid? guidGroupAttributeValue = groupAttributeValue.AsGuidOrNull();
                                             if ( guidGroupAttributeValue.HasValue )
@@ -141,6 +143,8 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                                                 var trelloBoardDefinedValue = DefinedValueCache.Get( trelloBoardDefinedValueGuid.Value );
 
                                                                 trelloActions = trelloActions.Where( x => x.Data.Board.Id == trelloBoardDefinedValue.Value ).ToList();
+
+                                                                trelloTasks = trelloTasks.Where( x => x.Data.Board.Id == trelloBoardDefinedValue.Value ).ToList();
                                                             }
                                                         }
                                                     }
@@ -172,6 +176,22 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
 
                                             var Cards = new List<Model.CardComments>();
 
+                                            var cardsToAdd = trelloTasks
+                                                    .GroupBy( x => new
+                                                    {
+                                                        Id = x.Data.Card.Id,
+                                                        Name = x.Data.Card.Name,
+                                                        BoardId = x.Data.Board.Id
+                                                    } )
+                                                    .Select( x => new
+                                                    {
+                                                        CardId = x.Key.Id,
+                                                        Name = x.Key.Name,
+                                                        BoardId = x.Key.BoardId
+                                                    } )
+                                                    .Where( c => !tmpCards.Select( x => x.CardId ).Contains( c.CardId ) )
+                                                    .ToList();
+
                                             foreach ( var tmpCard in tmpCards )
                                             {
 
@@ -189,7 +209,8 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                                 var card = new Model.CardComments
                                                 {
                                                     Card = trelloCard,
-                                                    Comments = Actions.Where( a => a.CardId == trelloCard.Id ).ToList()
+                                                    Comments = Actions.Where( a => a.CardId == trelloCard.Id ).ToList(),
+                                                    Tasks = trelloTasks.Where( a => a.Data.Card.Id == trelloCard.Id ).ToList()
                                                 };
 
                                                 Cards.Add( card );
@@ -211,6 +232,25 @@ namespace com.bemaservices.TrelloSync.Workflow.Action
                                                         Cards = Cards.Where( c => c.Card.IdBoard == x.Key.Id ).ToList()
                                                     } )
                                                     .ToList();
+
+                                            Boards.AddRange(
+                                                trelloTasks
+                                                    .GroupBy( x => new
+                                                    {
+                                                        Id = x.Data.Board.Id,
+                                                        Name = x.Data.Board.Name,
+                                                        ShortLink = x.Data.Board.ShortLink
+                                                    } )
+                                                    .Select( x => new Model.Board
+                                                    {
+                                                        Id = x.Key.Id,
+                                                        Name = x.Key.Name,
+                                                        ShortLink = x.Key.ShortLink,
+                                                        Cards = Cards.Where( c => c.Card.IdBoard == x.Key.Id ).ToList()
+                                                    } )
+                                                    .Where( b => !Boards.Select( x => x.Id ).Contains( b.Id ) )
+                                                    .ToList()
+                                                );
 
                                             var Comments = new Model.Comments
                                             {

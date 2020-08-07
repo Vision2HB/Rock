@@ -184,6 +184,28 @@ namespace com.bemaservices.TrelloSync
 
         }
 
+        public List<UpdateCheckItemStateOnCardAction> GetUserEndOfDayTasks( DefinedValueCache user, DateTime since )
+        {
+
+            var trelloUser = _trello.Members.WithId( user.Value );
+
+            var t = Task.Run( async delegate
+            {
+                await Task.Delay( 1000 );
+                return 42;
+            } );
+            t.Wait();
+
+            var tasks = _trello.Actions
+                                    .AutoPaged( Paging.MaxLimit )
+                                    .ForMember( trelloUser, new[] { ActionType.UpdateCheckItemStateOnCard }, Since.Date( since ) )
+                                    .OfType<UpdateCheckItemStateOnCardAction>()
+                                    .ToList();
+
+            return tasks;
+
+        }
+
         public Card GetCard( string id )
         {
             return _trello.Cards.WithId( id );
