@@ -51,12 +51,38 @@
         </thead>
 
         {% for transaction in TransactionDetails %}
-            <tr>
-                <td>{{ transaction.Transaction.TransactionDateTime | Date:'M/d/yyyy' }}</td>
-                <td>{{ transaction.Summary | Replace:'Admin','Daycation' }}</td>
-                <td>{{ transaction.Transaction.TransactionCode }}</td>
-                <td align="right">{{ transaction.Amount | FormatAsCurrency }}</td>
-            </tr>
+            {% if transaction.Amount != 0 %}
+                {% assign transactionSummary = '' %}
+                {% assign transactionSummary = transaction.Summary %}
+
+                {% assign summaryTrim = transactionSummary | Trim %}
+                {% if summaryTrim == empty or summaryTrim == '' %}
+                    {% assign scheduledTransaction = transaction.Transaction.ScheduledTransaction %}
+                    {% if scheduledTransaction != null %}
+                        {% for scheduledTransactionDetail in scheduledTransaction.ScheduledTransactionDetails %}
+                            {% if scheduledTransactionDetail.Amount == transaction.Amount && scheduledTransactionDetail.AccountId = transaction.AccountId && scheduledTransactionDetail.EntityTypeId = transaction.EntityTypeId && scheduledTransactionDetail.EntityId = transaction.EntityId %}
+                                {% assign transactionSummary = scheduledTransactionDetail.Summary %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+
+                {% assign summaryTrim = transactionSummary | Trim %}
+                {% if summaryTrim == empty or summaryTrim == '' %}
+                    {% assign refundDetails = null %}
+                    {% assign refundDetails = transaction.Transaction.RefundDetails %}
+                    {% if refundDetails != null %}
+                        {% assign transactionSummary = refundDetails.RefundReasonSummary %}
+                    {% endif %}
+                {% endif %}
+
+                <tr>
+                    <td>{{ transaction.Transaction.TransactionDateTime | Date:'M/d/yyyy' }}</td>
+                    <td>{{ transactionSummary | Replace:'Admin','Daycation' }}</td>
+                    <td>{{ transaction.Transaction.TransactionCode }}</td>
+                    <td align="right">{{ transaction.Amount | FormatAsCurrency }}</td>
+                </tr>
+            {% endif %}
         {% endfor %}
 
     </table>
@@ -78,7 +104,7 @@
 
         {% for accountsummary in AccountSummary %}
             <div class="row">
-                <div class="col-xs-6">Daycation <small>({{ accountsummary.AccountName }})</small></div>
+                <div class="col-xs-6">Daycation ({{ accountsummary.AccountName }})</div>
                 <div class="col-xs-6 text-right">{{ accountsummary.Total | FormatAsCurrency }}</div>
             </div>
          {% endfor %}

@@ -58,7 +58,7 @@
           <h2>{{ row.Title }}</h1>
           <h5>{{ row.Subtitle }}</h4>
           <div class='row'>
-            <a href="https://legacy.hfbc.org/page/1926">
+            <a href="https://legacy.hfbc.org/page/1927">
               <div class='col-sm-8'>
                 <span style='font-size:30px'>{{ row.ThisMonth | FormatAsCurrency }} MTD</span>
               </div>
@@ -138,17 +138,19 @@
           <h2>{{ row.Title }}</h1>
           <h5>{{ row.Subtitle }}</h4>
           <div class='row'>
+            <a href="/page/1946">
             <div class='col-sm-8'>
-              <a href="/page/1946">
+
                 <span style='font-size:30px'>{{ row.LastValue }} MTD</span>
                 <p>
                     {{ row.CumulativeValue }} YTD / {{ row.TotalValue }} Total
                 </p>
-              </a>
+
             </div>
             <div class='col-sm-4'>
                 <i class='fa fa-handshake-o fa-3x'></i>
             </div>
+            </a>
           </div>
         {% endfor %}
       </div>
@@ -164,15 +166,19 @@
           <h2>{{ row.Title }}</h1>
           <h5>{{ row.Subtitle }}</h4>
           <div class='row'>
+            <a href="/page/2079">
             <div class='col-sm-8'>
+
               <span style='font-size:30px'>{{ row.LastValue }} MTD</span>
               <p>
-                {{ row.CumulativeValue }} YTD
+                {{ row.CumulativeValue }} YTD / {{ row.TotalValue }} Total
               </p>
+
             </div>
             <div class='col-sm-4'>
               <i class='fa fa-exchange fa-3x'></i>
             </div>
+            </a>
           </div>
         {% endfor %}
       </div>
@@ -303,29 +309,7 @@
 </div>
 
 <div class='row'>
-  <div class='col-md-4'>
-    <div class="panel panel-default">
-      <div class="panel panel-body" style="padding-top:5px;padding-bottom:5px;margin-bottom:0px;">
-        {% for row in table14.rows %}
-          <h2>{{ row.Title }}</h1>
-          <h5>{{ row.Subtitle }}</h4>
-          <div class='row'>
-              <a href="/page/1976">
-              <div class='col-sm-8'>
-                <span style='font-size:30px'>{{ row.LastValue }} MTD</span>
-                <p>
-                  {{ row.CumulativeValue }} YTD
-                </p>
-              </div>
-              <div class='col-sm-4'>
-                <i class='fa fa-hand-o-up fa-3x'></i>
-              </div>
-            </a>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
+
 
   <div class='col-md-4'>
     <div class="panel panel-default">
@@ -367,6 +351,30 @@
               </div>
               <div class='col-sm-4'>
                 <i class='fa fa-exchange fa-3x'></i>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class='col-md-4'>
+    <div class="panel panel-default">
+      <div class="panel panel-body" style="padding-top:5px;padding-bottom:5px;margin-bottom:0px;">
+        {% for row in table14.rows %}
+          <h2>{{ row.Title }}</h1>
+          <h5>{{ row.Subtitle }}</h4>
+          <div class='row'>
+              <a href="/page/1976">
+              <div class='col-sm-8'>
+                <span style='font-size:30px'>{{ row.LastValue }} MTD</span>
+                <p>
+                  {{ row.CumulativeValue }} YTD
+                </p>
+              </div>
+              <div class='col-sm-4'>
+                <i class='fa fa-hand-o-up fa-3x'></i>
               </div>
             </a>
           </div>

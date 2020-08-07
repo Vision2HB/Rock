@@ -270,9 +270,12 @@ FROM [AttributeValue] AV
 INNER JOIN [Group] G ON AV.[EntityId] = G.[Id]
 INNER JOIN [AttributeMatrix] AM ON AV.[Value] = AM.[Guid]
 INNER JOIN [AttributeMatrixItem] AMI ON AM.[Id] = AMI.[AttributeMatrixId]
-Inner Join [AttributeValue] AV1 ON AV1.EntityId = AMI.[Id] and AV1.AttributeId = 24939
+LEFT OUTER JOIN [AttributeValue] AV1 ON AV1.EntityId = AMI.[Id] and AV1.AttributeId = 24939 --FundedDateTime
+LEFT OUTER JOIN [AttributeValue] AV5 ON AV5.[EntityId] = AMI.[Id] AND AV5.[AttributeId] = 24941 -- Children Count
 WHERE AV.[AttributeId] = 24986
 AND ISNULL(AV.[Value], '') != ''
+AND ISNULL(AV5.[Value], '') != '' 
+AND ISNULL(AV1.[Value],'') != ''
 
 SELECT 
     'Total Families' AS [Title],
@@ -291,7 +294,10 @@ Declare @ChildrenTable table(
 	FundedDateTime datetime
 	)
 Insert into @ChildrenTable
-Select G.Id,AV2.ValueAsNumeric, AV1.ValueAsDateTime
+Select 
+G.Id
+, AV2.ValueAsNumeric
+, AV1.ValueAsDateTime
 FROM [AttributeValue] AV
 INNER JOIN [Group] G ON AV.[EntityId] = G.[Id]
 INNER JOIN [AttributeMatrix] AM ON AV.[Value] = AM.[Guid]
@@ -307,7 +313,7 @@ SELECT
 	(
 		Select IsNull(Sum(IsNull(NumberOfChildren,0)),0)
 		From (
-			Select Distinct FamilyId, NumberOfChildren
+			Select FamilyId, NumberOfChildren
 			From @ChildrenTable 
 			Where FundedDateTime >= @ThisMonthStart 
 			AND FundedDateTime <= @ThisMonthEnd
@@ -316,7 +322,7 @@ SELECT
 	(
 		Select IsNull(Sum(IsNull(NumberOfChildren,0)),0)
 		From (
-			Select Distinct FamilyId, NumberOfChildren
+			Select FamilyId, NumberOfChildren
 			From @ChildrenTable 
 			Where FundedDateTime >= @ThisYearStart 
 			AND FundedDateTime <= @ThisYearEnd
@@ -325,7 +331,7 @@ SELECT
 	(
 		Select IsNull(Sum(IsNull(NumberOfChildren,0)),0)
 		From (
-			Select Distinct FamilyId, NumberOfChildren
+			Select FamilyId, NumberOfChildren
 			From @ChildrenTable
 		) t1
 	) as [Total]
@@ -582,7 +588,7 @@ Select f.Id, pa.PersonId, 'Attended Sustain Group', StartDateTime
 	Join GroupMember fm on f.Id = fm.GroupId and fm.GroupMemberStatus = 1
 	Where approvedColumn.ValueAsDateTime >= @ThisYearStart
 
-------- ADD FAMILIES WHO WERE TOUCHED BY A PATHWAY
+------- ADD FAMILIES WHO WERE TOUCHED BY A (old) PATHWAY
 Insert into @TouchesTable
 Select f.Id, p.Id, 'Pathway Added', n.CreatedDateTime
 	From Note n
@@ -592,16 +598,26 @@ Select f.Id, p.Id, 'Pathway Added', n.CreatedDateTime
 	Where ( NoteTypeId = 27 or NoteTypeId = 28)
 	And n.CreatedDateTime >= @ThisYearStart
 
+------ ADD FAMILIES WITH A PATHWAY CONNECTION REQUEST
+Insert into @TouchesTable
+Select f.Id, pa.PersonId, 'Pathway Added', cr.CreatedDateTime
+FROM ConnectionRequest cr
+	Join PersonAlias pa on cr.PersonAliasId = pa.Id
+	Join GroupMember fm on pa.PersonId = fm.PersonId and fm.GroupMemberStatus = 1
+	Join [Group] f on f.Id = fm.GroupId and f.GroupTypeId = 10 and f.IsActive = 1 and f.IsArchived = 0
+WHERE cr.ConnectionOpportunityId = 51
+And cr.CreatedDateTime >= @ThisYearStart
+
 ------- ADD FAMILIES WHO WERE TOUCHED BY AN INTERACTION
 Insert into @TouchesTable
-Select f.Id, p.Id, 'Interaction Added', n.CreatedDateTime
+Select Distinct f.Id, p.Id, 'Interaction Added', n.CreatedDateTime
 	From Note n
 	Join Person p on n.EntityId = p.Id
 	Join GroupMember fm on p.Id = fm.PersonId and fm.GroupMemberStatus = 1
 	Join [Group] f on f.Id = fm.GroupId and f.GroupTypeId = 10 and f.IsActive = 1 and f.IsArchived = 0
 	Join GroupMember legacyGm on p.Id = legacyGm.PersonId
-	Join [Group] legacyG on legacyGm.GroupId = legacyG.Id and legacyG.Id = 486871
-	Where ( NoteTypeId = 24 or NoteTypeId = 25)
+	Join [Group] legacyG on legacyGm.GroupId = legacyG.Id-- and legacyG.Id = 486871
+	Where ( ( (NoteTypeId = 24 or NoteTypeId = 25) and legacyG.Id = 486871) or NoteTypeId = 30)
 	And n.CreatedDateTime >= @ThisYearStart
 
 	Select
@@ -637,7 +653,7 @@ LEFT JOIN [PersonAlias] paC ON cr.[ConnectorPersonAliasId] = paC.[Id]
 LEFT JOIN [Person] pC ON paC.[PersonId] = pC.[Id]
 LEFT JOIN [PersonAlias] paCr ON cr.[CreatedByPersonAliasId] = paCr.[Id]
 LEFT JOIN [Person] pCr ON paCr.[PersonId] = pCr.[Id]
-WHERE co.[ConnectionTypeId] IN (6, 8, 11)
+WHERE co.Id = 51
 
 -----------------------------------------------------------------------------
 -- Interactions (Table 16)

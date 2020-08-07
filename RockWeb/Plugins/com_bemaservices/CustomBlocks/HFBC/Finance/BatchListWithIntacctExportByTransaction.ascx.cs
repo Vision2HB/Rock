@@ -1,20 +1,4 @@
-﻿// <copyright>
-// Copyright by BEMA Information Technologies
-//
-// Licensed under the Rock Community License (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.rockrms.com/license
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// </copyright>
-//
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -33,14 +17,14 @@ using System.ComponentModel;
 using System.Data.Entity;
 using System.Text;
 
-namespace RockWeb.Plugins.com_bemaservices.Finance
+namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance
 {
-    [DisplayName( "Batch List with GL Export" )]
+    [DisplayName( "Batch List with Intacct Export By Transaction" )]
     [Category( "BEMA Services > Finance" )]
     [Description( "Financial batch list that supports GL exports." )]
     [LinkedPage( "Detail Page", order: 0 )]
     [BooleanField( "Show Accounting Code", "Should the accounting code column be displayed.", false, "", 1 )]
-    public partial class BatchListWithGLExport : Rock.Web.UI.RockBlock, IPostBackEventHandler
+    public partial class BatchListWithIntacctExportByTransaction : Rock.Web.UI.RockBlock, IPostBackEventHandler
     {
         #region Fields
 
@@ -464,8 +448,6 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             if ( gBatchList.SelectedKeys.Any() )
             {
                 dpDate.SelectedDate = RockDateTime.Now;
-                tbAccountingPeriod.Text = GetUserPreference( "com.bemadev.exporttogl.accountingperiod" );
-                tbJournalType.Text = GetUserPreference( "com.bemadev.exporttogl.journaltype" );
 
                 pnlExportModal.Visible = true;
                 mdExport.Show();
@@ -485,8 +467,6 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void lbExportSave_Click( object sender, EventArgs e )
         {
-            SetUserPreference( "com.bemadev.exporttogl.accountingperiod", tbAccountingPeriod.Text );
-            SetUserPreference( "com.bemadev.exporttogl.journaltype", tbJournalType.Text );
 
             pnlExportModal.Visible = false;
             mdExport.Hide();
@@ -513,9 +493,16 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
             if ( batchesSelected.Any() )
             {
-                batches = new FinancialBatchService( rockContext ).Queryable().Where( b => batchesSelected.Contains( b.Id ) ).ToList();
+                batches = new FinancialBatchService( rockContext )
+                    .Queryable()
+                    //.Include( b => b.Transactions )
+                    //.Include( b => b.Transactions.SelectMany( t => t.TransactionDetails ) )
+                    //.Include( b => b.Transactions.Select( t => t.FinancialPaymentDetail.CurrencyTypeValue ) )
+                    //.Include( b => b.Transactions.Select( t => t.AuthorizedPersonAlias.Person) )
+                    .Where(b => batchesSelected.Contains(b.Id))
+                    .ToList();
 
-                records.AddRange( GLRecordsForBatch( batches, dpDate.SelectedDate.Value, tbAccountingPeriod.Text.Trim(), tbJournalType.Text.Trim() ) );
+                records.AddRange( GLRecordsForBatch( batches, dpDate.SelectedDate.Value ) );
             }
 
             if ( !UserCanEdit )
@@ -536,8 +523,10 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             // Send the results as a CSV file for download.
             Page.EnableViewState = false;
             Page.Response.Clear();
-            Page.Response.ContentType = "text/plain";
-            Page.Response.AppendHeader( "Content-Disposition", "attachment; filename=GLTRN2000.txt" );
+            Page.Response.ContentType = "text/csv";
+            Page.Response.AppendHeader( "Content-Disposition", "attachment; filename=GLINTACCT.csv" );
+            Page.Response.Write( @"DONOTIMPORT,RECEIPT_DATE,PAYMETHOD,DOCDATE,DOCNUMBER,DESCRIPTION,DEPOSITTO,BANKACCOUNTID,DEPOSITDATE,UNDEPACCTNO,LINE_NO,ACCT_NO,AMOUNT,DEPT_ID,LOCATION_ID,ITEM_MEMO,OTHERRECEIPTSENTRY_PROJECTID,OTHERRECEIPTSENTRY_CLASSID,PAYER_NAME" );
+            Page.Response.Write("\r\n");
             Page.Response.Write( string.Join( "\r\n", records.Select( r => r.ToString() ).ToArray() ) );
             Page.Response.Flush();
             Page.Response.End();
@@ -820,7 +809,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         /// <param name="accountingPeriod">Accounting period as defined in the GL system.</param>
         /// <param name="journalType">The type of journal entry to create as defined in the GL system.</param>
         /// <returns>A collection of GLRecord objects to be imported into the GL system.</returns>
-        List<GLRecord> GLRecordsForBatch( List<FinancialBatch> batches, DateTime date, string accountingPeriod, string journalType )
+        List<GLRecord> GLRecordsForBatch( List<FinancialBatch> batches, DateTime date )
         {
             List<GLRecord> records = new List<GLRecord>();
 
@@ -828,68 +817,122 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             // by the account attributes, GLBankAccount+GLCompany+GLFund.
             var transactions = batches
                 .SelectMany( t => t.Transactions )
-                .SelectMany( t => t.TransactionDetails )
+                .OrderBy( t => t.TransactionDateTime )
                 .ToList();
-            foreach ( var d in transactions )
+            foreach ( var t in transactions )
             {
-                d.LoadAttributes();
-                d.Account.LoadAttributes();
-            }
-            var accounts = transactions.GroupBy( d => new
-            {
-                GLBankAccount = d.Account.GetAttributeValue( "GLBankAccount" ),
-                GLCompany = d.Account.GetAttributeValue( "GLCompany" ),
-                GLFund = d.Account.GetAttributeValue( "GLFund" )
-            }, d => d )
-                .OrderBy( g => g.Key.GLBankAccount.AsIntegerOrNull() )
-                           .ThenBy( g => g.Key.GLFund.AsIntegerOrNull() );
-
-            // Go through each group and build the line items.
-            foreach ( var grp in accounts.ToList() )
-            {
+                int i = 1;
+                //Create debit GL record for transaction
                 GLRecord record = new GLRecord();
 
-                // Build the bank account deposit line item.
-                record.AccountingPeriod = accountingPeriod;
-                record.AccountNumber = grp.Key.GLBankAccount;
-                record.Amount = grp.Sum( d => d.Amount );
-                record.Company = grp.Key.GLCompany;
-                record.Date = date;
-                record.Department = string.Empty;
-                record.Description1 = "Contributions";
-                record.Description2 = string.Empty;
-                record.Fund = grp.Key.GLFund;
-                record.Journal = "0";
-                record.JournalType = journalType;
-                record.Project = string.Empty;
-
-                records.Add( record );
-
-                // Build each of the revenue fund withdrawls.
-                foreach ( var grpTransactions in grp.GroupBy( t => t.AccountId, t => t )
-                    .OrderBy( o => o.First().Account.GetAttributeValue( "GLRevenueDepartment" ).AsIntegerOrNull() )
-                    .ThenBy( o => o.First().Account.GetAttributeValue( "GLRevenueAccount" ).AsIntegerOrNull() ) )
+                record.ReceiptDate = t.CreatedDateTime ?? t.TransactionDateTime ?? RockDateTime.Today;
+                record.PayMethod = string.Empty;
+                record.DocDate = t.TransactionDateTime ?? t.CreatedDateTime ?? RockDateTime.Today;
+                record.DocNumber = t.TransactionCode;
+                record.Description = string.Empty;
+                record.DepositTo = "Undeposited funds";
+                record.BankAccountId = "MAIN-001"; // TO-DO set by export preferences
+                record.DepositDate = date;
+                record.UndepAccountNumber = string.Empty;
+                record.LineNumber = i;
+                record.AccountNumber = "40000"; // TO-DO set by export preferences
+                record.Amount = t.TransactionDetails.Sum( d => d.Amount );
+                record.DepartmentId = string.Empty;
+                record.LocationId = string.Empty;
+                record.ItemMemo = string.Empty;
+                record.OtherReceiptsEntryProjectId = string.Empty;
+                record.OtherReceiptsEntryClassId = string.Empty;
+                record.PayerName = string.Empty;
+                records.Add(record);
+                i++;
+                // For loop for transaction details in transaction
+                foreach( var d in t.TransactionDetails )
                 {
-                    record = new GLRecord();
+                    //Create credit GL record for each detail
+                    GLRecord detailrecord = new GLRecord();
 
-                    record.AccountingPeriod = accountingPeriod;
-                    record.AccountNumber = grpTransactions.First().Account.GetAttributeValue( "GLRevenueAccount" );
-                    record.Amount = -( grpTransactions.Sum( t => t.Amount ) );
-                    record.Company = grp.Key.GLCompany;
-                    record.Date = date;
-                    record.Department = grpTransactions.First().Account.GetAttributeValue( "GLRevenueDepartment" );
-                    record.Description1 = "Contributions";
-                    record.Description2 = string.Empty;
-                    record.Fund = grp.Key.GLFund;
-                    record.Journal = "0";
-                    record.JournalType = journalType;
-                    record.Project = string.Empty;
+                    d.Account.LoadAttributes();
 
-                    records.Add( record );
+                    detailrecord.ReceiptDate = d.CreatedDateTime ?? t.TransactionDateTime ?? RockDateTime.Today;
+                    detailrecord.PayMethod = t.FinancialPaymentDetail.CurrencyTypeValue.Value;
+                    detailrecord.DocDate = t.TransactionDateTime ?? d.CreatedDateTime ?? RockDateTime.Today;
+                    detailrecord.DocNumber = t.TransactionCode;
+                    detailrecord.Description = string.Empty;
+                    detailrecord.DepositTo = string.Empty;
+                    detailrecord.BankAccountId = string.Empty; // TO-DO set by export preferences
+                    detailrecord.DepositDate = date;
+                    detailrecord.UndepAccountNumber = string.Empty;
+                    detailrecord.LineNumber = i;
+                    detailrecord.AccountNumber = d.Account.GetAttributeValue("GLRevenueAccount"); 
+                    detailrecord.Amount = d.Amount;
+                    detailrecord.DepartmentId = d.Account.GetAttributeValue("GLRevenueDepartment");
+                    detailrecord.LocationId = string.Empty;
+                    detailrecord.ItemMemo = string.Empty;
+                    detailrecord.OtherReceiptsEntryProjectId = string.Empty;
+                    detailrecord.OtherReceiptsEntryClassId = d.Account.GetAttributeValue("GLFund");
+                    detailrecord.PayerName = t.AuthorizedPersonAlias.Person.FullName;
+                    records.Add(detailrecord);
+                    i++;
                 }
+
+
+                // Return list
             }
 
-            return records;
+
+            //var accounts = transactions.GroupBy( d => new
+            //{
+            //    GLBankAccount = d.Account.GetAttributeValue( "GLBankAccount" ),
+            //    GLCompany = d.Account.GetAttributeValue( "GLCompany" ),
+            //    GLFund = d.Account.GetAttributeValue( "GLFund" )
+            //}, d => d )
+            //    .OrderBy( g => g.Key.GLBankAccount.AsIntegerOrNull() )
+            //               .ThenBy( g => g.Key.GLFund.AsIntegerOrNull() );
+
+
+            
+                //int i = 1;
+                //// Go through each group and build the line items.
+                //foreach ( var grp in accounts.ToList() )
+                //{
+                //    GLRecord record = new GLRecord();
+
+
+                //    // Build the bank account deposit line item.
+                //    record.AccountNumber = grp.Key.GLBankAccount;
+                //    record.Amount = grp.Sum( d => d.Amount );
+                //    record.Company = grp.Key.GLCompany;
+                //    record.Date = date;
+                //    record.Department = string.Empty;
+                //    record.Fund = grp.Key.GLFund;
+                //    record.Journal = "0";
+
+                //    record.Project = string.Empty;
+                //    record.LineCount = i;
+                //    records.Add( record );
+                //    i++;
+                //    // Build each of the revenue fund withdrawls.
+                //    foreach ( var grpTransactions in grp.GroupBy( t => t.AccountId, t => t )
+                //        .OrderBy( o => o.First().Account.GetAttributeValue( "GLRevenueDepartment" ).AsIntegerOrNull() )
+                //        .ThenBy( o => o.First().Account.GetAttributeValue( "GLRevenueAccount" ).AsIntegerOrNull() ) )
+                //    {
+                //        record = new GLRecord();
+
+                //        record.AccountNumber = grpTransactions.First().Account.GetAttributeValue( "GLRevenueAccount" );
+                //        record.Amount = -( grpTransactions.Sum( t => t.Amount ) );
+                //        record.Company = grp.Key.GLCompany;
+                //        record.Date = date;
+                //        record.Department = grpTransactions.First().Account.GetAttributeValue( "GLRevenueDepartment" );
+                //        record.Fund = grp.Key.GLFund;
+                //        record.Journal = "0";
+                //        record.Project = string.Empty;
+                //        record.LineCount = i;
+                //        records.Add( record );
+                //        i++;
+                //    }
+                //}
+
+                return records;
         }
 
         #endregion
@@ -1006,40 +1049,51 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
         class GLRecord
         {
-            public string Company { get; set; }
-            public string Fund { get; set; }
-            public string AccountingPeriod { get; set; }
-            public string JournalType { get; set; }
-            public string Journal { get; set; }
-
-            public DateTime Date { get; set; }
-
-            public string Description1 { get; set; }
-
-            public string Description2 { get; set; }
-
-            public string Department { get; set; }
+            public DateTime ReceiptDate { get; set; } //need
+            public string PayMethod { get; set; }
+            public DateTime DocDate { get; set; }
+            public string DocNumber { get; set; }
+            public string Description { get; set; }
+            public string DepositTo { get; set; }
+            public string BankAccountId { get; set; } //need
+            public DateTime DepositDate { get; set; }
+            public string UndepAccountNumber { get; set; }
+            public int LineNumber { get; set; }
             public string AccountNumber { get; set; }
+            public decimal Amount { get; set; } //need
+            public string DepartmentId { get; set; } //need
+            public string LocationId { get; set;  }
+            public string ItemMemo { get; set; }
+            public string OtherReceiptsEntryProjectId { get; set; }
+            public string OtherReceiptsEntryClassId { get; set; }
+            public string PayerName { get; set; }
 
-            public decimal Amount { get; set; }
-
-            public string Project { get; set; }
 
             public override string ToString()
             {
-                return string.Format( "\"00000\",\"0{0}00{1}{2}{3}{4}\",\"000\",\"{5}\",\"{6}\",\"{7}\",\"{8}{9}\",\"{10}\",\"{11}\"",
-                    ( Company ?? string.Empty ).PadLeft( 3, '0' ).TrimLength( 3 ),
-                    ( Fund ?? string.Empty ).PadLeft( 3, '0' ).TrimLength( 3 ),
-                    ( AccountingPeriod ?? string.Empty ).PadLeft( 2, '0' ).TrimLength( 2 ),
-                    ( JournalType ?? string.Empty ).PadLeft( 2, '0' ).TrimLength( 2 ),
-                    ( Journal ?? string.Empty ).PadLeft( 5, '0' ).TrimLength( 5 ),
-                    Date.ToString( "MMddyy" ),
-                    ( Description1 ?? string.Empty ).TrimLength( 30 ),
-                    ( Description2 ?? string.Empty ).TrimLength( 30 ),
-                    ( Department ?? string.Empty ).PadLeft( 3, '0' ).TrimLength( 3 ),
-                    ( AccountNumber ?? string.Empty ).PadLeft( 9, '0' ).TrimLength( 9 ),
-                    Math.Round( Amount * 100 ).ToString( "0" ),
-                    ( Project ?? string.Empty ).TrimLength( 30 ) );
+                List<string> strList = new List<string>();
+
+                strList.Add("");                                //Do Not Import
+                strList.Add(ReceiptDate.ToString("yyyy-MM-dd")); //REceipt Date - Deposit Date
+                strList.Add(PayMethod ?? string.Empty);         //Pay Method
+                strList.Add(DocDate.ToString("yyyy-MM-dd"));       //Doc Date              Deposit Date
+                strList.Add(DocNumber ?? string.Empty);                      //Doc Number            None
+                strList.Add(Description ?? string.Empty);                      //Description           None
+                strList.Add(DepositTo ?? string.Empty);                //Deposit To            Undeposited Funds
+                strList.Add(BankAccountId ?? string.Empty);                      //Bank Account Id       blank
+                strList.Add(DepositDate.ToString("yyyy-MM-dd"));                      //Deposit Date          blank
+                strList.Add(UndepAccountNumber ?? string.Empty);                      //UndepacctNo           blank
+                strList.Add(LineNumber.ToString());              //Line No               auto-increment
+                strList.Add(AccountNumber ?? string.Empty);     //Account Number        Account Number
+                strList.Add(Amount.ToString( "0" ));             //Amount                Amount
+                strList.Add(DepartmentId ?? string.Empty);        //Department Id         Department
+                strList.Add(LocationId ?? string.Empty);                     //Location Id           not required
+                strList.Add(ItemMemo ?? string.Empty);                      //Item Memo             not required
+                strList.Add(OtherReceiptsEntryProjectId ?? string.Empty);   //Other receipts entry project id   not required       
+                strList.Add(OtherReceiptsEntryClassId ?? string.Empty);     //Other receipts entry class id     not required        
+                strList.Add(PayerName ?? string.Empty);                     //Payer Name            blank string                     
+                return strList.AsDelimited(",");
+
             }
         }
 

@@ -1,4 +1,4 @@
-﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="BatchListWithGLExport.ascx.cs" Inherits="RockWeb.Plugins.com_bemaservices.Finance.BatchListWithGLExport" %>
+﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="BatchListWithIntacctExportByTransaction.ascx.cs" Inherits="RockWeb.Plugins.com_bemaservices.CustomBlocks.HFBC.Finance.BatchListWithIntacctExportByTransaction" %>
 
 <asp:UpdatePanel ID="upnlContent" runat="server">
     <ContentTemplate>
@@ -17,7 +17,7 @@
                                     <Rock:NotificationBox ID="nbNotClosed" runat="server" Text="The batch you are trying to export has not been closed and could be modified after you have exported to GL. You may wish to close the batch first." NotificationBoxType="Warning" Visible="false" />
                                     <Rock:DatePicker ID="dpDate" runat="server" Label="Deposit Date" Help="The date to mark the general ledger entry as deposited." Required="true" />
                                     <Rock:RockTextBox ID="tbAccountingPeriod" runat="server" Label="Accounting Period" Help="Accounting period for this deposit." MaxLength="2" Required="true" />
-                                    <Rock:RockTextBox ID="tbJournalType" runat="server" Label="Journal Entry Type" Help="The type of journal entry for this deposit." MaxLength="2" Required="true" />
+
                                 </div>
                             </div>
                         </ContentTemplate>
