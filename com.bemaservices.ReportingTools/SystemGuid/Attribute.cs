@@ -8,6 +8,9 @@ namespace com.bemaservices.ReportingTools.SystemGuid
 {
     public static class Attribute
     {
+        public static string REPORTING_FIELDS_UPDATE_DATE_ATTRIBUTE = "A1263027-17BB-433B-A59E-2DF7F821BCD4";
+
+
         public static string FAMILY_HEAD_OF_HOUSEHOLD_ATTRIBUTE = "31B92D60-C950-4431-9E20-F87190C55232";
 
         public static string FAMILY_FULL_NAME_NICKNAMES_NO_TITLES_ATTRIBUTE = "E4EECEF9-87E9-4AA7-A47A-B4F2EED49858";

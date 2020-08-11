@@ -76,8 +76,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Jobs\UpdateFamilyNames.cs" />
-    <Compile Include="Migrations\002_FamilyNameJob.cs" />
+    <Compile Include="Jobs\CalculateReportingFields.cs" />
+    <Compile Include="Migrations\003_SqlFunctions.cs" />
+    <Compile Include="Migrations\002_ReportingFieldsJob.cs" />
     <Compile Include="Migrations\001_InitialSetup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SystemGuid\Attribute.cs" />

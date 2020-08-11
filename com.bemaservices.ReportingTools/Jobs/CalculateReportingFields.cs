@@ -32,15 +32,11 @@ using Rock.Web.UI.Controls;
 
 namespace com.bemaservices.ReportingTools.Jobs
 {
-    /// <summary>
-    /// Job to run quick lava code on a schedule
-    /// </summary>
-    [IntegerField( "Days Back to Sync Family Names For", "Limit the sync to only families updated within the last X days. Leave blank to sync all families", false, Key = "DaysToSyncFamilyNames" )]
     [IntegerField( "Command Timeout", "Maximum amount of time (in seconds) to wait for the sql operations to complete. Leave blank to use the default for this job (3600). Note, some operations could take several minutes, so you might want to set it at 3600 (60 minutes) or higher", false, 60 * 60, "General", 1, "CommandTimeout" )]
     [DisallowConcurrentExecution]
-    public class UpdateFamilyNames : IJob
+    public class CalculateReportingFields : IJob
     {
-        private const string SOURCE_OF_CHANGE = "Update Family Names Job";
+        private const string SOURCE_OF_CHANGE = "Calculate Reporting Fields Job";
 
         /// <summary> 
         /// Empty constructor for job initialization
@@ -49,7 +45,7 @@ namespace com.bemaservices.ReportingTools.Jobs
         /// scheduler can instantiate the class whenever it needs.
         /// </para>
         /// </summary>
-        public UpdateFamilyNames()
+        public CalculateReportingFields()
         {
         }
 
@@ -85,22 +81,15 @@ namespace com.bemaservices.ReportingTools.Jobs
 
             JobDataMap dataMap = context.JobDetail.JobDataMap;
 
-            DateTime? filterDateTime = null;
-            var daysToSyncFamilyNames = dataMap.GetString( "DaysToSyncFamilyNames" ).AsIntegerOrNull();
-            if ( daysToSyncFamilyNames.HasValue )
-            {
-                filterDateTime = RockDateTime.Now.AddDays( daysToSyncFamilyNames.Value * -1 );
-            }
-
             int commandTimeout = dataMap.GetString( "CommandTimeout" ).AsIntegerOrNull() ?? 3600;
 
             var resultContext = new RockContext();
 
             resultContext.Database.CommandTimeout = commandTimeout;
 
-            context.UpdateLastStatusMessage( "Getting Family Names Dataset..." );
+            context.UpdateLastStatusMessage( "Getting Reporting Fields Dataset..." );
 
-            var results = resultContext.Database.SqlQuery<FamilyNameResult>( "BEMA_ReportingTools_sp_FamilyNamesDataset" ).ToList();
+            var results = resultContext.Database.SqlQuery<FamilyNameResult>( "BEMA_ReportingTools_sp_ReportingFieldsDataset" ).ToList();
 
             int personEntityTypeId = EntityTypeCache.Get( "Rock.Model.Person" ).Id;
             int attributeEntityTypeId = EntityTypeCache.Get( "Rock.Model.Attribute" ).Id;
