@@ -36,6 +36,53 @@ namespace Rock.Security
     public static class Authorization
     {
 
+        /// <summary>
+        /// Available settings for SameSiteCookie
+        /// </summary>
+        public enum SameSiteCookieSetting
+        {
+            /// <summary>
+            /// Do not specify a setting
+            /// </summary>
+            None,
+
+            /// <summary>
+            /// Lax
+            /// </summary>
+            Lax,
+
+            /// <summary>
+            /// Strict
+            /// </summary>
+            Strict
+        }
+
+        /// <summary>
+        /// Authentication Level Type
+        /// </summary>
+        public enum AuthenticationLevel
+        {
+            /// <summary>
+            /// TrustedLogin
+            /// </summary>
+            TrustedLogin = 10,
+
+            /// <summary>
+            /// TokenAuthentication
+            /// </summary>
+            TokenAuthentication = 20,
+
+            /// <summary>
+            /// Identified
+            /// </summary>
+            Identified = 30,
+
+            /// <summary>
+            /// None
+            /// </summary>
+            None = 40
+        }
+
         #region Constants
 
         /// <summary>
@@ -92,6 +139,11 @@ namespace Rock.Security
         /// Authorization action for using (tagging with) the Tag.
         /// </summary>
         public const string TAG = "Tag";
+
+        /// <summary>
+        /// Unauthenticated Person Identifier cookie.
+        /// </summary>
+        public const string COOKIE_UNSECURED_PERSON_IDENTIFIER = ".ROCK-UnauthenticatedPersonIdentifier";
 
         #endregion
 
@@ -740,6 +792,7 @@ namespace Rock.Security
         /// </summary>
         public static void SignOut()
         {
+            ExpireUnsecuredPersonIdentifierCookie();
             var domainCookie = HttpContext.Current.Request.Cookies[$"{FormsAuthentication.FormsCookieName}_DOMAIN"];
             if ( domainCookie != null )
             {
@@ -766,6 +819,23 @@ namespace Rock.Security
         }
 
         /// <summary>
+        /// Expires the Unsecured Person Identifier Cookie
+        /// </summary>
+        /// <returns></returns>
+        private static void ExpireUnsecuredPersonIdentifierCookie()
+        {
+            var unsecuredPersonIdentifierCookie = HttpContext.Current.Request.Cookies[Rock.Security.Authorization.COOKIE_UNSECURED_PERSON_IDENTIFIER];
+            if ( unsecuredPersonIdentifierCookie != null )
+            {
+                HttpCookie httpcookie = new HttpCookie( Rock.Security.Authorization.COOKIE_UNSECURED_PERSON_IDENTIFIER );
+                httpcookie.Value = null;
+                httpcookie.Expires = DateTime.Now.AddDays( -1d );
+                HttpContext.Current.Response.Cookies.Remove( Rock.Security.Authorization.COOKIE_UNSECURED_PERSON_IDENTIFIER );
+                HttpContext.Current.Response.Cookies.Add( httpcookie );
+            }
+        }
+
+        /// <summary>
         /// Create a forms authentication cookie.
         /// </summary>
         /// <param name="domain">The domain.</param>
@@ -773,13 +843,18 @@ namespace Rock.Security
         /// <returns></returns>
         private static HttpCookie GetAuthCookie( string domain, string value )
         {
+            // Get the SameSite setting from the Global Attributes. If not set then default to Lax. Official IETF values are "Lax" and "Strict" so if None was selected don't put the setting in the cookie.
+            SameSiteCookieSetting sameSiteCookieSetting = GlobalAttributesCache.Get().GetValue( "core_SameSiteCookieSetting" ).ConvertToEnumOrNull<SameSiteCookieSetting>() ?? SameSiteCookieSetting.Lax;
+            string sameSiteCookieValue = sameSiteCookieSetting == SameSiteCookieSetting.None ? string.Empty : ";SameSite=" + sameSiteCookieSetting;
+
             var httpCookie = new HttpCookie( FormsAuthentication.FormsCookieName, value )
             {
                 Domain = domain.IsNotNullOrWhiteSpace() ? domain : FormsAuthentication.CookieDomain,
                 HttpOnly = true,
-                Path = FormsAuthentication.FormsCookiePath,
+                Path = FormsAuthentication.FormsCookiePath + sameSiteCookieValue,
                 Secure = FormsAuthentication.RequireSSL
             };
+
             return httpCookie;
         }
 

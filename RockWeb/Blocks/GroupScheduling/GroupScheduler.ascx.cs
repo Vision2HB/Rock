@@ -64,7 +64,7 @@ namespace RockWeb.Blocks.GroupScheduling
         /// <summary>
         /// 
         /// </summary>
-        protected static class PageParameterKey
+        private static class PageParameterKey
         {
             public const string GroupId = "GroupId";
         }
@@ -73,49 +73,15 @@ namespace RockWeb.Blocks.GroupScheduling
 
         #region UserPreferenceKeys
 
-        /// <summary>
-        /// Keys to use for UserPreferences
-        /// </summary>
-        protected static class UserPreferenceKey
+        private static class UserPreferenceKey
         {
-            /// <summary>
-            /// The selected group identifier
-            /// </summary>
             public const string SelectedGroupId = "SelectedGroupId";
-
-            /// <summary>
-            /// The selected date
-            /// </summary>
             public const string SelectedDate = "SelectedDate";
-
-            /// <summary>
-            /// The selected schedule id
-            /// </summary>
             public const string SelectedScheduleId = "SelectedScheduleId";
-
-            /// <summary>
-            /// The selected group location ids
-            /// </summary>
             public const string SelectedGroupLocationIds = "SelectedGroupLocationIds";
-
-            /// <summary>
-            /// The selected resource list source type
-            /// </summary>
             public const string SelectedResourceListSourceType = "SelectedResourceListSourceType";
-
-            /// <summary>
-            /// The group member filter type
-            /// </summary>
             public const string GroupMemberFilterType = "GroupMemberFilterType";
-
-            /// <summary>
-            /// The alternate group identifier
-            /// </summary>
             public const string AlternateGroupId = "AlternateGroupId";
-
-            /// <summary>
-            /// The data view identifier
-            /// </summary>
             public const string DataViewId = "DataViewId";
         }
 
@@ -247,7 +213,13 @@ btnCopyToClipboard.ClientID );
             {
                 var groupLocations = group.GroupLocations.ToList();
 
-                var groupSchedules = groupLocations.SelectMany( a => a.Schedules ).DistinctBy( a => a.Guid ).ToList();
+                var groupSchedules = groupLocations
+                    .Where( gl => gl.Location.IsActive )
+                    .SelectMany( gl => gl.Schedules )
+                    .Where( s => s.IsActive )
+                    .DistinctBy( a => a.Guid )
+                    .ToList();
+
                 if ( !groupSchedules.Any() )
                 {
                     nbGroupWarning.Text = "Group does not have any locations or schedules";
@@ -488,7 +460,10 @@ btnCopyToClipboard.ClientID );
 
                 var rockContext = new RockContext();
                 var groupLocationsQuery = new GroupLocationService( rockContext ).Queryable()
-                    .Where( a => a.GroupId == group.Id && a.Schedules.Any( s => s.Id == scheduleId ) )
+                    .Where( gl =>
+                        gl.GroupId == group.Id &&
+                        gl.Schedules.Any( s => s.Id == scheduleId ) &&
+                        gl.Location.IsActive )
                     .OrderBy( a => new { a.Order, a.Location.Name } )
                     .AsNoTracking();
 
@@ -952,6 +927,7 @@ btnCopyToClipboard.ClientID );
 
             List<string> errorMessages;
             var emailsSent = attendanceService.SendScheduleConfirmationSystemEmails( sendConfirmationAttendancesQuery, out errorMessages );
+            bool isSendConfirmationAttendancesFound = sendConfirmationAttendancesQuery.Any();
             rockContext.SaveChanges();
 
             StringBuilder summaryMessageBuilder = new StringBuilder();
@@ -970,7 +946,7 @@ btnCopyToClipboard.ClientID );
             else
             {
                 alertType = ModalAlertType.Information;
-                if ( emailsSent > 0 && sendConfirmationAttendancesQuery.Any() )
+                if ( emailsSent > 0 && isSendConfirmationAttendancesFound )
                 {
                     summaryMessageBuilder.AppendLine( string.Format( "Successfully sent {0} confirmation {1}", emailsSent, "email".PluralizeIf( emailsSent != 1 ) ) );
                 }

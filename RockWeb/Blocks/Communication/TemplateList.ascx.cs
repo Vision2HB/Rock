@@ -274,6 +274,8 @@ namespace RockWeb.Blocks.Communication
                 templateCopy.CreatedByPersonAliasId = null;
                 templateCopy.ModifiedByPersonAlias = null;
                 templateCopy.ModifiedByPersonAliasId = null;
+                templateCopy.LogoBinaryFileId = null;
+                templateCopy.ImageFileId = null;
                 templateCopy.CreatedDateTime = RockDateTime.Now;
                 templateCopy.ModifiedDateTime = RockDateTime.Now;
                 service.Add( templateCopy );
@@ -379,12 +381,6 @@ namespace RockWeb.Blocks.Communication
         {
             var rockContext = new RockContext();
             var communicationTemplateQry = new CommunicationTemplateService( rockContext ).Queryable( "CreatedByPersonAlias.Person" );
-
-            var privateCol = gCommunicationTemplates.ColumnsOfType<RockBoundField>().FirstOrDefault( c => c.DataField == "SenderPersonAlias.Person.FullName" );
-            if ( privateCol != null )
-            {
-                privateCol.Visible = GetAttributeValue( "EnablePersonalTemplates" ).AsBoolean();
-            }
 
             if ( _canFilterCreatedBy )
             {

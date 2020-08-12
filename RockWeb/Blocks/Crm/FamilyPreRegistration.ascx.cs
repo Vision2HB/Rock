@@ -37,7 +37,7 @@ namespace RockWeb.Blocks.Crm
     [Category( "CRM" )]
     [Description( "Provides a way to allow people to pre-register their families for weekend check-in." )]
 
-    [BooleanField( "Show Campus", "Should the campus field be displayed?", true, "", 0 )]
+    [BooleanField( "Show Campus", "Should the campus field be displayed? If there is only one active campus then the campus field will not show.", true, "", 0 )]
     [CampusField( "Default Campus", "An optional campus to use by default when adding a new family.", false, "", "", 1 )]
     [CustomDropdownListField( "Planned Visit Date", "How should the Planned Visit Date field be displayed (this value is only used when starting a workflow)?", HIDE_OPTIONAL_REQUIRED, false, "Optional", "", 2 )]
     [AttributeField( Rock.SystemGuid.EntityType.GROUP, "GroupTypeId", Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY, "Family Attributes", "The Family attributes that should be displayed", false, true, "", "", 3 )]
@@ -421,18 +421,18 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
                 bool saveEmptyValues = primaryFamily != null;
 
                 // Save the adults
-                var adultIds = new List<int>();
-                SaveAdult( ref primaryFamily, adultIds, 1, hfAdultGuid1, tbFirstName1, tbLastName1, dvpSuffix1, ddlGender1, dpBirthDate1, dvpMaritalStatus1, tbEmail1, pnMobilePhone1, phAttributes1 );
-                SaveAdult( ref primaryFamily, adultIds, 2, hfAdultGuid2, tbFirstName2, tbLastName2, dvpSuffix2, ddlGender2, dpBirthDate2, dvpMaritalStatus2, tbEmail2, pnMobilePhone2, phAttributes2 );
+                var adults = new List<Person>();
+                SaveAdult( ref primaryFamily, adults, 1, hfAdultGuid1, tbFirstName1, tbLastName1, dvpSuffix1, ddlGender1, dpBirthDate1, dvpMaritalStatus1, tbEmail1, pnMobilePhone1, phAttributes1 );
+                SaveAdult( ref primaryFamily, adults, 2, hfAdultGuid2, tbFirstName2, tbLastName2, dvpSuffix2, ddlGender2, dpBirthDate2, dvpMaritalStatus2, tbEmail2, pnMobilePhone2, phAttributes2 );
+
+                bool isNewFamily = false;
 
                 // If two adults were entered, let's check to see if we should assume they're married
-                if ( adultIds.Count == 2 )
+                if ( adults.Count == 2 )
                 {
                     var marriedStatusValue = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_MARITAL_STATUS_MARRIED.AsGuid() );
                     if ( marriedStatusValue != null )
                     {
-                        var adults = personService.Queryable().Where( p => adultIds.Contains( p.Id ) ).ToList();
-
                         // as long as neither of the adults has a marital status
                         if ( !adults.Any( a => a.MaritalStatusValueId.HasValue ) )
                         {
@@ -458,6 +458,7 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
                 {
                     // Otherwise, create a new family and save it
                     primaryFamily = CreateNewFamily( familyGroupType.Id, ( tbLastName1.Text.IsNotNullOrWhiteSpace() ? tbLastName1.Text : tbLastName2.Text ) );
+                    isNewFamily = true;
                     groupService.Add( primaryFamily );
                     saveEmptyValues = true;
                 }
@@ -466,18 +467,23 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
                 _rockContext.SaveChanges();
 
                 // Make sure adults are part of the primary family, and if not, add them.
-                foreach( int id in adultIds )
+                foreach( Person adult in adults )
                 {
-                    var currentFamilyMember = primaryFamily.Members.FirstOrDefault( m => m.PersonId == id );
+                    var currentFamilyMember = primaryFamily.Members.FirstOrDefault( m => m.PersonId == adult.Id );
                     if ( currentFamilyMember == null )
                     {
                         currentFamilyMember = new GroupMember
                         {
                             GroupId = primaryFamily.Id,
-                            PersonId = id,
+                            PersonId = adult.Id,
                             GroupRoleId = adultRoleId,
                             GroupMemberStatus = GroupMemberStatus.Active
                         };
+
+                        if ( isNewFamily )
+                        {
+                            adult.GivingGroupId = primaryFamily.Id;
+                        }
 
                         groupMemberService.Add( currentFamilyMember );
 
@@ -538,6 +544,7 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
                 primaryFamily.SaveAttributeValues( _rockContext );
 
                 // Get the adult known relationship groups
+                var adultIds = adults.Select( a => a.Id ).ToList();
                 var knownRelationshipGroupIds = groupMemberService.Queryable()
                     .Where( m =>
                         m.GroupRole.Guid == knownRelationshipOwnerRoleGuid &&
@@ -797,8 +804,15 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
             if ( GetAttributeValue( "ShowCampus" ).AsBoolean() )
             {
                 cpCampus.Campuses = CampusCache.All( false );
-                pnlCampus.Visible = true;
-                cpCampus.Required = GetAttributeValue("RequireCampus").AsBoolean();
+                if ( CampusCache.All( false ).Count > 1 )
+                {
+                    pnlCampus.Visible = true;
+                    cpCampus.Required = GetAttributeValue( "RequireCampus" ).AsBoolean();
+                }
+                else
+                {
+                    pnlCampus.Visible = false;
+                }
             }
             else
             {
@@ -1237,7 +1251,7 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
             }
         }
 
-        private void SaveAdult( ref Group primaryFamily, List<int> adultIds, int adultNumber,
+        private void SaveAdult( ref Group primaryFamily, List<Person> adults, int adultNumber,
             HiddenField hfAdultGuid,
             RockTextBox tbFirstName,
             RockTextBox tbLastName,
@@ -1372,7 +1386,7 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
                 GetAdultAttributeValues( phAttributes, adult, adultNumber, saveEmptyValues );
                 adult.SaveAttributeValues( _rockContext );
 
-                adultIds.Add( adult.Id );
+                adults.Add( adult );
             }
 
         }
@@ -1515,7 +1529,8 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
             ValidateRequiredField( "AdultGender", "Gender is required for each adult.", ddlGender1.SelectedValueAsEnumOrNull<Gender>() != null, ddlGender2.SelectedValueAsEnumOrNull<Gender>() != null, errorMessages );
             ValidateRequiredField( ADULT_BIRTHDATE_KEY, "Birthdate is required for each adult.", dpBirthDate1.SelectedDate != null, dpBirthDate2.SelectedDate != null, errorMessages );
             ValidateRequiredField( ADULT_EMAIL_KEY, "Email is required for each adult.", tbEmail1.Text.IsNotNullOrWhiteSpace(), tbEmail2.Text.IsNotNullOrWhiteSpace(), errorMessages );
-            ValidateRequiredField( ADULT_MOBILE_KEY, "Mobile Phone is required for each adult.", PhoneNumber.CleanNumber( pnMobilePhone1.Number ).IsNotNullOrWhiteSpace(), PhoneNumber.CleanNumber( pnMobilePhone2.Number ).IsNotNullOrWhiteSpace(), errorMessages );
+            //ValidateRequiredField( ADULT_MOBILE_KEY, "A valid Mobile Phone is required for each adult.", pnMobilePhone1.IsValid, pnMobilePhone2.IsValid, errorMessages );
+            bool isPhoneValid = ValidateRequiredField( ADULT_MOBILE_KEY, string.Empty, pnMobilePhone1.IsValid, pnMobilePhone2.IsValid, errorMessages );
 
             if ( errorMessages.Any() )
             {
@@ -1535,6 +1550,11 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
                 }
             }
 
+            if (!isPhoneValid)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -1546,7 +1566,7 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
         /// <param name="adult1HasValue">if set to <c>true</c> [adult1 has value].</param>
         /// <param name="adult2HasValue">if set to <c>true</c> [adult2 has value].</param>
         /// <param name="errorMessages">The error messages.</param>
-        private void ValidateRequiredField( string attributeKey, string errorMessage, bool adult1HasValue, bool adult2HasValue, List<String> errorMessages )
+        private bool ValidateRequiredField( string attributeKey, string errorMessage, bool adult1HasValue, bool adult2HasValue, List<String> errorMessages )
         {
             if ( GetAttributeValue( attributeKey ) == "Required" )
             {
@@ -1555,9 +1575,18 @@ ORDER BY [Text]", false, "", "Child Relationship", 2, "CanCheckinRelationships" 
                     ( tbFirstName2.Text.IsNotNullOrWhiteSpace() && !adult2HasValue )
                 )
                 {
-                    errorMessages.Add( errorMessage );
+                    if ( errorMessage.IsNotNullOrWhiteSpace() )
+                    {
+                        errorMessages.Add( errorMessage );
+                    }
+
+                    return false;
                 }
+
+                return true;
             }
+
+            return true;
         }
 
         /// <summary>

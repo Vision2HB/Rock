@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using System.Web.UI;
@@ -89,29 +90,7 @@ namespace RockWeb.Blocks.Administration
             ScriptManager scriptManager = ScriptManager.GetCurrent( Page );
             scriptManager.RegisterPostBackControl( btnDumpDiagnostics );
         }
-
-        protected override void OnPreRender( EventArgs e )
-        {
-            if ( Context.Items.Contains( "Cache_Hits" ) )
-            {
-                var cacheHits = Context.Items["Cache_Hits"] as System.Collections.Generic.Dictionary<string, bool>;
-                if ( cacheHits != null )
-                {
-                    var misses = cacheHits.Where( c => !c.Value );
-                    if ( misses.Any() )
-                    {
-                        lFalseCacheHits.Text = string.Format( "<p><strong>Cache Misses:</strong><br /> {0}</p>",
-                            misses.Select( c => c.Key )
-                                .OrderBy( c => c )
-                                .ToList()
-                                .AsDelimited( "<br />" ) );
-                    }
-                }
-            }
-            
-            base.OnPreRender( e );
-        }
-
+        
         #endregion
 
         #region Events
@@ -197,10 +176,23 @@ namespace RockWeb.Blocks.Administration
             ResponseWrite( "Server Variables:", "", response );
             foreach ( string key in Request.ServerVariables )
             {
-                if ( !key.Equals("HTTP_COOKIE", StringComparison.OrdinalIgnoreCase ) )
+                bool isCookieOrPassword = key.Equals( "HTTP_COOKIE", StringComparison.OrdinalIgnoreCase ) || key.Equals( "AUTH_PASSWORD", StringComparison.OrdinalIgnoreCase );
+                // Skip cookies
+                if ( isCookieOrPassword )
+                {
+                    continue;
+                }
+
+                bool isSensitiveData = key.IndexOf( "ALL_HTTP", StringComparison.OrdinalIgnoreCase ) >= 0 || key.IndexOf( "ALL_RAW", StringComparison.OrdinalIgnoreCase ) >= 0;
+                if ( isSensitiveData )
+                {
+                    // strip out any sensitive data
+                    ResponseWrite( key, Regex.Replace( Request.ServerVariables[key], @"ASP.NET_SessionId=\S*;|\.ROCK=\S*;", string.Empty, RegexOptions.Multiline ), response );
+                }
+                else
                 {
                     ResponseWrite( key, Request.ServerVariables[key], response );
-                } 
+                }
             }
 
             response.Flush();
@@ -252,6 +244,10 @@ namespace RockWeb.Blocks.Administration
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Gets the cache information (From Re-dis Cache Statistics)
+        /// </summary>
+        /// <returns></returns>
         private string GetCacheInfo()
         {
             StringBuilder sb = new StringBuilder();

@@ -1,5 +1,5 @@
 ﻿// <copyright>
-// Copyright by BEMA Information Technologies
+// Copyright by BEMA Software Services
 //
 // Licensed under the Rock Community License (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,9 +41,9 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 using Helper = Rock.Attribute.Helper;
 /*
- * BEMA Modified Core Block ( v9.4.1)
+ * BEMA Modified Core Block ( v10.3.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
- * 
+ *
  * Additional Features:
  * - FE1) Added Ability to waitlist someone if a single select option they have does not have available slots left
  */
@@ -61,19 +62,57 @@ namespace RockWeb.Plugins.com_bemaservices.Event
     [TextField( "Batch Name Prefix", "The batch prefix name to use when creating a new batch", false, "Event Registration", "", 3 )]
     [BooleanField( "Display Progress Bar", "Display a progress bar for the registration.", true, "", 4 )]
     [BooleanField( "Allow InLine Digital Signature Documents", "Should inline digital documents be allowed? This requires that the registration template is configured to display the document inline", true, "", 6, "SignInline" )]
-    [SystemEmailField( "Confirm Account Template", "Confirm Account Email Template", false, Rock.SystemGuid.SystemEmail.SECURITY_CONFIRM_ACCOUNT, "", 7 )]
-    [TextField( "Family Term", "The term to use for specifying which household or family a person is a member of.", true, "immediate family", "", 8 )]
-    [BooleanField( "Force Email Update", "Force the email to be updated on the person's record.", false, "", 9 )]
-    [BooleanField( "Show Field Descriptions", "Show the field description as help text", defaultValue: true, order: 10, key: "ShowFieldDescriptions" )]
+    [SystemCommunicationField( "Confirm Account Template",
+        "Confirm Account Email Template",
+        DefaultSystemCommunicationGuid = Rock.SystemGuid.SystemCommunication.SECURITY_CONFIRM_ACCOUNT,
+        Order = 7,
+        Key = AttributeKey.ConfirmAccountTemplate )]
+
+    [TextField( "Family Term",
+        Description = "The term to use for specifying which household or family a person is a member of.",
+        IsRequired = true,
+        DefaultValue = "immediate family",
+        Order = 8,
+        Key = AttributeKey.FamilyTerm )]
+
+    [BooleanField( "Force Email Update",
+        Description = "Force the email to be updated on the person's record.",
+        DefaultBooleanValue = false,
+        Order = 9,
+        Key =AttributeKey.ForceEmailUpdate )]
+
+    [BooleanField( "Show Field Descriptions",
+        Description = "Show the field description as help text",
+        DefaultBooleanValue = true,
+        Order = 10,
+        Key = AttributeKey.ShowFieldDescriptions )]
 
     /* BEMA.FE1.Start */
-    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Slots Attribute", "The Attribute dictating the slots" )]
-    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Single Select Key Attribute", "The Attribute Containing the key of the field the slots are divided by" )]
-    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Filter Key Attribute", "The Attribute Containing the key of the field the slots are filtered by" )]
+    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Slots Attribute", "The Attribute dictating the slots", Key = BemaAttributeKey.SlotsAttribute )]
+    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Single Select Key Attribute", "The Attribute Containing the key of the field the slots are divided by", Key = BemaAttributeKey.SingleSelectKeyAttribute )]
+    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Filter Key Attribute", "The Attribute Containing the key of the field the slots are filtered by", Key = BemaAttributeKey.FilterKeyAttribute )]
     /* BEMA.FE1.End */
-
     public partial class RegistrationEntryWithSlots : RockBlock
     {
+        private static class AttributeKey
+        {
+            public const string ConfirmAccountTemplate = "ConfirmAccountTemplate";
+            public const string FamilyTerm = "FamilyTerm";
+            public const string ForceEmailUpdate = "ForceEmailUpdate";
+            public const string ShowFieldDescriptions = "ShowFieldDescriptions";
+        }
+
+        /* BEMA.Start */
+		
+        private static class BemaAttributeKey
+        {
+            public const string SlotsAttribute = "SlotsAttribute";
+            public const string SingleSelectKeyAttribute = "SingleSelectKeyAttribute";
+            public const string FilterKeyAttribute = "FilterKeyAttribute";
+        }
+		
+        /* BEMA.End */
+
         #region Fields
 
         private bool _saveNavigationHistory = false;
@@ -1340,6 +1379,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         protected void ddlFamilyMembers_SelectedIndexChanged( object sender, EventArgs e )
         {
             SetRegistrantFields( ddlFamilyMembers.SelectedValueAsInt() );
+            CreateRegistrantControls( true );
 
             decimal currentStep = ( FormCount * CurrentRegistrantIndex ) + CurrentFormIndex + 1;
             PercentComplete = ( currentStep / ProgressBarSteps ) * 100.0m;
@@ -1443,8 +1483,18 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 RegistrationState.DiscountAmount = validDiscount ? discount.DiscountAmount : 0.0m;
 
                 CreateDynamicControls( true );
+
+                // If the registration was previously saved then save it again to update the discount
+                if ( RegistrationState.RegistrationId != null && RegistrationState.RegistrationId != 0 )
+                {
+                    // This should be false, but it is possible to fill this in before clicking the disount button
+                    bool hasPayment = ( RegistrationState.PaymentAmount ?? 0.0m ) > 0.0m;
+                    SaveRegistration( new RockContext(), hasPayment );
+                }
             }
         }
+
+
 
         #endregion
 
@@ -1555,7 +1605,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                                 mergeFields.Add( "User", user );
 
                                 var emailMessage = new RockEmailMessage( GetAttributeValue( "ConfirmAccountTemplate" ).AsGuid() );
-                                emailMessage.AddRecipient( new RecipientData( authorizedPersonAlias.Person.Email, mergeFields ) );
+                                emailMessage.AddRecipient( new RockEmailMessageRecipient( authorizedPersonAlias.Person, mergeFields ) );
                                 emailMessage.AppRoot = ResolveRockUrl( "~/" );
                                 emailMessage.ThemeRoot = ResolveRockUrl( "~~/" );
                                 emailMessage.CreateCommunicationRecord = false;
@@ -1826,9 +1876,11 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 if ( !RegistrationState.RegistrationId.HasValue && RegistrationInstanceState != null && RegistrationInstanceState.MaxAttendees.HasValue )
                 {
                     var existingRegistrantIds = RegistrationState.Registrants.Select( r => r.Id ).ToList();
-                    var otherRegistrantsCount = new RegistrationRegistrantService( new RockContext() ).Queryable()
+                    var otherRegistrantsCount = new RegistrationRegistrantService( new RockContext() )
+                        .Queryable()
                         .Where( a => a.Registration.RegistrationInstanceId == registrationInstanceId && !a.Registration.IsTemporary )
-                        .Where( a => !existingRegistrantIds.Contains( a.Id ) ).Count();
+                        .Where( a => !existingRegistrantIds.Contains( a.Id ) )
+                        .Count();
 
                     int otherRegistrants = RegistrationInstanceState.Registrations
                         .Where( r => !r.IsTemporary )
@@ -2535,6 +2587,11 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                                 registrant.PersonAliasId = null;
                             }
                         }
+                        else if ( registrantInfo.PersonId.HasValue )
+                        {
+                            // This can happen if the page has reloaded due to an error. The person was saved to the DB and we don't want to add them again.
+                            person = personService.Get( registrantInfo.PersonId.Value );
+                        }
                     }
                     else
                     {
@@ -2925,7 +2982,9 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     // Save the signed document
                     try
                     {
-                        if ( RegistrationTemplate.RequiredSignatureDocumentTemplateId.HasValue && !string.IsNullOrWhiteSpace( registrantInfo.SignatureDocumentKey ) )
+                        if ( RegistrationTemplate.RequiredSignatureDocumentTemplateId.HasValue &&
+                            !string.IsNullOrWhiteSpace( registrantInfo.SignatureDocumentKey ) &&
+                            registrantInfo.SignatureDocumentId.IsNotNullOrZero() )
                         {
                             var document = new SignatureDocument();
                             document.SignatureDocumentTemplateId = RegistrationTemplate.RequiredSignatureDocumentTemplateId.Value;
@@ -2940,6 +2999,8 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                             documentService.Add( document );
                             rockContext.SaveChanges();
 
+                            registrantInfo.SignatureDocumentId = document.Id;
+
                             var updateDocumentTxn = new Rock.Transactions.UpdateDigitalSignatureDocumentTransaction( document.Id );
                             Rock.Transactions.RockQueue.TransactionQueue.Enqueue( updateDocumentTxn );
                         }
@@ -2948,6 +3009,8 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     {
                         ExceptionLogService.LogException( ex, Context, this.RockPage.PageId, this.RockPage.Site.Id, CurrentPersonAlias );
                     }
+
+                    registrantInfo.PersonId = person.Id;
                 }
 
                 rockContext.SaveChanges();
@@ -3045,7 +3108,8 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 }
             }
 
-            if ( familyId.HasValue && location != null )
+            // If we have family ID and a meaninful location then update that info
+            if ( familyId.HasValue && location != null && location.IsMinimumViableAddress() )
             {
                 var familyGroup = new GroupService( rockContext ).Get( familyId.Value );
                 var existingLocation = new LocationService( rockContext ).Get(
@@ -3058,7 +3122,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     familyGroup,
                     true,
                     false );
-
+                
                 var homeLocationType = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.GROUP_LOCATION_TYPE_HOME.AsGuid() );
                 if ( homeLocationType != null && familyGroup != null )
                 {
@@ -3411,10 +3475,6 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                         History.EvaluateChange( batchChanges, "End Date/Time", null, batch.BatchEndDateTime );
                     }
 
-                    decimal newControlAmount = batch.ControlAmount + transaction.TotalAmount;
-                    History.EvaluateChange( batchChanges, "Control Amount", batch.ControlAmount.FormatAsCurrency(), newControlAmount.FormatAsCurrency() );
-                    batch.ControlAmount = newControlAmount;
-
                     var financialTransactionService = new FinancialTransactionService( rockContext );
 
                     // If this is a new Batch, SaveChanges so that we can get the Batch.Id
@@ -3422,12 +3482,14 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     {
                         rockContext.SaveChanges();
                     }
-
+              
                     transaction.BatchId = batch.Id;
 
                     // use the financialTransactionService to add the transaction instead of batch.Transactions to avoid lazy-loading the transactions already associated with the batch
                     financialTransactionService.Add( transaction );
+                    rockContext.SaveChanges();
 
+                    batchService.IncrementControlAmount( batch.Id, transaction.TotalAmount, batchChanges );
                     rockContext.SaveChanges();
                 } );
 
@@ -3600,6 +3662,12 @@ namespace RockWeb.Plugins.com_bemaservices.Event
 
         private bool ShowInstructions()
         {
+            // This can happen if the user logs out while viewing a registrations, even if it was completed.
+            if ( RegistrationTemplate == null )
+            {
+                return false;
+            }
+
             string instructions = string.IsNullOrEmpty( RegistrationInstanceState.RegistrationInstructions ) ?
                 RegistrationTemplate.RegistrationInstructions :
                 RegistrationInstanceState.RegistrationInstructions;
@@ -3617,6 +3685,12 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         /// </summary>
         private void ShowStart()
         {
+            // This can happen if the user logs out while viewing a registrations, even if it was completed.
+            if ( RegistrationTemplate == null )
+            {
+                return;
+            }
+
             lRegistrantTerm.Text = RegistrantTerm.Pluralize().ToLower();
 
             // If this is an existing registration, go directly to the summary
@@ -3642,7 +3716,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 {
                     max = RegistrationState.SlotsAvailable.Value;
                 }
-
+                
                 if ( max > MinRegistrants )
                 {
                     // If registration allows multiple registrants show the 'How Many' panel
@@ -3796,6 +3870,58 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         }
 
         /// <summary>
+        /// Shows the family members panel if it should be shown. This should only be called by SetPanel()
+        /// </summary>
+        /// <returns></returns>
+        private void ShowFamilyMembersPanel()
+        {
+            // Hide the panel by default
+            pnlFamilyMembers.Style[HtmlTextWriterStyle.Display] = "none";
+
+            // Are we on the right panel and showing the info?
+            if ( pnlRegistrantFields.Visible == false )
+            {
+                return;
+            }
+
+            // Is the template loaded?
+            if ( RegistrationTemplate == null )
+            {
+                return;
+            }
+
+            // Are we supposed to show it ever?
+            if ( RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.No )
+            {
+                return;
+            }
+
+            // Are there family members to choose from?
+            if ( ddlFamilyMembers.Items.Count == 0 )
+            {
+                return;
+            }
+
+            // Don't show if RegistrantsSameFamily is ask and there is no same family selection
+            if ( RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Ask )
+            {
+                if ( rblFamilyOptions.SelectedItem == null )
+                {
+                    return;
+                }
+
+                if ( rblFamilyOptions.SelectedItem.Text == "None of the above" )
+                {
+                    return;
+                }
+            }
+
+            // Show the pnlFamilyMembers panel if none of the above hide conditions are met.
+            // The RegistrantsSameFamily is yes or is ask and rboFamilyOptions has a valid selection
+            pnlFamilyMembers.Style[HtmlTextWriterStyle.Display] = "block";
+        }
+
+        /// <summary>
         /// Shows the registrant panel
         /// </summary>
         private void ShowRegistrant()
@@ -3912,7 +4038,6 @@ namespace RockWeb.Plugins.com_bemaservices.Event
 
                                 if ( familyMembers.Any() )
                                 {
-                                    ddlFamilyMembers.Visible = true;
                                     ddlFamilyMembers.Items.Add( new ListItem() );
 
                                     foreach ( var familyMember in familyMembers )
@@ -3924,8 +4049,6 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                                 }
                             }
                         }
-
-                        pnlFamilyMembers.Visible = ddlFamilyMembers.Items.Count > 0;
                     }
 
                     SetPanel( PanelIndex.PanelRegistrant );
@@ -4134,6 +4257,8 @@ namespace RockWeb.Plugins.com_bemaservices.Event
 
             lSummaryAndPaymentTitle.Text = ( CurrentPanel == PanelIndex.PanelSummary && RegistrationTemplate != null ) ? "Review " + RegistrationTemplate.RegistrationTerm : "Payment Method";
             lPaymentInfoTitle.Text = CurrentPanel == PanelIndex.PanelSummary ? "<h4>Payment Method</h4>" : string.Empty;
+
+            ShowFamilyMembersPanel();
         }
 
         /// <summary>
@@ -4471,7 +4596,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 // so that current registrant can use the first registrant's value
                 RegistrantInfo registrant = null;
                 RegistrantInfo firstRegistrant = null;
-                var preselectCurrentPerson = RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes;
+                //var preselectCurrentPerson = RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes;
 
                 if ( RegistrationState != null && RegistrationState.RegistrantCount >= CurrentRegistrantIndex )
                 {
@@ -4742,7 +4867,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     foreach ( var fee in RegistrationTemplate.Fees )
                     {
                         List<FeeInfo> feeValues = fee.GetFeeInfoFromControls( phFees );
-                        if ( fee != null )
+                        if ( feeValues != null )
                         {
                             registrant.FeeValues.AddOrReplace( fee.Id, feeValues );
                         }
@@ -4943,8 +5068,6 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     }
                 }
             }
-
-            CreateRegistrantControls( true );
         }
 
         #endregion
@@ -5078,10 +5201,8 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     lUpdateEmailWarning.Visible = true;
                 }
 
-                // Build Discount info if template has discounts and this is a new registration
-                if ( RegistrationTemplate != null
-                    && RegistrationTemplate.Discounts.Any()
-                    && !RegistrationState.RegistrationId.HasValue )
+                // Build Discount info
+                if ( ShowDiscountCode() )
                 {
                     divDiscountCode.Visible = true;
 
@@ -5097,6 +5218,16 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                             nbDiscountCode.Text = string.Format( "'{1}' is not a valid {1}.", discountCode, DiscountCodeTerm );
                             nbDiscountCode.Visible = true;
                         }
+                    }
+
+                    if ( !AllowDiscountCodeEntry() )
+                    {
+                        tbDiscountCode.Enabled = false;
+                        tbDiscountCode.Text = tbDiscountCode.Text.IsNotNullOrWhiteSpace() ? tbDiscountCode.Text : RegistrationState.DiscountCode;
+
+                        // If we cannot edit and there is no existing value then just hide the discount div.
+                        divDiscountCode.Visible = tbDiscountCode.Text.IsNotNullOrWhiteSpace();
+                        lbDiscountApply.Visible = false;
                     }
                 }
                 else
@@ -5297,12 +5428,12 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                                 // default Payment is more than min and less than balance due, so we can use it
                                 RegistrationState.PaymentAmount = defaultPayment;
                             }
-                            else if ( defaultPayment <= minimumPayment )
+                            else if (defaultPayment <= minimumPayment)
                             {
                                 // default Payment is less than min, so use min instead
                                 RegistrationState.PaymentAmount = minimumPayment;
                             }
-                            else if ( defaultPayment >= balanceDue )
+                            else if (defaultPayment >= balanceDue)
                             {
                                 // default Payment is more than balance due, so use balance due
                                 RegistrationState.PaymentAmount = balanceDue;
@@ -5429,6 +5560,47 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     pnlPaymentInfo.Visible = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Determines if a discount code can be entered.
+        /// </summary>
+        /// <returns></returns>
+        private bool AllowDiscountCodeEntry()
+        {
+            // Check if a discount code has already been applied and return false if true
+            if ( RegistrationState.DiscountCode.IsNotNullOrWhiteSpace() )
+            {
+                return false;
+            }
+
+            // check if the cost has been paid if full and return false if true unless the registration ID is null or 0, in which case this is a new registratin and the cost has not been calculated yet.
+            decimal balanceDue = RegistrationState.DiscountedCost - RegistrationState.PreviousPaymentTotal;
+            if ( ( balanceDue <= ( decimal ) 0.00 ) && ( RegistrationState.RegistrationId != null ) )
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Determines if the discount code should be displayed.
+        /// </summary>
+        /// <returns></returns>
+        private bool ShowDiscountCode()
+        {
+            if ( RegistrationTemplate == null )
+            {
+                return false;
+            }
+
+            if ( !RegistrationTemplate.Discounts.Any() )
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -5601,8 +5773,8 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         private void CheckForOpenSlots( RegistrantInfo registrant )
         {
             bool IsWaitList = registrant.OnWaitList;
-            var singleSelectKeyAttribute = AttributeCache.Get( GetAttributeValue( "SingleSelectKeyAttribute" ).AsGuid() );
-            var slotsAttribute = AttributeCache.Get( GetAttributeValue( "SlotsAttribute" ).AsGuid() );
+            var singleSelectKeyAttribute = AttributeCache.Get( GetAttributeValue( BemaAttributeKey.SingleSelectKeyAttribute ).AsGuid() );
+            var slotsAttribute = AttributeCache.Get( GetAttributeValue( BemaAttributeKey.SlotsAttribute ).AsGuid() );
 
             if ( singleSelectKeyAttribute != null && slotsAttribute != null )
             {
@@ -5665,8 +5837,9 @@ namespace RockWeb.Plugins.com_bemaservices.Event
 
         private void DisplayOpenSlots( RegistrationTemplateFormField field, bool setValue, object fieldValue )
         {
-            var singleSelectKeyAttribute = AttributeCache.Get( GetAttributeValue( "SingleSelectKeyAttribute" ).AsGuid() );
-            var slotsAttribute = AttributeCache.Get( GetAttributeValue( "SlotsAttribute" ).AsGuid() );
+            var singleSelectKeyAttribute = AttributeCache.Get( GetAttributeValue( BemaAttributeKey.SingleSelectKeyAttribute ).AsGuid() );
+            var slotsAttribute = AttributeCache.Get( GetAttributeValue( BemaAttributeKey.SlotsAttribute ).AsGuid() );
+
             if ( singleSelectKeyAttribute != null && slotsAttribute != null )
             {
                 RegistrationInstanceState.LoadAttributes();
@@ -5734,7 +5907,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         private string GetFilterValue()
         {
             var filterValue = "";
-            var filterKeyAttribute = AttributeCache.Get( GetAttributeValue( "FilterKeyAttribute" ).AsGuid() );
+            var filterKeyAttribute = AttributeCache.Get( GetAttributeValue( BemaAttributeKey.FilterKeyAttribute ).AsGuid() );
 
             if ( filterKeyAttribute != null )
             {

@@ -9,7 +9,7 @@
 
         <Rock:NotificationBox ID="nbMessage" runat="server" Visible="false" />
 
-        <asp:Panel ID="pnlDetails" runat="server" CssClass="row">
+        <asp:Panel id="pnlDetails" runat="server" CssClass="row">
 
             <!-- BEMA.FE3.Start -->
             <asp:Panel ID="pnlBemaFilters" runat="server" Visible="false">
@@ -98,8 +98,7 @@
                     </div>
                 <% } %>
 
-                <Rock:DateRangePicker ID="drpDateRange" runat="server" Label="Select Range" />
-                <asp:LinkButton ID="lbDateRangeRefresh" runat="server" CssClass="btn btn-default btn-sm" Text="Refresh" OnClick="lbDateRangeRefresh_Click" />
+                <Rock:DateRangePicker ID="drpDateRange" runat="server" Label="Select Range" /><asp:LinkButton ID="lbDateRangeRefresh" runat="server" CssClass="btn btn-default btn-sm" Text="Refresh" OnClick="lbDateRangeRefresh_Click" />
 
             </asp:Panel>
 

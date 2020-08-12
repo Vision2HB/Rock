@@ -29,7 +29,6 @@ using Newtonsoft.Json;
 
 using Rock.Communication;
 using Rock.Data;
-using Rock.Web;
 using Rock.Web.Cache;
 
 namespace Rock.Model
@@ -219,7 +218,7 @@ namespace Rock.Model
         }
 
         /// <summary>
-        /// Gets or sets the enabled lava commands.
+        /// Gets or sets a comma-delimited list of enabled LavaCommands
         /// </summary>
         /// <value>
         /// The enabled lava commands.
@@ -359,6 +358,16 @@ namespace Rock.Model
         [DataMember]
         [MaxLength( 100 )]
         public string PushSound { get; set; }
+
+        /// <summary>
+        /// Option to prevent communications from being sent to people with the same email/SMS addresses.
+        /// This will mean two people who share an address will not receive a personalized communication, only one of them will.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [exclude duplicate recipient address]; otherwise, <c>false</c>.
+        /// </value>
+        [DataMember]
+        public bool ExcludeDuplicateRecipientAddress { get; set; }
 
         #endregion
 
@@ -701,7 +710,7 @@ namespace Rock.Model
         /// <param name="segmentCriteria">The segment criteria.</param>
         /// <param name="segmentDataViewIds">The segment data view ids.</param>
         /// <returns></returns>
-        public static IQueryable<GroupMember> GetCommunicationListMembers( RockContext rockContext, int? listGroupId, SegmentCriteria segmentCriteria, List<int> segmentDataViewIds)
+        public static IQueryable<GroupMember> GetCommunicationListMembers( RockContext rockContext, int? listGroupId, SegmentCriteria segmentCriteria, List<int> segmentDataViewIds )
         {
             IQueryable<GroupMember> groupMemberQuery = null;
             if ( listGroupId.HasValue )
@@ -751,6 +760,51 @@ namespace Rock.Model
         }
 
         /// <summary>
+        /// if <see cref="ExcludeDuplicateRecipientAddress" /> is set to true, removes <see cref="CommunicationRecipient"></see>s that have the same SMS/Email address as another recipient
+        /// </summary>
+        /// <param name="rockContext">The rock context.</param>
+        public void RemoveRecipientsWithDuplicateAddress( RockContext rockContext )
+        {
+            if ( !ExcludeDuplicateRecipientAddress )
+            {
+                return;
+            }
+
+            var communicationRecipientService = new CommunicationRecipientService( rockContext );
+
+            var recipientsQry = GetRecipientsQry( rockContext );
+
+            int? smsMediumEntityTypeId = EntityTypeCache.GetId( Rock.SystemGuid.EntityType.COMMUNICATION_MEDIUM_SMS.AsGuid() );
+            if ( smsMediumEntityTypeId.HasValue )
+            {
+                IQueryable<CommunicationRecipient> duplicateSMSRecipientsQuery = recipientsQry.Where( a => a.MediumEntityTypeId == smsMediumEntityTypeId.Value )
+                    .Where( a => a.PersonAlias.Person.PhoneNumbers.Where( pn => pn.IsMessagingEnabled ).Any() )
+                    .GroupBy( a => a.PersonAlias.Person.PhoneNumbers.Where( pn => pn.IsMessagingEnabled ).FirstOrDefault().Number )
+                    .Where( a => a.Count() > 1 )
+                    .Select( a => a.OrderBy( x => x.Id ).Skip( 1 ).ToList() )
+                    .SelectMany( a => a );
+
+                var duplicateSMSRecipients = duplicateSMSRecipientsQuery.ToList();
+                communicationRecipientService.DeleteRange( duplicateSMSRecipients );
+            }
+
+            int? emailMediumEntityTypeId = EntityTypeCache.GetId( Rock.SystemGuid.EntityType.COMMUNICATION_MEDIUM_EMAIL.AsGuid() );
+            if ( emailMediumEntityTypeId.HasValue )
+            {
+                IQueryable<CommunicationRecipient> duplicateEmailRecipientsQry = recipientsQry.Where( a => a.MediumEntityTypeId == emailMediumEntityTypeId.Value )
+                    .GroupBy( a => a.PersonAlias.Person.Email )
+                    .Where( a => a.Count() > 1 )
+                    .Select( a => a.OrderBy( x => x.Id ).Skip( 1 ).ToList() )
+                    .SelectMany( a => a );
+
+                var duplicateEmailRecipients = duplicateEmailRecipientsQry.ToList();
+                communicationRecipientService.DeleteRange( duplicateEmailRecipients );
+            }
+
+            rockContext.SaveChanges();
+        }
+
+        /// <summary>
         /// Refresh the recipients list.
         /// </summary>
         /// <param name="rockContext">The rock context.</param>
@@ -762,19 +816,20 @@ namespace Rock.Model
                 return;
             }
 
-            var emailMediumEntityType = EntityTypeCache.Get( SystemGuid.EntityType.COMMUNICATION_MEDIUM_EMAIL.AsGuid() );
-            var smsMediumEntityType = EntityTypeCache.Get( SystemGuid.EntityType.COMMUNICATION_MEDIUM_SMS.AsGuid() );
-            var preferredCommunicationTypeAttribute = AttributeCache.Get( SystemGuid.Attribute.GROUPMEMBER_COMMUNICATION_LIST_PREFERRED_COMMUNICATION_MEDIUM.AsGuid() );
             var segmentDataViewGuids = this.Segments.SplitDelimitedValues().AsGuidList();
-            var segmentDataViewIds =  new DataViewService( rockContext ).GetByGuids( segmentDataViewGuids ).Select( a => a.Id ).ToList();
+            var segmentDataViewIds = new DataViewService( rockContext ).GetByGuids( segmentDataViewGuids ).Select( a => a.Id ).ToList();
 
             var qryCommunicationListMembers = GetCommunicationListMembers( rockContext, ListGroupId, this.SegmentCriteria, segmentDataViewIds );
 
-            // NOTE: If this is scheduled communication, don't include Members that were added after the scheduled FutureSendDateTime
+            // NOTE: If this is scheduled communication, don't include Members that were added after the scheduled FutureSendDateTime.
+            // However, don't exclude if the date added can't be determined or they will never be sent a scheduled communication.
             if ( this.FutureSendDateTime.HasValue )
             {
                 var memberAddedCutoffDate = this.FutureSendDateTime;
-                qryCommunicationListMembers = qryCommunicationListMembers.Where( a => ( a.DateTimeAdded.HasValue && a.DateTimeAdded.Value < memberAddedCutoffDate ) || ( a.CreatedDateTime.HasValue && a.CreatedDateTime.Value < memberAddedCutoffDate ) );
+
+                qryCommunicationListMembers = qryCommunicationListMembers.Where( a => ( a.DateTimeAdded.HasValue && a.DateTimeAdded.Value < memberAddedCutoffDate )
+                                                                                        || ( a.CreatedDateTime.HasValue && a.CreatedDateTime.Value < memberAddedCutoffDate )
+                                                                                        || ( !a.DateTimeAdded.HasValue && !a.CreatedDateTime.HasValue ) );
             }
 
             var communicationRecipientService = new CommunicationRecipientService( rockContext );
@@ -787,6 +842,9 @@ namespace Rock.Model
                 .AsNoTracking()
                 .ToList();
 
+            var emailMediumEntityType = EntityTypeCache.Get( SystemGuid.EntityType.COMMUNICATION_MEDIUM_EMAIL.AsGuid() );
+            var smsMediumEntityType = EntityTypeCache.Get( SystemGuid.EntityType.COMMUNICATION_MEDIUM_SMS.AsGuid() );
+
             foreach ( var newMember in newMemberInList )
             {
                 var communicationRecipient = new CommunicationRecipient
@@ -796,41 +854,9 @@ namespace Rock.Model
                     CommunicationId = Id
                 };
 
-                switch ( CommunicationType )
-                {
-                    case CommunicationType.Email:
-                        communicationRecipient.MediumEntityTypeId = emailMediumEntityType.Id;
-                        break;
-                    case CommunicationType.SMS:
-                        communicationRecipient.MediumEntityTypeId = smsMediumEntityType.Id;
-                        break;
-                    case CommunicationType.RecipientPreference:
-                        newMember.LoadAttributes();
-
-                        if ( preferredCommunicationTypeAttribute != null )
-                        {
-                            var recipientPreference = ( CommunicationType? ) newMember
-                                .GetAttributeValue( preferredCommunicationTypeAttribute.Key ).AsIntegerOrNull();
-
-                            switch ( recipientPreference )
-                            {
-                                case CommunicationType.SMS:
-                                    communicationRecipient.MediumEntityTypeId = smsMediumEntityType.Id;
-                                    break;
-                                case CommunicationType.Email:
-                                    communicationRecipient.MediumEntityTypeId = emailMediumEntityType.Id;
-                                    break;
-                                default:
-                                    communicationRecipient.MediumEntityTypeId = emailMediumEntityType.Id;
-                                    break;
-                            }
-                        }
-
-                        break;
-
-                    default:
-                        throw new Exception( "Unexpected CommunicationType: " + CommunicationType.ConvertToString() );
-                }
+                communicationRecipient.MediumEntityTypeId = DetermineMediumEntityTypeId( emailMediumEntityType.Id, smsMediumEntityType.Id, CommunicationType,
+                                                                newMember.CommunicationPreference,
+                                                                newMember.Person.CommunicationPreference );
 
                 communicationRecipientService.Add( communicationRecipient );
             }
@@ -846,6 +872,44 @@ namespace Rock.Model
             }
 
             rockContext.SaveChanges();
+        }
+
+        /// <summary>
+        /// Determines the medium entity type identifier.
+        /// Given the email and sms medium entity type ids and the available communication preferences
+        /// this method will determine which medium entity type id should be used and return that id.
+        /// If a preference could not be determined the email medium entity type id will be returned.
+        /// </summary>
+        /// <param name="emailMediumEntityTypeId">The email medium entity type identifier.</param>
+        /// <param name="smsMediumEntityTypeId">The SMS medium entity type identifier.</param>
+        /// <param name="recipientPreference">The recipient preference.</param>
+        /// <returns></returns>
+        /// <exception cref="Exception">Unexpected CommunicationType: " + currentCommunicationPreference.ConvertToString()</exception>
+        public static int DetermineMediumEntityTypeId( int emailMediumEntityTypeId, int smsMediumEntityTypeId, params CommunicationType[] recipientPreference )
+        {
+            for ( var i = 0; i < recipientPreference.Length; i++ )
+            {
+                var currentCommunicationPreference = recipientPreference[i];
+                var hasNextCommunicaitonPreference = ( i + 1 ) < recipientPreference.Length;
+
+                switch ( currentCommunicationPreference )
+                {
+                    case CommunicationType.Email:
+                        return emailMediumEntityTypeId;
+                    case CommunicationType.SMS:
+                        return smsMediumEntityTypeId;
+                    case CommunicationType.RecipientPreference:
+                        if ( hasNextCommunicaitonPreference )
+                        {
+                            break;
+                        }
+                        return emailMediumEntityTypeId;
+                    default:
+                        throw new ArgumentException( $"Unexpected CommunicationType: {currentCommunicationPreference.ConvertToString()}", "recipientPreference" );
+                }
+            }
+
+            return emailMediumEntityTypeId;
         }
 
         /// <summary>
@@ -907,11 +971,20 @@ namespace Rock.Model
                 return;
             }
 
-            if ( communication.ListGroupId.HasValue && !communication.SendDateTime.HasValue )
+            // only alter the Recipient list if it the communication hasn't sent a message to any recipients yet
+            if ( communication.SendDateTime.HasValue == false )
             {
                 using ( var rockContext = new RockContext() )
                 {
-                    communication.RefreshCommunicationRecipientList( rockContext );
+                    if ( communication.ListGroupId.HasValue )
+                    {
+                        communication.RefreshCommunicationRecipientList( rockContext );
+                    }
+
+                    if ( communication.ExcludeDuplicateRecipientAddress )
+                    {
+                        communication.RemoveRecipientsWithDuplicateAddress( rockContext );
+                    }
                 }
             }
 
@@ -929,7 +1002,7 @@ namespace Rock.Model
                 rockContext.SaveChanges();
             }
         }
-        
+
         /// <summary>
         /// Gets the next pending.
         /// </summary>
@@ -945,7 +1018,7 @@ namespace Rock.Model
 
             lock ( _obj )
             {
-                recipient = new CommunicationRecipientService( rockContext ).Queryable( "Communication,PersonAlias.Person" )
+                recipient = new CommunicationRecipientService( rockContext ).Queryable().Include( r => r.Communication ).Include( r => r.PersonAlias.Person )
                     .Where( r =>
                         r.CommunicationId == communicationId &&
                         ( r.Status == CommunicationRecipientStatus.Pending ||
@@ -1072,6 +1145,7 @@ namespace Rock.Model
         /// <summary>
         /// RecipientPreference
         /// </summary>
+        [Display( Name = "No Preference" )]
         RecipientPreference = 0,
 
         /// <summary>

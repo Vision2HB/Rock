@@ -40,8 +40,8 @@ namespace Rock.Communication.Transport
     [ExportMetadata( "ComponentName", "Twilio" )]
     [TextField( "SID", "Your Twilio Account SID (find at https://www.twilio.com/user/account)", true, "", "", 0 )]
     [TextField( "Token", "Your Twilio Account Token", true, "", "", 1 )]
-    [IntegerField("Long-Code Throttling", "The amount of time (in milliseconds) to wait between sending to recipients when sending a message from a long-code number (regular phone number). When carriers detect that a message is not coming from a human, they may filter/block the message. A delay can help prevent this from happening.",
-        false, 500, order: 2)]
+    [IntegerField( "Long-Code Throttling", "The amount of time (in milliseconds) to wait between sending to recipients when sending a message from a long-code number (regular phone number). When carriers detect that a message is not coming from a human, they may filter/block the message. A delay can help prevent this from happening.",
+        false, 500, order: 2 )]
     public class Twilio : TransportComponent
     {
         /// <summary>
@@ -85,13 +85,13 @@ namespace Rock.Communication.Transport
 
                 List<Uri> attachmentMediaUrls = GetAttachmentMediaUrls( rockMessage.Attachments.AsQueryable() );
 
-                foreach ( var recipientData in rockMessage.GetRecipientData() )
+                foreach ( var recipient in rockMessage.GetRecipients() )
                 {
                     try
                     {
                         foreach ( var mergeField in mergeFields )
                         {
-                            recipientData.MergeFields.AddOrIgnore( mergeField.Key, mergeField.Value );
+                            recipient.MergeFields.AddOrIgnore( mergeField.Key, mergeField.Value );
                         }
 
                         CommunicationRecipient communicationRecipient = null;
@@ -99,19 +99,20 @@ namespace Rock.Communication.Transport
                         using ( var rockContext = new RockContext() )
                         {
                             CommunicationRecipientService communicationRecipientService = new CommunicationRecipientService( rockContext );
-                            int? recipientId = recipientData.CommunicationRecipientId.AsIntegerOrNull();
+                            int? recipientId = recipient.CommunicationRecipientId;
                             if ( recipientId != null )
                             {
                                 communicationRecipient = communicationRecipientService.Get( recipientId.Value );
                             }
 
-                            string message = ResolveText( smsMessage.Message, smsMessage.CurrentPerson, communicationRecipient, smsMessage.EnabledLavaCommands, recipientData.MergeFields, smsMessage.AppRoot, smsMessage.ThemeRoot );
-                            Person recipientPerson = ( Person ) recipientData.MergeFields.GetValueOrNull( "Person" );
+                            string message = ResolveText( smsMessage.Message, smsMessage.CurrentPerson, communicationRecipient, smsMessage.EnabledLavaCommands, recipient.MergeFields, smsMessage.AppRoot, smsMessage.ThemeRoot );
+                            Person recipientPerson = ( Person ) recipient.MergeFields.GetValueOrNull( "Person" );
 
                             // Create the communication record and send using that if we have a person since a communication record requires a valid person. Otherwise just send without creating a communication record.
                             if ( rockMessage.CreateCommunicationRecord && recipientPerson != null )
                             {
                                 var communicationService = new CommunicationService( rockContext );
+
                                 Rock.Model.Communication communication = communicationService.CreateSMSCommunication( smsMessage.CurrentPerson, recipientPerson?.PrimaryAliasId, message, smsMessage.FromNumber, string.Empty, smsMessage.communicationName );
 
                                 // Since we just created a new communication record, we need to move any attachments from the rockMessage
@@ -130,7 +131,7 @@ namespace Rock.Communication.Transport
                             }
                             else
                             {
-                                MessageResource response = SendToTwilio( smsMessage.FromNumber.Value, null, attachmentMediaUrls, message, recipientData.To );
+                                MessageResource response = SendToTwilio( smsMessage.FromNumber.Value, null, attachmentMediaUrls, message, recipient.To );
 
                                 if ( response.ErrorMessage.IsNotNullOrWhiteSpace() )
                                 {
@@ -149,7 +150,7 @@ namespace Rock.Communication.Transport
                         errorMessages.Add( ex.Message );
                         ExceptionLogService.LogException( ex );
                     }
-                    
+
                     if ( throttlingWaitTimeMS.HasValue )
                     {
                         System.Threading.Tasks.Task.Delay( throttlingWaitTimeMS.Value ).Wait();
@@ -244,22 +245,13 @@ namespace Rock.Communication.Transport
                                 {
                                     try
                                     {
-                                        var phoneNumber = recipient.PersonAlias.Person.PhoneNumbers
-                                            .Where( p => p.IsMessagingEnabled )
-                                            .FirstOrDefault();
-
-                                        if ( phoneNumber != null )
+                                        var twilioNumber = recipient.PersonAlias.Person.PhoneNumbers.GetFirstSmsNumber();
+                                        if ( !string.IsNullOrWhiteSpace( twilioNumber ) )
                                         {
                                             // Create merge field dictionary
                                             var mergeObjects = recipient.CommunicationMergeValues( mergeFields );
 
                                             string message = ResolveText( communication.SMSMessage, currentPerson, recipient, communication.EnabledLavaCommands, mergeObjects, publicAppRoot );
-
-                                            string twilioNumber = phoneNumber.Number;
-                                            if ( !string.IsNullOrWhiteSpace( phoneNumber.CountryCode ) )
-                                            {
-                                                twilioNumber = "+" + phoneNumber.CountryCode + phoneNumber.Number;
-                                            }
 
                                             MessageResource response = SendToTwilio( fromPhone, callbackUrl, attachmentMediaUrls, message, twilioNumber );
 
@@ -424,7 +416,7 @@ namespace Rock.Communication.Transport
                     createMessageOptions.MediaUrl = attachmentMediaUrls;
                 }
 
-                if ( System.Web.Hosting.HostingEnvironment.IsDevelopmentEnvironment )
+                if ( System.Web.Hosting.HostingEnvironment.IsDevelopmentEnvironment && !callbackUrl.Contains( ".ngrok.io" ) )
                 {
                     createMessageOptions.StatusCallback = null;
                 }
@@ -477,7 +469,7 @@ namespace Rock.Communication.Transport
         /// <exception cref="System.NotImplementedException"></exception>
         [RockObsolete( "1.7" )]
         [Obsolete( "Use Send( RockMessage message, out List<string> errorMessage ) method instead", true )]
-        public override void Send(Dictionary<string, string> mediumData, List<string> recipients, string appRoot, string themeRoot)
+        public override void Send( Dictionary<string, string> mediumData, List<string> recipients, string appRoot, string themeRoot )
         {
             var message = new RockSMSMessage();
             message.FromNumber = DefinedValueCache.Get( ( mediumData.GetValueOrNull( "FromValue" ) ?? string.Empty ).AsInteger() );
@@ -535,7 +527,7 @@ namespace Rock.Communication.Transport
         /// <exception cref="System.NotImplementedException"></exception>
         [RockObsolete( "1.7" )]
         [Obsolete( "Use Send( RockMessage message, out List<string> errorMessage ) method instead", true )]
-        public override void Send(List<string> recipients, string from, string subject, string body, string appRoot = null, string themeRoot = null, List<Attachment> attachments = null)
+        public override void Send( List<string> recipients, string from, string subject, string body, string appRoot = null, string themeRoot = null, List<Attachment> attachments = null )
         {
             throw new NotImplementedException();
         }
@@ -570,7 +562,7 @@ namespace Rock.Communication.Transport
         /// <returns>
         ///   <c>true</c> if [is long code phone number] [the specified from number]; otherwise, <c>false</c>.
         /// </returns>
-        private bool IsLongCodePhoneNumber(string fromNumber)
+        private bool IsLongCodePhoneNumber( string fromNumber )
         {
             // if the number of digits in the phone number 10 or more, assume is it a LongCode ( if it is less than 10, assume it is a short-code)
             return fromNumber.AsNumeric().Length >= 10;

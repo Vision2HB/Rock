@@ -1,5 +1,5 @@
 ﻿// <copyright>
-// Copyright by BEMA Information Technologies
+// Copyright by BEMA Software Services
 //
 // Licensed under the Rock Community License (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v9.2.1)
+ * BEMA Modified Core Block ( v10.3.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -58,7 +58,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
     /* BEMA.UI1.Start */
     [TextField(
         "Case Worker Label",
-        Key = AttributeKey.CaseWorkerLabel,
+        Key = BemaAttributeKey.CaseWorkerLabel,
         Description = "The Label on the Case Worker controls.",
         IsRequired = true,
         DefaultValue = "Case Worker",
@@ -69,7 +69,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
     /* BEMA.UI2.Start */
     [TextField(
         "Government Id Label",
-        Key = AttributeKey.GovernmentIdLabel,
+        Key = BemaAttributeKey.GovernmentIdLabel,
         Description = "The Label on the Government Id controls.",
         IsRequired = true,
         DefaultValue = "Government ID",
@@ -80,7 +80,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
     /* BEMA.UI3.Start */
     [TextField(
         "Date Range Label",
-        Key = AttributeKey.DateRangeLabel,
+        Key = BemaAttributeKey.DateRangeLabel,
         Description = "The Label on the Date Range controls.",
         IsRequired = true,
         DefaultValue = "Date Range",
@@ -92,7 +92,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
     {
         /* BEMA.Start */
         #region Attribute Keys
-        private static class AttributeKey
+        private static class BemaAttributeKey
         {
             public const string CaseWorkerLabel = "CaseWorkerLabel";
             public const string GovernmentIdLabel = "GovernmentIdLabel";
@@ -192,21 +192,21 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             var caseWorkerField = gList.Columns.OfType<RockBoundField>().FirstOrDefault( a => a.DataField == "CaseWorkerPersonAlias.Person" );
             if ( caseWorkerField != null )
             {
-                caseWorkerField.HeaderText = GetAttributeValue( AttributeKey.CaseWorkerLabel );
+                caseWorkerField.HeaderText = GetAttributeValue( BemaAttributeKey.CaseWorkerLabel );
             }
-            ddlCaseWorker.Label = GetAttributeValue( AttributeKey.CaseWorkerLabel );
+            ddlCaseWorker.Label = GetAttributeValue( BemaAttributeKey.CaseWorkerLabel );
             /* BEMA.UI1.End */
 
             /* BEMA.UI2.Start */
             var dateRangeField = gList.Columns.OfType<RockBoundField>().FirstOrDefault( a => a.DataField == "GovernmentId" );
             if ( dateRangeField != null )
             {
-                dateRangeField.HeaderText = GetAttributeValue( AttributeKey.GovernmentIdLabel );
+                dateRangeField.HeaderText = GetAttributeValue( BemaAttributeKey.GovernmentIdLabel );
             }
             /* BEMA.UI2.End */
 
             /* BEMA.UI3.Start */
-            drpDate.Label = GetAttributeValue( AttributeKey.DateRangeLabel );
+            drpDate.Label = GetAttributeValue( BemaAttributeKey.DateRangeLabel );
             /* BEMA.UI3.End */
 
             if ( !Page.IsPostBack )
@@ -744,6 +744,9 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
             gList.DataSource = list;
             gList.DataBind();
+
+            // Hide the campus column if the campus filter is not visible.
+            gList.ColumnsOfType<RockBoundField>().First( c => c.DataField == "Campus.Name" ).Visible = cpCampus.Visible;
 
             // Builds the Totals section
             var definedTypeCache = DefinedTypeCache.Get( new Guid( Rock.SystemGuid.DefinedType.BENEVOLENCE_RESULT_TYPE ) );

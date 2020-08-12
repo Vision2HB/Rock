@@ -149,6 +149,23 @@ namespace Rock.Model
         [DataMember]
         public int? InitiatorPersonAliasId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Entity Id.
+        /// </summary>
+        /// <value>
+        /// The Entity Id.
+        /// </value>
+        [DataMember]
+        public int? EntityId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Entity Type Id.
+        /// </summary>
+        /// <value>
+        /// The Entity Type Id.
+        /// </value>
+        [DataMember]
+        public int? EntityTypeId { get; set; }
         #endregion
 
         #region Virtual Properties
@@ -565,6 +582,11 @@ namespace Rock.Model
                 this.WorkflowIdNumber = maxNumber + 1;
             }
 
+            if ( state == EntityState.Deleted )
+            {
+                DeleteConnectionRequestWorkflows( dbContext );
+            }
+
             base.PreSaveChanges( dbContext, state );
         }
 
@@ -605,6 +627,22 @@ namespace Rock.Model
 
             errorMessages = new List<string>();
             return false;
+        }
+        
+        /// <summary>
+        /// Deletes any connection request workflows tied to this workflow.
+        /// </summary>
+        /// <param name="dbContext">The database context.</param>
+        private void DeleteConnectionRequestWorkflows( Data.DbContext dbContext )
+        {
+            var rockContext = ( RockContext ) dbContext;
+            var connectionRequestWorkflowService = new ConnectionRequestWorkflowService( rockContext );
+            var connectionRequestWorkflows = connectionRequestWorkflowService.Queryable().Where( c => c.WorkflowId == this.Id );
+
+            if ( connectionRequestWorkflows.Any() )
+            {
+                dbContext.BulkDelete( connectionRequestWorkflows );
+            }
         }
 
         #endregion

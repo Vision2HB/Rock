@@ -47,6 +47,8 @@ namespace Rock.Web.UI.Controls
 
         private const string DEFAULT_EMPTY_DATA_TEXT = "No Results Found";
         private const string PAGE_SIZE_KEY = "grid-page-size-preference";
+        private const string PAGE_SIZE_LIST_DEFAULT = "50,500,5000";
+        private const int PAGE_SIZE_INITIAL_MAX = 500;
 
         #endregion
 
@@ -596,6 +598,26 @@ namespace Rock.Web.UI.Controls
         /// </value>
         public Dictionary<string, object> ObjectList { get; set; }
 
+        /// <summary>
+        /// Gets or sets the available page sizes for the grid.
+        /// </summary>
+        /// <value>
+        /// A delimited list of values representing the available page sizes.
+        /// </value>
+        [
+        Category( "Appearance" ),
+        DefaultValue( PAGE_SIZE_LIST_DEFAULT ),
+        Description( "Page Sizes" )
+        ]
+        public virtual string PageSizes
+        {
+            get { return ViewState["PageSizes"] as string ?? PAGE_SIZE_LIST_DEFAULT; }
+            set
+            {
+                ViewState["PageSizes"] = value;
+            }
+        }
+
         #region Action Row Properties
 
         /// <summary>
@@ -684,16 +706,20 @@ namespace Rock.Web.UI.Controls
 
         #region Base Control Methods
 
+        private PagerTemplate _pagerTemplate;
+
         /// <summary>
         /// Raises the <see cref="E:System.Web.UI.Control.Init"/> event.
         /// </summary>
         /// <param name="e">An <see cref="T:System.EventArgs"/> that contains event data.</param>
         protected override void OnInit( EventArgs e )
         {
-            PagerTemplate pagerTemplate = new PagerTemplate();
-            pagerTemplate.NavigateClick += pagerTemplate_NavigateClick;
-            pagerTemplate.ItemsPerPageClick += pagerTemplate_ItemsPerPageClick;
-            this.PagerTemplate = pagerTemplate;
+            _pagerTemplate = new PagerTemplate();
+
+            _pagerTemplate.NavigateClick += pagerTemplate_NavigateClick;
+            _pagerTemplate.ItemsPerPageClick += pagerTemplate_ItemsPerPageClick;
+
+            this.PagerTemplate = _pagerTemplate;
 
             this.Sorting += Grid_Sorting;
 
@@ -703,22 +729,75 @@ namespace Rock.Web.UI.Controls
             this.Actions.ExcelExportClick += Actions_ExcelExportClick;
             this.Actions.MergeTemplateClick += Actions_MergeTemplateClick;
 
-            int pageSize = 50;
+            SetPageSize();
+
+            base.OnInit( e );
+        }
+
+        /// <summary>
+        /// Set the grid page size.
+        /// </summary>
+        private void SetPageSize()
+        {
+            /* [2020-03-11] DL
+             * The page size of the grid must be set during the Grid.OnInit event to ensure that postback events can be processed.
+             * ViewState is not yet loaded, so page size is stored in the user preference for the block instead.
+             */
+
+            int pageSize = 0;
 
             var rockBlock = this.RockBlock();
             if ( rockBlock != null )
             {
                 string preferenceKey = string.Format( "{0}_{1}", PAGE_SIZE_KEY, rockBlock.BlockCache?.Id );
                 pageSize = rockBlock.GetUserPreference( preferenceKey ).AsInteger();
-                if ( pageSize != 50 && pageSize != 500 && pageSize != 5000 )
+            }
+
+            var availablePageSizes = this.GetAvailablePageSizes();
+
+            _pagerTemplate.PageSizes = availablePageSizes;
+
+            // If this is an initial page load, ensure that the page size is no greater than 500 records.
+            // This behavior allows recovery from a timeout caused by an attempt to load too many records.
+            if ( !Page.IsPostBack )
+            {
+                if ( pageSize > PAGE_SIZE_INITIAL_MAX )
                 {
-                    pageSize = 50;
+                    pageSize = PAGE_SIZE_INITIAL_MAX;
                 }
             }
 
-            base.PageSize = pageSize;
+            // If the page size is not valid, use the first available lesser value.
+            if ( !availablePageSizes.Contains( pageSize ) )
+            {
+                pageSize = availablePageSizes.LastOrDefault( x => x < pageSize );
+            }
 
-            base.OnInit( e );
+            if ( pageSize == 0 )
+            {
+                pageSize = availablePageSizes.First();
+            }
+
+            base.PageSize = pageSize;
+        }
+
+        /// <summary>
+        /// Get a definitive list of the available page sizes for the grid.
+        /// </summary>
+        /// <returns>An ascending list of available page sizes, containing at least one non-zero entry.</returns>
+        private List<int> GetAvailablePageSizes()
+        {
+            var pageSizeList = this.PageSizes.StringToIntList().ToList();
+
+            pageSizeList = pageSizeList.Where( x => x > 0 ).OrderBy( x => x ).ToList();
+
+            if ( !pageSizeList.Any() )
+            {
+                // If no page sizes exist, use the default values.
+                pageSizeList.AddRange( PAGE_SIZE_LIST_DEFAULT.StringToIntList() );
+            }
+
+            return pageSizeList;
         }
 
         /// <summary>
@@ -875,7 +954,6 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
             {
                 this.RemoveCssClass( "table-bordered" );
                 this.RemoveCssClass( "table-striped" );
-                this.RemoveCssClass( "table-hover" );
                 this.AddCssClass( "table-condensed" );
                 this.AddCssClass( "table-light" );
             }
@@ -885,7 +963,16 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
                 this.RemoveCssClass( "table-light" );
                 this.AddCssClass( "table-bordered" );
                 this.AddCssClass( "table-striped" );
+            }
+
+            if ( DisplayType == GridDisplayType.Full
+                 && this.RowClickEnabled )
+            {
                 this.AddCssClass( "table-hover" );
+            }
+            else
+            {
+                this.RemoveCssClass( "table-hover" );
             }
 
             base.RenderControl( writer );
@@ -1042,7 +1129,7 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
         {
             if ( !dataBinding && AllowCustomPaging && PreDataBound && CurrentPageRows < PageSize )
             {
-                // When using a LinqDataSource (custom paging) and doing a postback from the last page of a grid that
+                // When using custom paging and doing a postback from the last page of a grid that
                 // has fewer rows, the default dummy data source used by Asp.Net to rebuild controls does not reflect the
                 // correct number of rows. Because we add custom paging and action rows to the end of the table, this results in
                 // header/body/footer ordering errors and/or viewstate errors. As a work-around a custom dummy data source
@@ -1227,6 +1314,19 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
             else
             {
                 itemCount = 0;
+            }
+
+            // If custom paging is enabled, set the current page row count here to avoid viewstate errors on postback.
+            if ( this.AllowCustomPaging )
+            {
+                if ( itemCount > this.PageSize )
+                {
+                    CurrentPageRows = this.PageSize;
+                }
+                else
+                {
+                    CurrentPageRows = itemCount;
+                }
             }
 
             PagerTemplate pagerTemplate = this.PagerTemplate as PagerTemplate;
@@ -1924,19 +2024,11 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
                 Dictionary<BoundField, PropertyInfo> boundFieldPropLookup = new Dictionary<BoundField, PropertyInfo>();
                 var attributeFields = this.Columns.OfType<AttributeField>().ToList();
                 var lavaFields = new List<LavaField>();
-                var rockTemplateFields = new List<RockTemplateField>();
                 var visibleFields = new Dictionary<int, DataControlField>();
 
                 int fieldOrder = 0;
                 foreach ( DataControlField dataField in this.Columns )
                 {
-                    if ( dataField is LavaField )
-                    {
-                        var lavaField = dataField as LavaField;
-                        lavaFields.Add( lavaField );
-                        visibleFields.Add( fieldOrder++, lavaField );
-                    }
-
                     if ( dataField is BoundField )
                     {
                         var boundField = dataField as BoundField;
@@ -1946,27 +2038,29 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
                     if ( dataField is RockTemplateField )
                     {
                         var rockTemplateField = dataField as RockTemplateField;
-                        rockTemplateFields.Add( rockTemplateField );
                         if ( rockTemplateField.ExcelExportBehavior == ExcelExportBehavior.AlwaysInclude || ( rockTemplateField.Visible == true && rockTemplateField.ExcelExportBehavior == ExcelExportBehavior.IncludeIfVisible ) )
                         {
                             visibleFields.Add( fieldOrder++, rockTemplateField );
                         }
+
+                        /*
+                         * 2020-03-03 - JPH
+                         *
+                         * Since LavaField inherits from RockTemplateField, perform this LavaField check only
+                         * after determining that this dataField is of type RockTemplateField. This way, we
+                         * will add the dataField to the visibleFields collection only once, and only if its
+                         * ExcelExportBehavior dictates to do so.
+                         *
+                         * Reason: Issue #3950 (Lava report fields generate two columns in Excel exports)
+                         * https://github.com/SparkDevNetwork/Rock/issues/3950
+                         */
+                        if ( dataField is LavaField )
+                        {
+                            var lavaField = dataField as LavaField;
+                            lavaFields.Add( lavaField );
+                        }
                     }
                 }
-
-                
-
-                if ( CustomColumns != null && CustomColumns.Any() )
-                {
-                    foreach ( var columnConfig in CustomColumns )
-                    {
-                        var column = columnConfig.GetGridColumn();
-                        lavaFields.Add( column );
-                        visibleFields.Add( fieldOrder++, column );
-                    }
-                }
-
-
 
                 if ( CustomColumns != null && CustomColumns.Any() )
                 {
@@ -1986,8 +2080,14 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
                 // If this is a DotLiquid.Drop class, don't include any of the properties that are inherited from DotLiquid.Drop
                 if ( typeof( DotLiquid.Drop ).IsAssignableFrom( oType ) )
                 {
-                    var dropProperties = typeof( DotLiquid.Drop ).GetProperties().Select( a => a.Name );
-                    allprops = allprops.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
+                    //var dropProperties = typeof( DotLiquid.Drop ).GetProperties().Select( a => a.Name );
+                    Type dotLiquidDropType = typeof( DotLiquid.Drop );
+                    allprops = allprops.Where( a => a.DeclaringType != dotLiquidDropType ).ToList();
+                }
+                else if ( typeof( RockDynamic ).IsAssignableFrom( oType ) )
+                {
+                    Type rockDynamicType = typeof( RockDynamic );
+                    allprops = allprops.Where( a => a.DeclaringType != typeof( RockDynamic ) ).ToList();
                 }
 
                 // Inspect the collection of Fields that appear in the Grid and add the corresponding data item properties to the set of fields to be exported.
@@ -2133,7 +2233,7 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
                             {
                                 var attrib = dataItemWithAttributes.Attributes[attributeField.DataField];
                                 string rawValue = dataItemWithAttributes.GetAttributeValue( attributeField.DataField );
-                                string resultHtml = attrib.FieldType.Field.FormatValue( null, attrib.EntityTypeId, dataItemWithAttributes.Id, rawValue, attrib.QualifierValues, false ).ReverseCurrencyFormatting().ToString();
+                                string resultHtml = attrib.FieldType.Field.FormatValue( null, attrib.EntityTypeId, dataItemWithAttributes.Id, rawValue, attrib.QualifierValues, false )?.ReverseCurrencyFormatting()?.ToString();
                                 if ( !string.IsNullOrEmpty( resultHtml ) )
                                 {
                                     worksheet.Cells[rowCounter, columnCounter].Value = resultHtml;
@@ -4000,6 +4100,8 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
     /// </summary>
     internal class PagerTemplate : ITemplate, IDisposable
     {
+        private const int MAX_PAGE_SIZE_OPTIONS = 9;
+
         /// <summary>
         /// Gets or sets a value indicating whether this instance is disposed.
         /// </summary>
@@ -4064,7 +4166,7 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
             set { _itemLinkListItem = value; }
         }
 
-        private HtmlGenericControl[] _itemLinkListItem = new HtmlGenericControl[3];
+        private HtmlGenericControl[] _itemLinkListItem = new HtmlGenericControl[MAX_PAGE_SIZE_OPTIONS];
 
         /// <summary>
         /// Gets or sets the item link.
@@ -4078,13 +4180,36 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
             set { _itemLink = value; }
         }
 
-        private LinkButton[] _itemLink = new LinkButton[3];
+        private LinkButton[] _itemLink = new LinkButton[MAX_PAGE_SIZE_OPTIONS];
+
+        /// <summary>
+        /// Gets or sets the list of available page sizes.
+        /// </summary>
+        internal List<int> PageSizes
+        {
+            get { return _pageSizes; }
+
+            set
+            {
+                _pageSizes = value ?? new List<int>();
+
+                // Get an ascending list of positive integers as the page size options.
+                _pageSizes = _pageSizes.Where( x => x > 0 ).OrderBy( x => x ).Take( MAX_PAGE_SIZE_OPTIONS ).ToList();
+
+                if ( !_pageSizes.Any() )
+                {
+                    _pageSizes = new List<int> { 50, 500, 5000 };
+                }
+            }
+        }
+
+        private List<int> _pageSizes = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PagerTemplate"/> class.
         /// </summary>
         public PagerTemplate()
-        {
+        { 
             IsDisposed = false;
         }
 
@@ -4098,6 +4223,7 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
             ulSizeOptions.AddCssClass( "grid-pagesize pagination pagination-sm" );
             container.Controls.Add( ulSizeOptions );
 
+            // Create the page size selection controls.
             for ( int i = 0; i < ItemLinkListItem.Length; i++ )
             {
                 ItemLinkListItem[i] = new HtmlGenericControl( "li" );
@@ -4106,7 +4232,6 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
                 ItemLink[i] = new LinkButton();
                 ItemLinkListItem[i].Controls.Add( ItemLink[i] );
                 ItemLink[i].ID = string.Format( "ItemLink{0}", i );
-                ItemLink[i].Text = ( 5 * Math.Pow( 10, i + 1 ) ).ToString( "N0" );
                 ItemLink[i].CausesValidation = false;
                 ItemLink[i].Click += new EventHandler( lbItems_Click );
             }
@@ -4227,7 +4352,19 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
                 string pageSizeValue = pageSize.ToString( "N0" );
                 for ( int i = 0; i < ItemLinkListItem.Length; i++ )
                 {
-                    ItemLinkListItem[i].Attributes["class"] = ItemLink[i].Text == pageSizeValue ? "active" : string.Empty;
+                    var li = ItemLinkListItem[i];
+                    var lb = ItemLink[i];
+                    
+                    if ( i < _pageSizes.Count )
+                    {
+                        lb.Text = _pageSizes[i].ToString( "N0" );
+                        li.Attributes["class"] = lb.Text == pageSizeValue ? "active" : string.Empty;
+                    }
+                    else
+                    {
+                        li.Visible = false;
+                        lb.Visible = false;
+                    }
                 }
             }
         }
@@ -4264,19 +4401,12 @@ $('#{this.ClientID} .grid-select-cell').on( 'click', function (event) {{
             LinkButton lbItems = sender as LinkButton;
             if ( lbItems != null && ItemsPerPageClick != null )
             {
-                int itemsPerPage = 50;
+                int itemsPerPage = lbItems.Text.Replace(",", "").AsInteger();
 
-                switch ( lbItems.Text )
+                // If the page size is not valid, use the first available page size.
+                if ( !_pageSizes.Contains(itemsPerPage) )
                 {
-                    case "50":
-                        itemsPerPage = 50;
-                        break;
-                    case "500":
-                        itemsPerPage = 500;
-                        break;
-                    case "5,000":
-                        itemsPerPage = 5000;
-                        break;
+                    itemsPerPage = _pageSizes.First();
                 }
 
                 NumericalEventArgs eventArgs = new NumericalEventArgs( itemsPerPage );

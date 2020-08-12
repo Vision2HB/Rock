@@ -57,6 +57,16 @@ namespace Rock.SystemGuid
         public const string DATA_MIGRATIONS_90_DISC = "A839DFEC-B1A3-499C-9BB3-03241E8E5305";
 
         /// <summary>
+        /// The Job to run Post v10.0 Data Migrations for AttributeValue.ValueAsNumeric
+        /// </summary>
+        public const string DATA_MIGRATIONS_100_ATTRIBUTEVALUE_VALUEASNUMERIC = "0A7573C9-D977-4A7E-BDD6-66DD36CBF6F3";
+
+        /// <summary>
+        /// The Job to run Post v10.0 Data Migrations for SundayDate
+        /// </summary>
+        public const string DATA_MIGRATIONS_100_SUNDAYDATE = "CC263453-B290-4393-BB91-1C1C87CAE291";
+
+        /// <summary>
         /// The Job to run Post v9 Data Migrations to convert Scheduled Transaction Notes to History
         /// </summary>
         public const string DATA_MIGRATIONS_90_SCHEDULEDTRANSACTIONNOTESTOHISTORY = "6707AA98-7CF8-4258-A75A-0881CD68B0D9";
@@ -65,6 +75,11 @@ namespace Rock.SystemGuid
         /// The Job to run Post v9 Data Migrations
         /// </summary>
         public const string DATA_MIGRATIONS_90 = "3F279016-C7D1-490F-835D-8FFE6D943A32";
+
+        /// <summary>
+        /// The Job to run Post v10.3 Data Migrations for Spiritual Gifts Assessment updates
+        /// </summary>
+        public const string DATA_MIGRATIONS_103_SPIRITUAL_GIFTS = "B16F889F-3349-4CA9-976D-7EF098DD8BC6";
 
         /// <summary>
         /// The Job to Migrate pre-v8.0 History Summary Data
@@ -85,5 +100,16 @@ namespace Rock.SystemGuid
         /// The Job to get NCOA
         /// </summary>
         public const string GET_NCOA = "D2D6EA6C-F94A-39A0-481B-A23D08B887D6";
+
+        /// <summary>
+        /// The Job to Rebuild a Sequence. This job has been deleted and replaced with
+        /// <see cref="Rock.Transactions.StreakTypeRebuildTransaction" />
+        /// </summary>
+        public const string REBUILD_STREAK = "BFBB9524-10E8-42CF-BCD3-0CC7D2B22C3A";
+
+        /// <summary>
+        /// The Job to send an email digest with an attendance summary of all child groups to regional group leaders
+        /// </summary>
+        public const string SEND_GROUP_ATTENDANCE_DIGEST = "9F9E9C3B-FC58-4939-A272-4FA86D44CE7B";
     }
 }

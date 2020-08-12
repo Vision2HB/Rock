@@ -72,7 +72,8 @@ namespace Rock.Financial
 
             return new Payment
             {
-                TransactionCode = transaction.TransactionCode
+                TransactionCode = transaction.TransactionCode,
+                Amount = paymentInfo.Amount
             };
         }
 
@@ -214,6 +215,13 @@ namespace Rock.Financial
         public override bool UpdateScheduledPayment( FinancialScheduledTransaction transaction, PaymentInfo paymentInfo, out string errorMessage )
         {
             errorMessage = string.Empty;
+            var referencePaymentInfo = paymentInfo as ReferencePaymentInfo;
+
+            if (referencePaymentInfo != null)
+            {
+                transaction.TransactionCode = referencePaymentInfo.TransactionCode;
+            }
+
             return true;
         }
 
