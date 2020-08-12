@@ -78,8 +78,6 @@ BEGIN
 
 	RETURN @hohId
 END
-
-GO
 " );
         }
 
@@ -114,7 +112,6 @@ BEGIN
 
 	RETURN @Result
 END
-GO
 " );
         }
 
@@ -323,10 +320,6 @@ BEGIN
 
     RETURN
 END
-
-
-
-GO
 " );
         }
 
@@ -534,10 +527,7 @@ BEGIN
     VALUES (@PersonNames);
 
     RETURN
-END
-
-
-GO" );
+END" );
         }
 
         private void BEMA_ReportingTools_ufn_GetFamilyNickNames()
@@ -700,10 +690,7 @@ BEGIN
     VALUES (@PersonNames);
 
     RETURN
-END
-
-
-GO" );
+END" );
         }
 
         private void BEMA_ReportingTools_ufn_GetFamilyLastNames()
@@ -861,10 +848,7 @@ BEGIN
     VALUES (@PersonNames);
 
     RETURN
-END
-
-
-GO" );
+END" );
         }
 
         private void BEMA_ReportingTools_sp_ReportingFieldsDataset()
@@ -973,11 +957,7 @@ BEGIN
 	Order By LastName desc, FirstName 
 
 
-END
-GO
-
-
-" );
+END" );
         }
 
         /// <summary>
