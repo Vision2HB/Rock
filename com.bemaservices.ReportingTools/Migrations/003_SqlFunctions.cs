@@ -754,7 +754,7 @@ BEGIN
                     THEN ISNULL([p].[NickName], '')
                 ELSE ISNULL([p].[FirstName], '')
                 END [FirstName]
-            ,ISNULL([p].[LastName], '') + ' ' + ISNULL([dv].[Value], '') [FullName]
+            ,ISNULL([p].[LastName], '') + ' ' [FullName]
             ,[p].Gender
             ,[gr].[Guid]
         FROM [GroupMember] [gm]
