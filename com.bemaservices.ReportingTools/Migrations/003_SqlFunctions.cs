@@ -208,7 +208,7 @@ BEGIN
         BEGIN
 
 			
-			SELECT	 @GroupTitles = @GroupTitles + [Title] + ' & '
+			SELECT @GroupTitles = @GroupTitles + case when Title is not null then Title + ' & ' else '' end
             FROM @GroupMemberTable g
             WHERE g.[GroupRoleGuid] = @cGROUPTYPEROLE_FAMILY_MEMBER_ADULT
             ORDER BY g.Gender 
@@ -336,6 +336,7 @@ AS
 BEGIN
     DECLARE @PersonNames VARCHAR(max);
     DECLARE @AdultLastNameCount INT;
+	DECLARE @GroupMemberCount INT;
     DECLARE @GroupFirstOrNickNames VARCHAR(max) = '';
     DECLARE @GroupLastName VARCHAR(max);
     DECLARE @GroupAdultFullNames VARCHAR(max) = '';
@@ -385,8 +386,8 @@ BEGIN
                 END + ' ' + ISNULL([p].[LastName], '') + ' ' + ISNULL([dv].[Value], '') [FullName]
 			 ,CASE @UseNickName
                 WHEN 1
-                    THEN [dvtitle].[Value] + ' ' + ISNULL([p].[NickName], '')
-                ELSE [dvtitle].[Value] + ' ' + ISNULL([p].[FirstName], '')
+                    THEN case when dvtitle.value is not null then [dvtitle].[Value] + ' ' else '' end + ' ' + ISNULL([p].[NickName], '')
+                ELSE case when dvtitle.value is not null then [dvtitle].[Value] + ' ' else '' end + ' ' + ISNULL([p].[FirstName], '')
                 END + ' ' + ISNULL([p].[LastName], '') + ' ' + ISNULL([dv].[Value], '') [FullNameWTitle]
             ,[p].Gender
             ,[gr].[Guid]
@@ -406,6 +407,8 @@ BEGIN
                     )
                 )
 
+		SET @GroupMemberCount = (Select Count(0) From @GroupMemberTable)
+
         -- determine adultCount and if we can use the same lastname for all adults, and get lastname while we are at it
         SELECT @AdultLastNameCount = count(DISTINCT [LastName])
             ,@GroupLastName = max([LastName])
@@ -416,7 +419,9 @@ BEGIN
         BEGIN
 
 			
-			SELECT	 @GroupTitles = @GroupTitles + [Title] + ' & '
+			SELECT	 @GroupTitles = @GroupTitles + 
+									case when Title is not null then Title +' ' else '' end +
+									FirstOrNickName+' & '
             FROM @GroupMemberTable g
             WHERE g.[GroupRoleGuid] = @cGROUPTYPEROLE_FAMILY_MEMBER_ADULT
             ORDER BY g.Gender 
@@ -431,7 +436,7 @@ BEGIN
             ORDER BY g.Gender desc
                 ,g.FirstOrNickName
 
-			SELECT @GroupAdultFullNames =  @GroupAdultFullNames + [FullNameWTitle] + '& '
+			SELECT @GroupAdultFullNames =  @GroupAdultFullNames + IsNull([FullNameWTitle], FullName) + ' & '
             FROM @GroupMemberTable g
             WHERE g.[GroupRoleGuid] = @cGROUPTYPEROLE_FAMILY_MEMBER_ADULT
             ORDER BY g.Gender 
@@ -478,44 +483,51 @@ BEGIN
             END
         END
 
-        IF @AdultLastNameCount = 0
-        BEGIN
-            -- get the NonAdultFullNames for use in the case of families without adults 
-            SELECT @GroupNonAdultFullNames = @groupNonAdultFullNames + [FullName] + ' & '
-            FROM @GroupMemberTable
-            ORDER BY [FullName]
+		IF @GroupMemberCount = 1
+		Begin
+			SET @PersonNames = @GroupAdultFullNames;
+		End
+		Else
+		begin
+			IF @AdultLastNameCount = 0
+			BEGIN
+				-- get the NonAdultFullNames for use in the case of families without adults 
+				SELECT @GroupNonAdultFullNames = @groupNonAdultFullNames + [FullName] + ' & '
+				FROM @GroupMemberTable
+				ORDER BY [FullName]
 
-            IF len(@GroupNonAdultFullNames) > 2
-            BEGIN
-                -- trim the extra ' &' off the end 
-                SET @GroupNonAdultFullNames = SUBSTRING(@GroupNonAdultFullNames, 0, len(@GroupNonAdultFullNames) - 1)
-            END
+				IF len(@GroupNonAdultFullNames) > 2
+				BEGIN
+					-- trim the extra ' &' off the end 
+					SET @GroupNonAdultFullNames = SUBSTRING(@GroupNonAdultFullNames, 0, len(@GroupNonAdultFullNames) - 1)
+				END
 
-            -- if all the fullnames are blanks, get rid of the '&'
-            IF (LTRIM(RTRIM(@GroupNonAdultFullNames)) = '&')
-            BEGIN
-                SET @GroupNonAdultFullNames = ''
-            END
-        END
+				-- if all the fullnames are blanks, get rid of the '&'
+				IF (LTRIM(RTRIM(@GroupNonAdultFullNames)) = '&')
+				BEGIN
+					SET @GroupNonAdultFullNames = ''
+				END
+			END
 
-        IF (@AdultLastNameCount = 1)
-        BEGIN
-            -- just one lastname and at least one adult. Get the Person Names portion of the address in the format <MaleAdult> & <FemaleAdult> <LastName>
-			IF (@GroupTitles is not null)
-            SET @PersonNames = @GroupTitles + ' ' + @GroupFirstOrNickNames + ' ' + @GroupLastName;
-			ELSE 
-			SET @PersonNames = @GroupFirstOrNickNames + ' ' + @GroupLastName;
-        END
-        ELSE IF (@AdultLastNameCount = 0)
-        BEGIN
-            -- no adults in family, list all members of the family in 'Fullname & FullName & ...' format
-            SET @PersonNames = @GroupNonAdultFullNames;
-        END
-        ELSE
-        BEGIN
-            -- multiple adult lastnames
-            SET @PersonNames = @GroupAdultFullNames;
-        END
+			IF (@AdultLastNameCount = 1)
+			BEGIN
+				-- just one lastname and at least one adult. Get the Person Names portion of the address in the format <MaleAdult> & <FemaleAdult> <LastName>
+				IF (@GroupTitles is not null)
+				SET @PersonNames = @GroupTitles + ' ' + @GroupLastName;
+				ELSE 
+				SET @PersonNames = @GroupFirstOrNickNames + ' ' + @GroupLastName;
+			END
+			ELSE IF (@AdultLastNameCount = 0)
+			BEGIN
+				-- no adults in family, list all members of the family in 'Fullname & FullName & ...' format
+				SET @PersonNames = @GroupNonAdultFullNames;
+			END
+			ELSE
+			BEGIN
+				-- multiple adult lastnames
+				SET @PersonNames = @GroupAdultFullNames;
+			END
+		END
     END
 
     --WHILE (len(@PersonNames) - len(replace(@PersonNames, ' & ', '  ')) > 1)
@@ -524,7 +536,7 @@ BEGIN
     --END
 
     INSERT INTO @PersonNamesTable ([PersonNames])
-    VALUES (@PersonNames);
+    VALUES (LTrim(RTrim(Replace(@PersonNames,'  ',' '))));
 
     RETURN
 END" );
@@ -894,11 +906,23 @@ BEGIN
 
     Declare @ModifiedPersonIds table(
 			PersonId int,
-			GroupId int null
+			GroupId int null,
+			GivingGroupPersonIds nvarchar(max)
 			)
 
 	Insert into @ModifiedPersonIds
-	Select p.Id, familyMembers.GroupId
+	Select p.Id, 
+			familyMembers.GroupId,
+			--(Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId) -- SQL SERVER 2017+ Version
+			STUFF
+			  (
+				(
+				  SELECT ',' + convert(nvarchar(max),p1.Id)
+					FROM Person p1
+					WHERE p1.GivingId = p.GivingId
+					FOR XML PATH('')
+				), 1, 1, N''
+			  )
 	From Person modifiedPerson
 	Left Join (
 			Select fm1.PersonId as modifiedFamilyMemberId, 
@@ -914,8 +938,7 @@ BEGIN
 	Left Join AttributeValue updateDate on updateDate.EntityId = p.Id and updateDate.AttributeId = @UpdateDateAttributeId
 	Where (updateDate.ValueAsDateTime is null or modifiedPerson.ModifiedDateTime > updateDate.ValueAsDateTime)
 
-
-	Select	p.Id,
+	Select p.Id,
 			mpId.GroupId,
 			p.FirstName,
 			p.NickName,
@@ -926,35 +949,34 @@ BEGIN
 				as GivingUnitHeadofHousehold,
 			(SELECT * FROM dbo.ufnCrm_GetFamilyTitle( null, mpId.GroupId, default, 1)) 
 				as FamilyFullNameNickNameNoTitle,
-			(SELECT * FROM dbo.ufnCrm_GetFamilyTitle( null, mpId.GroupId, (Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId), 1) )
+			(SELECT * FROM dbo.ufnCrm_GetFamilyTitle( null, mpId.GroupId,mpId.GivingGroupPersonIds , 1) )
 				as GivingUnitFullNameNickNameNoTitle,
 			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyNickNames](null, mpId.GroupId, default, 0))
 				as FamilyFirstName,
-			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyNickNames]( null, mpId.GroupId, (Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId), 0) )
+			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyNickNames]( null, mpId.GroupId, mpId.GivingGroupPersonIds, 0) )
 				as GivingUnitFirstName,
 			(SELECT * FROM dbo.BEMA_ReportingTools_ufn_GetFamilyTitleFormal(null, mpId.GroupId, default, 1)) 
 				as FamilyFullNameNickName,
-			(SELECT * FROM dbo.BEMA_ReportingTools_ufn_GetFamilyTitleFormal( null, mpId.GroupId, (Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId), 1) )
+			(SELECT * FROM dbo.BEMA_ReportingTools_ufn_GetFamilyTitleFormal( null, mpId.GroupId, mpId.GivingGroupPersonIds, 1) )
 				as GivingUnitFullNameNickName,
 			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyLastNames](null, mpId.GroupId, default, 1))
 				as FamilyLastNames,
-			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyLastNames](null, mpId.GroupId, (Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId), 1))
+			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyLastNames](null, mpId.GroupId, mpId.GivingGroupPersonIds, 1))
 				as GivingUnitLastNames,
 			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyNickNames](null, mpId.GroupId, default, 1))
 				as FamilyNickNames,
-			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyNickNames](null, mpId.GroupId, (Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId), 1))
+			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyNickNames](null, mpId.GroupId, mpId.GivingGroupPersonIds, 1))
 				as GivingUnitNickNames,
 			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyTitles](null, mpId.GroupId, default, 1)) 
 				as FamilyTitles,
-			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyTitles](null, mpId.GroupId, (Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId), 1)) 
+			(SELECT * FROM dbo.[BEMA_ReportingTools_ufn_GetFamilyTitles](null, mpId.GroupId, mpId.GivingGroupPersonIds, 1)) 
 				as GivingUnitTitles,
 			(SELECT * FROM dbo.BEMA_ReportingTools_ufn_GetFamilyTitleFormal(null, mpId.GroupId, default, 0)) 
 				as FamilyFullNameFirstName,
-			(SELECT * FROM dbo.BEMA_ReportingTools_ufn_GetFamilyTitleFormal(null, mpId.GroupId, (Select String_agg(p1.Id,',') From Person p1 where p1.GivingId = p.GivingId), 0)) 
+			(SELECT * FROM dbo.BEMA_ReportingTools_ufn_GetFamilyTitleFormal(null, mpId.GroupId, mpId.GivingGroupPersonIds, 0)) 
 				as GivingUnitFullNameFirstName
 	From Person p
 	Join (Select distinct * From @ModifiedPersonIds) mpId on p.Id = mpId.PersonId
-	Order By LastName desc, FirstName 
 
 
 END" );
