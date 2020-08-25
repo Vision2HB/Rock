@@ -61,6 +61,8 @@ namespace com.bemaservices.ReportingTools.Jobs
             var familyType = GroupTypeCache.Get( Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY.AsGuid() );
             var adultRole = familyType.Roles.FirstOrDefault( r => r.Guid.Equals( Rock.SystemGuid.GroupRole.GROUPROLE_FAMILY_MEMBER_ADULT.AsGuid() ) );
 
+            var reportingFieldsUpdateDateAttribute = AttributeCache.Get( com.bemaservices.ReportingTools.SystemGuid.Attribute.REPORTING_FIELDS_UPDATE_DATE_ATTRIBUTE.AsGuid() );
+
             var familyHeadOfHouseholdAttribute = AttributeCache.Get( com.bemaservices.ReportingTools.SystemGuid.Attribute.FAMILY_HEAD_OF_HOUSEHOLD_ATTRIBUTE.AsGuid() );
             var familyFullNameNickNamesNoTitlesAttribute = AttributeCache.Get( com.bemaservices.ReportingTools.SystemGuid.Attribute.FAMILY_FULL_NAME_NICKNAMES_NO_TITLES_ATTRIBUTE.AsGuid() );
             var familyFirstNamesAttribute = AttributeCache.Get( com.bemaservices.ReportingTools.SystemGuid.Attribute.FAMILY_FIRST_NAMES_ATTRIBUTE.AsGuid() );
@@ -84,15 +86,9 @@ namespace com.bemaservices.ReportingTools.Jobs
             int commandTimeout = dataMap.GetString( "CommandTimeout" ).AsIntegerOrNull() ?? 3600;
 
             var resultContext = new RockContext();
-
             resultContext.Database.CommandTimeout = commandTimeout;
-
             context.UpdateLastStatusMessage( "Getting Reporting Fields Dataset..." );
-
             var results = resultContext.Database.SqlQuery<FamilyNameResult>( "BEMA_ReportingTools_sp_ReportingFieldsDataset" ).ToList();
-
-            int personEntityTypeId = EntityTypeCache.Get( "Rock.Model.Person" ).Id;
-            int attributeEntityTypeId = EntityTypeCache.Get( "Rock.Model.Attribute" ).Id;
 
             int progressPosition = 0;
             int progressTotal = results.Count;
@@ -101,29 +97,30 @@ namespace com.bemaservices.ReportingTools.Jobs
             {
                 progressPosition++;
                 // create new rock context for each person (https://weblog.west-wind.com/posts/2014/Dec/21/Gotcha-Entity-Framework-gets-slow-in-long-Iteration-Loops)
-                RockContext updateContext = new RockContext();
-                updateContext.SourceOfChange = SOURCE_OF_CHANGE;
-                updateContext.Database.CommandTimeout = commandTimeout;
-                var attributeValueService = new AttributeValueService( updateContext );
+                //  RockContext updateContext = new RockContext();
+                //updateContext.SourceOfChange = SOURCE_OF_CHANGE;
+                // updateContext.Database.CommandTimeout = commandTimeout;
+                // var attributeValueService = new AttributeValueService( updateContext );
 
-                SaveAttribute( familyHeadOfHouseholdAttribute, result.PersonId, result.FamilyHeadofHousehold, updateContext, attributeValueService );
-                SaveAttribute( familyFullNameNickNamesNoTitlesAttribute, result.PersonId, result.FamilyFullNameNickNameNoTitle, updateContext, attributeValueService );
-                SaveAttribute( familyFirstNamesAttribute, result.PersonId, result.FamilyFirstName, updateContext, attributeValueService );
-                SaveAttribute( familyFullNameNickNamesAttribute, result.PersonId, result.FamilyFullNameNickName, updateContext, attributeValueService );
-                SaveAttribute( familyLastNamesAttribute, result.PersonId, result.FamilyLastNames, updateContext, attributeValueService );
-                SaveAttribute( familyNickNamesAttribute, result.PersonId, result.FamilyNickNames, updateContext, attributeValueService );
-                SaveAttribute( familyTitlesAttribute, result.PersonId, result.FamilyTitles, updateContext, attributeValueService );
-                SaveAttribute( familyFullNameFirstNamesAttribute, result.PersonId, result.FamilyFullNameFirstName, updateContext, attributeValueService );
+                SaveAttributeSql( familyHeadOfHouseholdAttribute, result.Id, result.FamilyHeadofHousehold, commandTimeout );
+                SaveAttributeSql( familyFullNameNickNamesNoTitlesAttribute, result.Id, result.FamilyFullNameNickNameNoTitle, commandTimeout );
+                SaveAttributeSql( familyFirstNamesAttribute, result.Id, result.FamilyFirstName, commandTimeout );
+                SaveAttributeSql( familyFullNameNickNamesAttribute, result.Id, result.FamilyFullNameNickName, commandTimeout );
+                SaveAttributeSql( familyLastNamesAttribute, result.Id, result.FamilyLastNames, commandTimeout );
+                SaveAttributeSql( familyNickNamesAttribute, result.Id, result.FamilyNickNames, commandTimeout );
+                SaveAttributeSql( familyTitlesAttribute, result.Id, result.FamilyTitles, commandTimeout );
+                SaveAttributeSql( familyFullNameFirstNamesAttribute, result.Id, result.FamilyFullNameFirstName, commandTimeout );
 
-                SaveAttribute( givingUnitHeadOfHouseholdAttribute, result.PersonId, result.GivingUnitHeadofHousehold, updateContext, attributeValueService );
-                SaveAttribute( givingUnitFullNameNickNamesNoTitlesAttribute, result.PersonId, result.GivingUnitFullNameNickNameNoTitle, updateContext, attributeValueService );
-                SaveAttribute( givingUnitFirstNamesAttribute, result.PersonId, result.GivingUnitFirstName, updateContext, attributeValueService );
-                SaveAttribute( givingUnitFullNameNickNamesAttribute, result.PersonId, result.GivingUnitFullNameNickName, updateContext, attributeValueService );
-                SaveAttribute( givingUnitLastNamesAttribute, result.PersonId, result.GivingUnitLastNames, updateContext, attributeValueService );
-                SaveAttribute( givingUnitNickNamesAttribute, result.PersonId, result.GivingUnitNickNames, updateContext, attributeValueService );
-                SaveAttribute( givingUnitTitlesAttribute, result.PersonId, result.GivingUnitTitles, updateContext, attributeValueService );
-                SaveAttribute( givingUnitFullNameFirstNamesAttribute, result.PersonId, result.GivingUnitFullNameFirstName, updateContext, attributeValueService );
+                SaveAttributeSql( givingUnitHeadOfHouseholdAttribute, result.Id, result.GivingUnitHeadofHousehold, commandTimeout );
+                SaveAttributeSql( givingUnitFullNameNickNamesNoTitlesAttribute, result.Id, result.GivingUnitFullNameNickNameNoTitle, commandTimeout );
+                SaveAttributeSql( givingUnitFirstNamesAttribute, result.Id, result.GivingUnitFirstName, commandTimeout );
+                SaveAttributeSql( givingUnitFullNameNickNamesAttribute, result.Id, result.GivingUnitFullNameNickName, commandTimeout );
+                SaveAttributeSql( givingUnitLastNamesAttribute, result.Id, result.GivingUnitLastNames, commandTimeout );
+                SaveAttributeSql( givingUnitNickNamesAttribute, result.Id, result.GivingUnitNickNames, commandTimeout );
+                SaveAttributeSql( givingUnitTitlesAttribute, result.Id, result.GivingUnitTitles, commandTimeout );
+                SaveAttributeSql( givingUnitFullNameFirstNamesAttribute, result.Id, result.GivingUnitFullNameFirstName, commandTimeout );
 
+                SaveAttributeSql( reportingFieldsUpdateDateAttribute, result.Id, RockDateTime.Now.ToString(), commandTimeout );
                 // update stats
                 context.UpdateLastStatusMessage( $"Updating Family Names {progressPosition} of {progressTotal}" );
             }
@@ -131,23 +128,74 @@ namespace com.bemaservices.ReportingTools.Jobs
             context.UpdateLastStatusMessage( "" );
         }
 
-        private static void SaveAttribute( AttributeCache attribute, int personId, string value, RockContext updateContext, AttributeValueService attributeValueService )
+        /*   private static void SaveAttribute( AttributeCache attribute, int personId, string value, RockContext commandTimeoutattributeValueService )
+           {
+               try
+               {
+                   if ( attribute != null )
+                   {
+                       var attributeValue = attributeValueService.Queryable().Where( v => v.AttributeId == attribute.Id && v.EntityId == personId ).FirstOrDefault();
+                       if ( attributeValue == null )
+                       {
+                           attributeValue = new AttributeValue();
+                           attributeValue.EntityId = personId;
+                           attributeValue.AttributeId = attribute.Id;
+                           attributeValueService.Add( attributeValue );
+                       }
+                       attributeValue.Value = value;
+
+                       updateContext.SaveChanges();
+                   }
+               }
+               catch ( Exception ex )
+               {
+                   string message = String.Format( "Error occurred saving {0} for Person with ID {1}", attribute.Name, personId );
+                   ExceptionLogService.LogException( new Exception( message, ex ) );
+               }
+           }*/
+
+        private static void SaveAttributeSql( AttributeCache attribute, int personId, string value, int commandTimeout )
         {
             try
             {
                 if ( attribute != null )
                 {
-                    var attributeValue = attributeValueService.Queryable().Where( v => v.AttributeId == attribute.Id && v.EntityId == personId ).FirstOrDefault();
-                    if ( attributeValue == null )
-                    {
-                        attributeValue = new AttributeValue();
-                        attributeValue.EntityId = personId;
-                        attributeValue.AttributeId = attribute.Id;
-                        attributeValueService.Add( attributeValue );
-                    }
-                    attributeValue.Value = value;
+                    var query = string.Format( @"
 
-                    updateContext.SaveChanges();
+                        DECLARE @PersonId int = {0}
+
+                        DECLARE @AttributeId int = {1}
+
+                        IF @PersonId IS NOT NULL AND @AttributeId IS NOT NULL
+                        BEGIN
+
+                            DECLARE @TheValue NVARCHAR(MAX) = '{2}'
+
+                            -- Delete existing attribute value first (might have been created by Rock system)
+                            DELETE [AttributeValue]
+                            WHERE [AttributeId] = @AttributeId
+                            AND [EntityId] = @PersonId
+
+                            INSERT INTO [AttributeValue] (
+                                [IsSystem],[AttributeId],[EntityId],
+                                [Value],
+                                [Guid])
+                            VALUES(
+                                1,@AttributeId,@PersonId,
+                                @TheValue,
+                                NEWID())
+                        END
+                        ",
+                           personId,
+                           attribute.Id,
+                           value.Replace( "'", "''" )
+                       );
+
+                    int rows = DbService.ExecuteCommand( query, commandTimeout: commandTimeout );
+                    if ( rows < 0 )
+                    {
+                        rows = 0;
+                    }
                 }
             }
             catch ( Exception ex )
@@ -160,7 +208,7 @@ namespace com.bemaservices.ReportingTools.Jobs
         public class FamilyNameResult
         {
             [Key]
-            public int PersonId { get; set; }
+            public int Id { get; set; }
             public int GroupId { get; set; }
             public string FamilyHeadofHousehold { get; set; }
             public string GivingUnitHeadofHousehold { get; set; }
