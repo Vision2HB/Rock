@@ -204,6 +204,8 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
 
         #endregion PageParameterKeys
 
+        // This is a sample comment to demonstrate Git. Please delete next upgrade / file modification
+
         #region Fields
 
         private const string CATEGORY_COMMUNICATION_TEMPLATE = "CategoryCommunicationTemplate";
