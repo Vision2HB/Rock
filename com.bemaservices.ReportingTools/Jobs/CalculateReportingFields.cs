@@ -128,32 +128,6 @@ namespace com.bemaservices.ReportingTools.Jobs
             context.UpdateLastStatusMessage( "" );
         }
 
-        /*   private static void SaveAttribute( AttributeCache attribute, int personId, string value, RockContext commandTimeoutattributeValueService )
-           {
-               try
-               {
-                   if ( attribute != null )
-                   {
-                       var attributeValue = attributeValueService.Queryable().Where( v => v.AttributeId == attribute.Id && v.EntityId == personId ).FirstOrDefault();
-                       if ( attributeValue == null )
-                       {
-                           attributeValue = new AttributeValue();
-                           attributeValue.EntityId = personId;
-                           attributeValue.AttributeId = attribute.Id;
-                           attributeValueService.Add( attributeValue );
-                       }
-                       attributeValue.Value = value;
-
-                       updateContext.SaveChanges();
-                   }
-               }
-               catch ( Exception ex )
-               {
-                   string message = String.Format( "Error occurred saving {0} for Person with ID {1}", attribute.Name, personId );
-                   ExceptionLogService.LogException( new Exception( message, ex ) );
-               }
-           }*/
-
         private static void SaveAttributeSql( AttributeCache attribute, int personId, string value, int commandTimeout )
         {
             try
