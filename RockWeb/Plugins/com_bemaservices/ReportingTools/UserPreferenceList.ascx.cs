@@ -81,7 +81,7 @@ namespace RockWeb.Plugins.com_bemaservices.ReportingTools
             }
 
             rGrid.DataKeyNames = new string[] { "Id" };
-            rGrid.Actions.ShowAdd = true;
+            rGrid.Actions.ShowAdd = false;
             rGrid.GridRebind += rGrid_GridRebind;
             rGrid.RowDataBound += rGrid_RowDataBound;
             rFilter.ApplyFilterClick += rFilter_ApplyFilterClick;
