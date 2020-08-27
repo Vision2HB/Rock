@@ -24,6 +24,7 @@ namespace com.bemaservices.MinistrySafe.Migrations
 
             BackgroundCheckReportPage();
 
+
         }
 
         private void BackgroundCheckReportPage()
