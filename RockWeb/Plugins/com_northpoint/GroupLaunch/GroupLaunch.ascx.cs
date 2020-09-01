@@ -293,6 +293,10 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
 
             // Add UI Text of "No Edits Allowed"
             ConnectedHighlight.Text = "Connected: Active In GroupLaunch";
+
+            Authorization.RefreshAction( rockGroup.TypeId, rockGroupId, Authorization.MANAGE_MEMBERS );
+
+            Authorization.RefreshAction( rockGroup.TypeId, rockGroupId, Authorization.EDIT );
         }
 
         private void UnFreezeRockGroup( int rockGroupId )
@@ -327,6 +331,10 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
             
             // Add UI Text of "No Edits Allowed"
             ConnectedHighlight.Text = "Connected: GroupLaunch Finalized";
+
+            Authorization.RefreshAction( rockGroup.TypeId, rockGroupId, Authorization.MANAGE_MEMBERS );
+
+            Authorization.RefreshAction( rockGroup.TypeId, rockGroupId, Authorization.EDIT );
         }
 
         private void DenyAll( ISecured entity, string action, RockContext rockContext = null )
