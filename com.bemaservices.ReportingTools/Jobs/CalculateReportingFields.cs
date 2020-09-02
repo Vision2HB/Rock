@@ -84,45 +84,52 @@ namespace com.bemaservices.ReportingTools.Jobs
             JobDataMap dataMap = context.JobDetail.JobDataMap;
 
             int commandTimeout = dataMap.GetString( "CommandTimeout" ).AsIntegerOrNull() ?? 3600;
-
+            int batchNumber = 1;
             var resultContext = new RockContext();
             resultContext.Database.CommandTimeout = commandTimeout;
-            context.UpdateLastStatusMessage( "Getting Reporting Fields Dataset..." );
+            context.UpdateLastStatusMessage( $"Getting Reporting Fields Dataset for Batch #{batchNumber}..." );
             var results = resultContext.Database.SqlQuery<FamilyNameResult>( "BEMA_ReportingTools_sp_ReportingFieldsDataset" ).ToList();
 
-            int progressPosition = 0;
-            int progressTotal = results.Count;
-
-            foreach ( var result in results )
+            while ( results.Count > 0 )
             {
-                progressPosition++;
-                // create new rock context for each person (https://weblog.west-wind.com/posts/2014/Dec/21/Gotcha-Entity-Framework-gets-slow-in-long-Iteration-Loops)
-                //  RockContext updateContext = new RockContext();
-                //updateContext.SourceOfChange = SOURCE_OF_CHANGE;
-                // updateContext.Database.CommandTimeout = commandTimeout;
-                // var attributeValueService = new AttributeValueService( updateContext );
+                int progressPosition = 0;
+                int progressTotal = results.Count;
 
-                SaveAttributeSql( familyHeadOfHouseholdAttribute, result.Id, result.FamilyHeadofHousehold, commandTimeout );
-                SaveAttributeSql( familyFullNameNickNamesNoTitlesAttribute, result.Id, result.FamilyFullNameNickNameNoTitle, commandTimeout );
-                SaveAttributeSql( familyFirstNamesAttribute, result.Id, result.FamilyFirstName, commandTimeout );
-                SaveAttributeSql( familyFullNameNickNamesAttribute, result.Id, result.FamilyFullNameNickName, commandTimeout );
-                SaveAttributeSql( familyLastNamesAttribute, result.Id, result.FamilyLastNames, commandTimeout );
-                SaveAttributeSql( familyNickNamesAttribute, result.Id, result.FamilyNickNames, commandTimeout );
-                SaveAttributeSql( familyTitlesAttribute, result.Id, result.FamilyTitles, commandTimeout );
-                SaveAttributeSql( familyFullNameFirstNamesAttribute, result.Id, result.FamilyFullNameFirstName, commandTimeout );
+                foreach ( var result in results )
+                {
+                    progressPosition++;
+                    // create new rock context for each person (https://weblog.west-wind.com/posts/2014/Dec/21/Gotcha-Entity-Framework-gets-slow-in-long-Iteration-Loops)
+                    //  RockContext updateContext = new RockContext();
+                    //updateContext.SourceOfChange = SOURCE_OF_CHANGE;
+                    // updateContext.Database.CommandTimeout = commandTimeout;
+                    // var attributeValueService = new AttributeValueService( updateContext );
 
-                SaveAttributeSql( givingUnitHeadOfHouseholdAttribute, result.Id, result.GivingUnitHeadofHousehold, commandTimeout );
-                SaveAttributeSql( givingUnitFullNameNickNamesNoTitlesAttribute, result.Id, result.GivingUnitFullNameNickNameNoTitle, commandTimeout );
-                SaveAttributeSql( givingUnitFirstNamesAttribute, result.Id, result.GivingUnitFirstName, commandTimeout );
-                SaveAttributeSql( givingUnitFullNameNickNamesAttribute, result.Id, result.GivingUnitFullNameNickName, commandTimeout );
-                SaveAttributeSql( givingUnitLastNamesAttribute, result.Id, result.GivingUnitLastNames, commandTimeout );
-                SaveAttributeSql( givingUnitNickNamesAttribute, result.Id, result.GivingUnitNickNames, commandTimeout );
-                SaveAttributeSql( givingUnitTitlesAttribute, result.Id, result.GivingUnitTitles, commandTimeout );
-                SaveAttributeSql( givingUnitFullNameFirstNamesAttribute, result.Id, result.GivingUnitFullNameFirstName, commandTimeout );
+                    SaveAttributeSql( familyHeadOfHouseholdAttribute, result.Id, result.FamilyHeadofHousehold, commandTimeout );
+                    SaveAttributeSql( familyFullNameNickNamesNoTitlesAttribute, result.Id, result.FamilyFullNameNickNameNoTitle, commandTimeout );
+                    SaveAttributeSql( familyFirstNamesAttribute, result.Id, result.FamilyFirstName, commandTimeout );
+                    SaveAttributeSql( familyFullNameNickNamesAttribute, result.Id, result.FamilyFullNameNickName, commandTimeout );
+                    SaveAttributeSql( familyLastNamesAttribute, result.Id, result.FamilyLastNames, commandTimeout );
+                    SaveAttributeSql( familyNickNamesAttribute, result.Id, result.FamilyNickNames, commandTimeout );
+                    SaveAttributeSql( familyTitlesAttribute, result.Id, result.FamilyTitles, commandTimeout );
+                    SaveAttributeSql( familyFullNameFirstNamesAttribute, result.Id, result.FamilyFullNameFirstName, commandTimeout );
 
-                SaveAttributeSql( reportingFieldsUpdateDateAttribute, result.Id, RockDateTime.Now.ToString(), commandTimeout );
-                // update stats
-                context.UpdateLastStatusMessage( $"Updating Family Names {progressPosition} of {progressTotal}" );
+                    SaveAttributeSql( givingUnitHeadOfHouseholdAttribute, result.Id, result.GivingUnitHeadofHousehold, commandTimeout );
+                    SaveAttributeSql( givingUnitFullNameNickNamesNoTitlesAttribute, result.Id, result.GivingUnitFullNameNickNameNoTitle, commandTimeout );
+                    SaveAttributeSql( givingUnitFirstNamesAttribute, result.Id, result.GivingUnitFirstName, commandTimeout );
+                    SaveAttributeSql( givingUnitFullNameNickNamesAttribute, result.Id, result.GivingUnitFullNameNickName, commandTimeout );
+                    SaveAttributeSql( givingUnitLastNamesAttribute, result.Id, result.GivingUnitLastNames, commandTimeout );
+                    SaveAttributeSql( givingUnitNickNamesAttribute, result.Id, result.GivingUnitNickNames, commandTimeout );
+                    SaveAttributeSql( givingUnitTitlesAttribute, result.Id, result.GivingUnitTitles, commandTimeout );
+                    SaveAttributeSql( givingUnitFullNameFirstNamesAttribute, result.Id, result.GivingUnitFullNameFirstName, commandTimeout );
+
+                    SaveAttributeSql( reportingFieldsUpdateDateAttribute, result.Id, RockDateTime.Now.ToString(), commandTimeout );
+                    // update stats
+                    context.UpdateLastStatusMessage( $"Updating Family Names {progressPosition} of {progressTotal} for Batch #{batchNumber}" );
+                }
+
+                batchNumber++;
+                context.UpdateLastStatusMessage( $"Getting Reporting Fields Dataset for Batch #{batchNumber}..." );
+                results = resultContext.Database.SqlQuery<FamilyNameResult>( "BEMA_ReportingTools_sp_ReportingFieldsDataset" ).ToList();
             }
 
             context.UpdateLastStatusMessage( "" );
