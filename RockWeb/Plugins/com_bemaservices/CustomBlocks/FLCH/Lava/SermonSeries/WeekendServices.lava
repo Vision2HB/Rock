@@ -7,6 +7,8 @@
     {% assign teachingOnlyAudioFile = item | Attribute:'teachingOnlyAudioFile','Url' %}
     {% assign vimeoId = item | Attribute:'VimeoId' %}
     {% assign videoLink = item | Attribute:'VideoLink','RawValue' %}
+    {% assign LiveStreamCode = item | Attribute:'Audience','Object' | Attribute:'DefaultResiEmbedCode'%}
+    {% assign LiveStartTime = item | Attribute:'Audience','Object' | Attribute:'LiveStreamStartTime'%}
 
     {% contentchannelitem where:'Guid == "{{ seriesGuid }}"' %}
         {% assign series = contentchannelitem %}
@@ -20,15 +22,32 @@
                 <iframe src="https://player.vimeo.com/video/{{vimeoId}}" allow="autoplay; fullscreen" allowfullscreen="" width="100%" height="360" frameborder="0"></iframe>
               </div>
             {% else %}
-            <div class="embed-responsive embed-responsive-16by9" style="background-image: url({{ series | Attribute:'SeriesImage','Url' }}); background-size:cover; background-position:center;">
 
-            </div>
-              {% if teachingOnlyAudioFile != '' %}
-                <audio controls>
-                  <source src="{{teachingOnlyAudioFile}}" >
-                  Your browser does not support the audio element.
-                </audio>
+              {% assign currentDateTime = 'Now' | Date:'yyyyMMddHHmm' %}
+              {% capture liveStreamDateTime %}{{ item.StartDateTime | Date:'yyyyMMdd'}}{{ LiveStartTime | Date:'HHmm' }}{% endcapture %}
+              {% capture nextWeekDateTime %}{{ item.StartDateTime | DateAdd:7,'d' | Date:'yyyyMMdd'}}{{ LiveStartTime | Date:'HHmm' }}{% endcapture %}
+
+              {% if LiveStreamCode != null and LiveStreamCode != empty and currentDateTime > liveStreamDateTime and currentDateTime < nextWeekDateTime %}
+
+                <div class="embed-responsive embed-responsive-16by9">
+                  {{ LiveStreamCode }}
+                </div>
+
+              {% else %}
+
+                <div class="embed-responsive embed-responsive-16by9" style="background-image: url({{ series | Attribute:'SeriesImage','Url' }}); background-size:cover; background-position:center;">
+
+                </div>
+
+                {% if teachingOnlyAudioFile != '' %}
+                    <audio controls>
+                      <source src="{{teachingOnlyAudioFile}}" >
+                      Your browser does not support the audio element.
+                    </audio>
+                {% endif %}
+
               {% endif %}
+
             {% endif %}
 
     </div>
@@ -172,3 +191,5 @@
 
 
 {% endfor %}
+
+
