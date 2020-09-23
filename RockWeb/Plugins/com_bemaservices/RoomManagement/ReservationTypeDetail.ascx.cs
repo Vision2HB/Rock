@@ -346,7 +346,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 reservationType.IsActive = true;
                 reservationType.IconCssClass = tbIconCssClass.Text;
                 reservationType.FinalApprovalGroupId = ddlFinalApprovalGroup.SelectedValueAsId();
-                reservationType.SuperAdminGroupId = ddlSuperAdminGroup.SelectedValueAsId();
+                reservationType.OverrideApprovalGroupId = ddlSuperAdminGroup.SelectedValueAsId();
                 reservationType.NotificationEmailId = ddlNotificationEmail.SelectedValueAsId();
                 reservationType.IsCommunicationHistorySaved = cbIsCommunicationHistorySaved.Checked;
                 reservationType.IsContactDetailsRequired = cbIsContactDetailsRequired.Checked;
@@ -1158,9 +1158,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 ddlFinalApprovalGroup.SetValue( reservationType.FinalApprovalGroupId.Value );
 
             }
-            if ( reservationType.SuperAdminGroupId.HasValue )
+            if ( reservationType.OverrideApprovalGroupId.HasValue )
             {
-                ddlSuperAdminGroup.SetValue( reservationType.SuperAdminGroupId.Value );
+                ddlSuperAdminGroup.SetValue( reservationType.OverrideApprovalGroupId.Value );
 
             }
 

@@ -1199,7 +1199,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 var changes = new History.HistoryChangeList();
 
                 reservation = new Reservation { Id = 0 };
-                reservation.ApprovalState = ReservationApprovalState.Unapproved;
+                reservation.ApprovalState = ReservationApprovalState.PendingInitialApproval;
                 reservation.RequesterAliasId = ppPrimaryContract.PersonAliasId;
                 changes.Add( new History.HistoryChange( History.HistoryVerb.Add, History.HistoryChangeType.Record, "Reservation" ) );
 
@@ -1284,7 +1284,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     return;
                 }
 
-                reservation = reservationService.UpdateApproval( reservation,ReservationApprovalState.Unapproved );
+                reservation = reservationService.UpdateApproval( reservation,ReservationApprovalState.PendingInitialApproval );
                 reservation = reservationService.SetFirstLastOccurrenceDateTimes( reservation );
 
                 if ( reservation.Id.Equals( 0 ) )

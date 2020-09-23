@@ -1207,7 +1207,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                     if ( newApprovalState != null && newApprovalState == ReservationApprovalState.Approved )
                     {
-                        bool isSuperAdmin = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, reservation.ReservationType.SuperAdminGroupId );
+                        bool isSuperAdmin = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, reservation.ReservationType.OverrideApprovalGroupId );
                         foreach ( var reservationResource in reservation.ReservationResources )
                         {
                             bool canApprove = ReservationService.CanPersonApproveReservationResource( CurrentPerson, isSuperAdmin, reservationResource );
@@ -1548,7 +1548,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 var canDeny = false;
 
                 canApprove = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, reservationResource.Resource.ApprovalGroupId )
-                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.SuperAdminGroupId );
+                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId );
 
                 canDeny = canApprove || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId );
 
@@ -1948,7 +1948,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 }
 
                 canApprove = ReservationTypeService.IsPersonInGroupWithGuid( CurrentPerson, approvalGroupGuid )
-                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.SuperAdminGroupId );
+                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId );
 
                 canDeny = canApprove || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId );
 
@@ -2503,12 +2503,12 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
             bool canApprove = false;
 
-            canApprove = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.SuperAdminGroupId )
+            canApprove = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId )
                 || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId );
 
             btnApprove.Visible = ( reservation.ApprovalState == ReservationApprovalState.PendingFinalApproval && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ) ) && !nbError.Text.IsNotNullOrWhiteSpace();
-            btnDeny.Visible = ( reservation.ApprovalState == ReservationApprovalState.PendingFinalApproval && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ) ) || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.SuperAdminGroupId );
-            btnOverride.Visible = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.SuperAdminGroupId );
+            btnDeny.Visible = ( reservation.ApprovalState == ReservationApprovalState.PendingFinalApproval && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ) ) || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId );
+            btnOverride.Visible = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId );
 
             // Show the delete button if the person is authorized to delete it
             if ( canApprove || CurrentPersonAliasId == reservation.CreatedByPersonAliasId || reservation.AdministrativeContactPersonAliasId == CurrentPersonAliasId )
@@ -2719,7 +2719,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                 bool canApprove = false;
 
-                canApprove = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.SuperAdminGroupId )
+                canApprove = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId )
                     || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId );
 
                 if ( reservation.Id != 0 )
