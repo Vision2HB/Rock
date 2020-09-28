@@ -617,7 +617,7 @@ namespace com.bemaservices.DoorControl.DSX.Utility
                             StartDateTime = doorLock.StartTime,
                             StartAction = doorLock.StartTimeAction,
                             EndDateTime = doorLock.EndTime,
-                            EndAction = doorLock.EndTimeAction,
+                            EndAction = doorLock.IsHvacOnly == true ? doorLock.StartTimeAction : doorLock.EndTimeAction,
                             ReservationId = doorLock.ReservationId,
                             LocationId = doorLock.LocationId,
                             OverrideGroup = doorLock.OverrideGroup,
