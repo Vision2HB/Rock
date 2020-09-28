@@ -16,7 +16,7 @@ namespace com.bemaservices.DoorControl.DSX.Migrations
         public override void Up()
         {
             // Process Door Lock Attribute
-            RockMigrationHelper.AddEntityAttribute( "com.centralaz.RoomManagement.Model.Reservation", Rock.SystemGuid.FieldType.BOOLEAN, "", "", "Process Door Lock", "", "Determines if a door lock should be added for the reservation.", 0, "", com.bemaservices.DoorControl.DSX.SystemGuid.Attribute.RESERVATION_PROCESS_DOOR_LOCK_ATTRIBUTE );
+            RockMigrationHelper.AddEntityAttribute( "com.bemaservices.RoomManagement.Model.Reservation", Rock.SystemGuid.FieldType.BOOLEAN, "", "", "Process Door Lock", "", "Determines if a door lock should be added for the reservation.", 0, "", com.bemaservices.DoorControl.DSX.SystemGuid.Attribute.RESERVATION_PROCESS_DOOR_LOCK_ATTRIBUTE );
             RockMigrationHelper.AddAttributeQualifier(
                 com.bemaservices.DoorControl.DSX.SystemGuid.Attribute.RESERVATION_PROCESS_DOOR_LOCK_ATTRIBUTE,
                 "falseText",

@@ -10,6 +10,7 @@ namespace com.bemaservices.DoorControl.DSX.Models
     {
         Unlock = 1,
         Lock = 2,
-        TimeZone = 3
+        TimeZone = 3,
+        EndUnlocked = 4
     }
 }

@@ -18,7 +18,7 @@ namespace com.bemaservices.DoorControl.DSX.Migrations
             Sql( @"
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_DoorLock] DROP CONSTRAINT [FK__com_bemaservices_RoomManagement_DoorLock_Reservation]
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_DoorLock]  WITH CHECK ADD  CONSTRAINT [FK__com_bemaservices_RoomManagement_DoorLock_Reservation] FOREIGN KEY([ReservationId])
-                REFERENCES [dbo].[_com_centralaz_RoomManagement_Reservation] ([Id])
+                REFERENCES [dbo].[_com_bemaservices_RoomManagement_Reservation] ([Id])
                 ON DELETE CASCADE
                 
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_DoorLock] CHECK CONSTRAINT [FK__com_bemaservices_RoomManagement_DoorLock_Reservation]

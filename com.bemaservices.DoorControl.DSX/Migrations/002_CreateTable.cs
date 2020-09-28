@@ -52,7 +52,7 @@ namespace com.bemaservices.DoorControl.DSX.Migrations
                 REFERENCES [dbo].[Location] ([Id])
 
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_DoorLock]  WITH CHECK ADD CONSTRAINT [FK__com_bemaservices_RoomManagement_DoorLock_Reservation] FOREIGN KEY([ReservationId])
-                REFERENCES [dbo].[_com_centralaz_RoomManagement_Reservation] ([Id])
+                REFERENCES [dbo].[_com_bemaservices_RoomManagement_Reservation] ([Id])
             " );
         }
 

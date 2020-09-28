@@ -19,7 +19,7 @@ namespace com.bemaservices.DoorControl.DSX.Migrations
             AttributeMatrixTemplateService attributeMatrixTemplateService = new AttributeMatrixTemplateService( rockContext );
 
             // Reservation Attribute
-            RockMigrationHelper.AddEntityAttribute( "com.centralaz.RoomManagement.Model.Reservation", "F16FC460-DC1E-4821-9012-5F21F974C677", "", "", "Door Overrides", "", "Stores Door Lock Overrides", 0, "", com.bemaservices.DoorControl.DSX.SystemGuid.Attribute.RESERVATION_DOOR_OVERRIDES_ATTRIBUTE );
+            RockMigrationHelper.AddEntityAttribute( "com.bemaservices.RoomManagement.Model.Reservation", "F16FC460-DC1E-4821-9012-5F21F974C677", "", "", "Door Overrides", "", "Stores Door Lock Overrides", 0, "", com.bemaservices.DoorControl.DSX.SystemGuid.Attribute.RESERVATION_DOOR_OVERRIDES_ATTRIBUTE );
             RockMigrationHelper.AddAttributeQualifier(
                 com.bemaservices.DoorControl.DSX.SystemGuid.Attribute.RESERVATION_DOOR_OVERRIDES_ATTRIBUTE,
                 "attributematrixtemplate",
