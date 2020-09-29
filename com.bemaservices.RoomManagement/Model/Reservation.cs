@@ -343,6 +343,20 @@ namespace com.bemaservices.RoomManagement.Model
         private ICollection<ReservationResource> _reservationResources;
 
         /// <summary>
+        /// Gets or sets the reservation linkages.
+        /// </summary>
+        /// <value>
+        /// The reservation resources.
+        /// </value>
+        [LavaInclude]
+        public virtual ICollection<ReservationLinkage> ReservationLinkages
+        {
+            get { return _reservationLinkages ?? ( _reservationLinkages = new Collection<ReservationLinkage>() ); }
+            set { _reservationLinkages = value; }
+        }
+        private ICollection<ReservationLinkage> _reservationLinkages;
+
+        /// <summary>
         /// Gets or sets the reservation locations.
         /// </summary>
         /// <value>

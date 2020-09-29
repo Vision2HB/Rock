@@ -1,0 +1,22 @@
+{% assign currentPageId = 'Global' | 'Global' | Page:'Id' %}
+{% assign reservationId = 'Global' | PageParameter:'ReservationId' %}
+{% if reservationId > 0 %}
+  <ul class="nav nav-tabs">
+    {% page where:'Guid == "4CBD2B96-E076-46DF-A576-356BCA5E577F"' %}
+      <li {% if page.Id == currentPageId %}class='active'{% endif %}>
+                <a href="/page/{{page.Id}}?ReservationId={{reservationId}}">Notes</a>          
+        </li>
+    {% endpage %}
+    {% page where:'Guid == "BB6DB032-4677-4003-9B82-1ADE3415DFD7"' %}
+      <li {% if page.Id == currentPageId %}class='active'{% endif %}>
+                <a href="/page/{{page.Id}}?ReservationId={{reservationId}}">Events</a>     
+        </li>
+    {% endpage %}
+    {% page where:'Guid == "00D7B67F-1000-4F4D-BDB3-B7C3BB03F430"' %}
+      <li {% if page.Id == currentPageId %}class='active'{% endif %}>
+                <a href="/page/{{page.Id}}?ReservationId={{reservationId}}">History</a>     
+        </li>
+    {% endpage %}
+</ul>
+</br>
+{% endif %}

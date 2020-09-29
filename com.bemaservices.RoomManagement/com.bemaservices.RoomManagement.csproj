@@ -95,6 +95,7 @@
     <Compile Include="Field\Types\ReservationFieldType.cs" />
     <Compile Include="Jobs\FireWorkflowFromReservationInDateRange.cs" />
     <Compile Include="Jobs\PopulateFirstLastOccurrenceDateTimes.cs" />
+    <Compile Include="Migrations\032_ReservationLinkages.cs" />
     <Compile Include="Migrations\031_Rollup200.cs" />
     <Compile Include="Migrations\030_BemaTransition.cs" />
     <Compile Include="Migrations\029_ReservationLocationTypes.cs" />
@@ -112,6 +113,8 @@
     <Compile Include="Model\LocationLayoutService.cs" />
     <Compile Include="Model\ReservationLocationType.cs" />
     <Compile Include="Model\ReservationLocationTypeService.cs" />
+    <Compile Include="Model\ReservationLinkage.cs" />
+    <Compile Include="Model\ReservationLinkageService.cs" />
     <Compile Include="ReportTemplates\AdvancedReportTemplate.cs" />
     <Compile Include="ReportTemplates\LavaReportTemplate.cs" />
     <Compile Include="ReportTemplates\ReportTemplate.cs" />

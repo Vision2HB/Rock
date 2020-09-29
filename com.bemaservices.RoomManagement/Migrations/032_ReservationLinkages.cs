@@ -29,27 +29,15 @@ namespace com.bemaservices.RoomManagement.Migrations
     /// Migration for the RoomManagement system.
     /// </summary>
     /// <seealso cref="Rock.Plugin.Migration" />
-    [MigrationNumber( 31, "1.10.3" )]
-    public class Rollup160 : Migration
+    [MigrationNumber( 32, "1.10.3" )]
+    public class ReservationLinkage : Migration
     {
         /// <summary>
         /// The commands to run to migrate plugin to the specific version
         /// </summary>
         public override void Up()
         {
-           Sql( @"
-               ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType] ADD [OverrideApprovalGroupId] INT NULL
-
-                ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType]  WITH CHECK ADD  CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationType_OverrideApprovalGroupId] FOREIGN KEY([OverrideApprovalGroupId])
-                REFERENCES [dbo].[Group] ([Id])
-
-                ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType] CHECK CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationType_OverrideApprovalGroupId]             
-" );
-
-            Sql( @" UPDATE _com_bemaservices_RoomManagement_ReservationType
-                    SET [OverrideApprovalGroupId] = [SuperAdminGroupId]" );
-
-             Sql( @"
+          Sql( @"
 
                 CREATE TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationLinkage](
 	                [Id] [int] IDENTITY(1,1) NOT NULL,
