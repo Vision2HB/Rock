@@ -612,36 +612,43 @@ namespace com.bemaservices.DoorControl.DSX.Utility
                     // Adding Values that are happening in the future.
                     foreach ( var doorLock in futureDoorLocks )
                     {
-                        var item = new DoorLock
+                        try
                         {
-                            StartDateTime = doorLock.StartTime,
-                            StartAction = doorLock.StartTimeAction,
-                            EndDateTime = doorLock.EndTime,
-                            EndAction = doorLock.IsHvacOnly == true ? DoorLockActions.EndUnlocked : doorLock.EndTimeAction,
-                            ReservationId = doorLock.ReservationId,
-                            LocationId = doorLock.LocationId,
-                            OverrideGroup = doorLock.OverrideGroup,
-                            RoomName = doorLock.RoomName,
-                            IsHvacOnly = doorLock.IsHvacOnly
-                        };
-
-                        // check for ongoing events in same override group
-                        foreach ( var linkedItem in futureDoorLocks.Where( i => i.OverrideGroup == doorLock.OverrideGroup && i != doorLock ).ToList() )
-                        {
-                            if ( doorLock.EndTime.AddMinutes( 30 ) >= linkedItem.StartTime && linkedItem.EndTime >= doorLock.EndTime )
+                            var item = new DoorLock
                             {
-                                item.EndAction = DoorLockActions.EndUnlocked;
-                                break;
+                                StartDateTime = doorLock.StartTime,
+                                StartAction = doorLock.StartTimeAction,
+                                EndDateTime = doorLock.EndTime,
+                                EndAction = doorLock.IsHvacOnly == true ? DoorLockActions.EndUnlocked : doorLock.EndTimeAction,
+                                ReservationId = doorLock.ReservationId,
+                                LocationId = doorLock.LocationId,
+                                OverrideGroup = doorLock.OverrideGroup,
+                                RoomName = doorLock.RoomName,
+                                IsHvacOnly = doorLock.IsHvacOnly
+                            };
+
+                            // check for ongoing events in same override group
+                            foreach ( var linkedItem in futureDoorLocks.Where( i => i.OverrideGroup == doorLock.OverrideGroup && i != doorLock ).ToList() )
+                            {
+                                if ( doorLock.EndTime.AddMinutes( 30 ) >= linkedItem.StartTime && linkedItem.EndTime >= doorLock.EndTime )
+                                {
+                                    item.EndAction = DoorLockActions.EndUnlocked;
+                                    break;
+                                }
+                            }
+
+                            // Adding if not in DB
+                            if ( !doorLockService.Exists( item ) )
+                            {
+                                doorLockService.Add( item );
+                                rockContext.SaveChanges();
+
+                                addedCount += 1;
                             }
                         }
-
-                        // Adding if not in DB
-                        if ( !doorLockService.Exists( item ) )
+                        catch ( Exception exception )
                         {
-                            doorLockService.Add( item );
-                            rockContext.SaveChanges();
-
-                            addedCount += 1;
+                            ExceptionLogService.LogException( exception );
                         }
                     }
 
