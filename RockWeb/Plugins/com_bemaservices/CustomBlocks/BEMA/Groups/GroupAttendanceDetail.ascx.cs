@@ -34,12 +34,13 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v11.0.1)
+ * BEMA Modified Core Block ( v11.1.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
  * - UI1) Added ability to hide the cancel button
  * - UI2) Added ability to hide the Print Attendance Roster button 
+ * - FE1) Added ability to mark anonymous attendance
  */
 namespace RockWeb.Plugins.com_bemaservices.Groups
 {
@@ -1326,7 +1327,11 @@ cbDidNotMeet.ClientID );
                             var workflow = Workflow.Activate( workflowType, _group.Name );
 
                             workflow.SetAttributeValue( "StartDateTime", _occurrence.OccurrenceDate.ToString( "o" ) );
-                            workflow.SetAttributeValue( "Schedule", _group.Schedule.Guid.ToString() );
+
+                            if ( _group.Schedule != null )
+                            {
+                                workflow.SetAttributeValue( "Schedule", _group.Schedule.Guid.ToString() );
+                            }
 
                             List<string> workflowErrors;
                             new WorkflowService( rockContext ).Process( workflow, _group, out workflowErrors );

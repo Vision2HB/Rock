@@ -35,7 +35,7 @@ using Rock.Web.UI.Controls.Communication;
 using Rock.Web.UI.Controls;
 using System.Data.Entity;
 /*
- * BEMA Modified Core Block ( v11.0.1)
+ * BEMA Modified Core Block ( v11.1.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
