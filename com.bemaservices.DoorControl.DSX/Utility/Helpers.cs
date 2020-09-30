@@ -628,7 +628,7 @@ namespace com.bemaservices.DoorControl.DSX.Utility
                             };
 
                             // check for ongoing events in same override group
-                            foreach ( var linkedItem in futureDoorLocks.Where( i => i.OverrideGroup == doorLock.OverrideGroup && i != doorLock ).ToList() )
+                            foreach ( var linkedItem in futureDoorLocks.Where( i => i.OverrideGroup == doorLock.OverrideGroup && i != doorLock && i.ReservationId != doorLock.ReservationId ).ToList() )
                             {
                                 if ( doorLock.EndTime.AddMinutes( 30 ) >= linkedItem.StartTime && linkedItem.EndTime >= doorLock.EndTime )
                                 {
