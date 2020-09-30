@@ -109,7 +109,7 @@ namespace com.bemaservices.DoorControl.DSX.Utility
                             var schedule = scheduleService.Get( scheduleGuid.AsGuid() );
                             if ( schedule != null )
                             {
-                                DDay.iCal.Event calEvent = schedule.GetCalenderEvent();
+                                DDay.iCal.Event calEvent = schedule.GetCalendarEvent();
                                 if ( calEvent != null && calEvent.DTStart != null )
                                 {
                                     var occurrences = ScheduleICalHelper.GetOccurrences( calEvent, config.DateToSync, config.DateToSync.AddDays( 1 ).AddMinutes( -1 ) );
