@@ -3,11 +3,11 @@
 <# // NOTE: if this generates file with a numeric suffix (AssemblySharedInfo1.cs) , see https://stackoverflow.com/a/1943084/1755417 #>
 <#@ output extension=".cs" #>
 <#
-     int major = 1;
-     int minor = 11;
-     int build = 0;
-     int revision = 0;
-
+     int major = 1; 
+     int minor = 11; 
+     int build = 1; 
+     int revision = 0; 
+  
      try
      {
          using(var f = File.OpenText(Host.ResolvePath("AssemblySharedInfo.cs")))
