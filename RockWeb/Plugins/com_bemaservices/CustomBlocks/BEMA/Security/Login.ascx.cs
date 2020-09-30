@@ -622,7 +622,7 @@ Thank you for logging in, however, we need to confirm the email associated with 
                         userLogin.PersonId.HasValue )
                     {
                         var hasRequiredAuthLogin = false;
-                        StringBuilder sb = new StringBuilder();
+                        System.Text.StringBuilder sb = new System.Text.StringBuilder();
                         sb.Append( "Please login using the following:</br><ul>" );
                         foreach ( var securityRole in requiredSecurityRoles )
                         {
