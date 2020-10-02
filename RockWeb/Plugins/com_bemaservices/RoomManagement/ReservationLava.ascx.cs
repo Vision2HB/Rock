@@ -513,8 +513,10 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 EventEndDateTime = r.EventEndDateTime,
                 ReservationStartDateTime = r.ReservationStartDateTime,
                 ReservationEndDateTime = r.ReservationEndDateTime,
-                EventDateTimeDescription = r.EventTimeDescription,
-                ReservationDateTimeDescription = r.ReservationTimeDescription,
+                EventTimeDescription = r.EventTimeDescription,
+                EventDateTimeDescription = r.EventDateTimeDescription,
+                ReservationTimeDescription = r.ReservationTimeDescription,
+                ReservationDateTimeDescription = r.ReservationDateTimeDescription,
                 SetupPhotoId = r.SetupPhotoId,
                 SetupPhotoLink = ResolveRockUrl( String.Format( "~/GetImage.ashx?id={0}", r.SetupPhotoId ?? 0 ) ),
                 Note = r.Note,
@@ -522,19 +524,61 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 EventContactPersonAlias = r.EventContactPersonAlias,
                 EventContactEmail = r.EventContactEmail,
                 EventContactPhoneNumber = r.EventContactPhoneNumber,
+                ReservationMinistry = r.ReservationMinistry,
                 MinistryName = r.ReservationMinistry != null ? r.ReservationMinistry.Name : string.Empty,
             } )
-            .OrderBy( r => r.EventStartDateTime )
-            .GroupBy( r => r.EventStartDateTime.Date )
-            .Select( r => r.ToList() )
-            .ToList();
+                .ToList();
+
+            var lavaReservationSummaries = reservationSummaries
+                .OrderBy( r => r.EventStartDateTime )
+                .GroupBy( r => r.EventStartDateTime.Date )
+                .Select( r => r.ToList() )
+                .ToList();
+
+            // Build a list of dates and then all the reservations on those dates.
+            // Each date contains a few useful details depending on how you want
+            // to present the data.
+            // Date = The date containing these reservations.
+            // Reservations = The ordered list of reservations for this day.
+            // Locations = The ordered list of reservation locations being used (for example with a room setup sheet).
+            // Resources = The ordered list of resources being used (for example to easily see where resources are supposed to go).
+            var lavaReservationDates = reservationSummaries
+                .OrderBy( r => r.EventStartDateTime )
+                .GroupBy( r => r.EventStartDateTime.Date )
+                .Select( r => new
+                {
+                    Date = r.Key,
+                    Reservations = r.ToList(),
+                    Locations = r
+                        .SelectMany( a => a.Locations, ( a, b ) => new
+                        {
+                            Name = b.Location.Name,
+                            Reservation = a,
+                            Location = b
+                        } )
+                        .OrderBy( a => a.Reservation.EventStartDateTime )
+                        .ThenBy( a => a.Name )
+                        .ToList(),
+                    Resources = r
+                        .SelectMany( a => a.Resources, ( a, b ) => new
+                        {
+                            Name = b.Resource.Name,
+                            Reservation = a,
+                            Resource = b
+                        } )
+                        .OrderBy( a => a.Reservation.EventStartDateTime )
+                        .ThenBy( a => a.Name )
+                        .ToList()
+                } )
+                .ToList();
 
             var mergeFields = new Dictionary<string, object>();
             mergeFields.Add( "TimeFrame", ViewMode );
             mergeFields.Add( "FilterStartDate", FilterStartDate );
             mergeFields.Add( "FilterEndDate", FilterEndDate );
             mergeFields.Add( "DetailsPage", LinkedPageUrl( "DetailsPage", null ) );
-            mergeFields.Add( "ReservationSummaries", reservationSummaries );
+            mergeFields.Add( "ReservationSummaries", lavaReservationSummaries );
+            mergeFields.Add( "ReservationDates", lavaReservationDates );
             mergeFields.Add( "CurrentPerson", CurrentPerson );
 
             var definedValue = new DefinedValueService( new RockContext() ).Get( hfSelectedView.ValueAsInt() );
