@@ -10,12 +10,11 @@
   </div>
   {% endif %}
 
-  {% for reservationDate in ReservationSummaries %}
-  {% assign firstReservation = reservationDate | First %}
+  {% for reservationDate in ReservationDates %}
   <div class="panel panel-default margin-t-md">
     <div class="panel-heading clearfix">
 		<h2 class="panel-title pull-left">
-			{{ firstReservation.CalendarDate }}
+			{{ reservationDate.Date | Date:'dddd, MMMM d, yyyy' }}
 		</h2>
     </div>
 	<div class="table-responsive">
@@ -49,7 +48,7 @@
 			</thead>
 
 			<tbody>
-			{% for reservationSummary in reservationDate %}
+			{% for reservationSummary in reservationDate.Reservations %}
 			<!-- Start with one total item because the overall status must also be approved -->
 			{% assign totalItems = 1 %}
 			{% assign approvedItems = 0 %}
@@ -73,8 +72,8 @@
 		
 				<tr class="{{ rowclass }} js-clickable-row" data-href="{{ DetailsPage }}?ReservationId={{ reservationSummary.Id }}">
 					<td><span class="{{ textclass }}">{{ reservationSummary.ReservationName }}</span></td>
-					<td><span class="{{ textclass }}">{{ reservationSummary.EventDateTimeDescription }}</span></td>
-					<td><span class="{{ textclass }}">{{ reservationSummary.ReservationDateTimeDescription }}</span></td>
+					<td><span class="{{ textclass }}">{{ reservationSummary.EventTimeDescription }}</span></td>
+					<td><span class="{{ textclass }}">{{ reservationSummary.ReservationTimeDescription }}</span></td>
 					<td><span class="{{ textclass }}">
 						<ul>
 						{% assign totalItems = reservationSummary.Locations | Size  | Plus: totalItems %}
