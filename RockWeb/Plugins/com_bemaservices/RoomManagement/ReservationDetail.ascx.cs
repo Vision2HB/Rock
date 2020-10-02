@@ -799,11 +799,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             var reservationService = new ReservationService( new RockContext() );
 
             var newItem = reservationService.GetNewFromTemplate( id );
-            if ( newItem.EventItemOccurrenceId.HasValue )
-            {
-                newItem.EventItemOccurrence = new EventItemOccurrenceService( new RockContext() ).Get( newItem.EventItemOccurrenceId.Value );
-                newItem.EventItemOccurrence.EventItem = new EventItemService( new RockContext() ).Get( newItem.EventItemOccurrence.EventItemId );
-            }
 
             if ( newItem == null )
             {

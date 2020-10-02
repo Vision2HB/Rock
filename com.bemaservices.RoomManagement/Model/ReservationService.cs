@@ -879,6 +879,8 @@ namespace com.bemaservices.RoomManagement.Model
             newItem.ModifiedByPersonAliasId = null;
             newItem.ModifiedDateTime = RockDateTime.Now;
 
+            newItem.ReservationLinkages = new List<ReservationLinkage>();
+
             // Clear the approval state since that would not be fair otherwise...
             newItem.ApprovalState = ReservationApprovalState.PendingInitialApproval;
             foreach ( var rl in newItem.ReservationLocations )
