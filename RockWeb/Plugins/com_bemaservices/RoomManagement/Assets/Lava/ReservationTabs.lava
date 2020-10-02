@@ -7,12 +7,12 @@
                 <a href="/page/{{page.Id}}?ReservationId={{reservationId}}">Notes</a>          
         </li>
     {% endpage %}
-    {% page where:'Guid == "BB6DB032-4677-4003-9B82-1ADE3415DFD7"' %}
+    {% page where:'Guid == "6F74FD8C-2478-46A2-B26F-5D0D052B4BC2"' %}
       <li {% if page.Id == currentPageId %}class='active'{% endif %}>
                 <a href="/page/{{page.Id}}?ReservationId={{reservationId}}">Events</a>     
         </li>
     {% endpage %}
-    {% page where:'Guid == "00D7B67F-1000-4F4D-BDB3-B7C3BB03F430"' %}
+    {% page where:'Guid == "FF1AA1C0-4142-45C8-9F3B-00632CB10E89"' %}
       <li {% if page.Id == currentPageId %}class='active'{% endif %}>
                 <a href="/page/{{page.Id}}?ReservationId={{reservationId}}">History</a>     
         </li>
