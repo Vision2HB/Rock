@@ -26,6 +26,7 @@ using Rock;
 using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
+using Rock.Security;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
@@ -113,7 +114,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
             gLinkages.EmptyDataText = "No Linkages Found";
             gLinkages.DataKeyNames = new string[] { "Id" };
-            gLinkages.Actions.ShowAdd = true;
             gLinkages.Actions.AddClick += gLinkages_AddClick;
             gLinkages.RowDataBound += gLinkages_RowDataBound;
             gLinkages.GridRebind += gLinkages_GridRebind;
@@ -317,6 +317,41 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         /// </summary>
         private void ShowDetail()
         {
+            bool readOnly = true;
+
+            int? reservationId = PageParameter( "ReservationId" ).AsInteger();
+
+            if ( reservationId.HasValue )
+            {
+                var reservation = new ReservationService( new RockContext() ).Get( reservationId.Value );
+                if ( reservation != null )
+                {
+                    if ( reservation.IsAuthorized( Authorization.ADMINISTRATE, CurrentPerson ) )
+                    {
+                        readOnly = false;
+                    }
+
+                    var canCreateReservations = reservation.IsAuthorized( Authorization.EDIT, CurrentPerson );
+                    if ( canCreateReservations &&
+                        ( reservation.CreatedByPersonAliasId == CurrentPersonAliasId ||
+                        reservation.AdministrativeContactPersonAliasId == CurrentPersonAliasId ||
+                        reservationId == 0 )
+                        )
+                    {
+                        readOnly = false;
+                    }
+                }
+                else
+                {
+                    pnlLinkages.Visible = false;
+                }
+            }
+            else
+            {
+                pnlLinkages.Visible = false;
+            }
+
+            gLinkages.Actions.ShowAdd = !readOnly;
 
             BindLinkagesGrid();
         }
