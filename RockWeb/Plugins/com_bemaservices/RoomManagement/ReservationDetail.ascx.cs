@@ -109,6 +109,18 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         }
 
         /// <summary>
+        /// Gets or sets the required additional information field count.
+        /// </summary>
+        /// <value>The required additional information field count.</value>
+        private int RequiredAdditionalInfoFieldCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the additional information field count.
+        /// </summary>
+        /// <value>The additional information field count.</value>
+        private int AdditionalInfoFieldCount { get; set; }
+
+        /// <summary>
         /// Gets or sets the type of the reservation.
         /// </summary>
         /// <value>
@@ -225,27 +237,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             }
             else
             {
-                Reservation reservation = null;
-                int? reservationId = PageParameter( "ReservationId" ).AsIntegerOrNull();
-                if ( reservationId.HasValue )
-                {
-                    reservation = new ReservationService( new RockContext() ).Get( reservationId.Value );
-                }
 
-                if ( reservation == null )
-                {
-                    reservation = new Reservation();
-                    reservation.ReservationType = ReservationType;
-                    reservation.ReservationTypeId = ReservationType.Id;
-                }
+                LoadAdditionalInfo();
 
-                if ( reservation != null )
-                {
-                    reservation.LoadAttributes();
-                    BuildAttributeEdits( reservation, false );
-                }
-
-                LoadQuestionsAndAnswers();
             }
         }
 
@@ -737,15 +731,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 ddlMinistry.Items.Add( new ListItem( ministry.Name, ministry.Id.ToString().ToUpper() ) );
             }
 
-            var reservation = new ReservationService( rockContext ).Get( hfReservationId.Value.AsInteger() );
-            if ( reservation == null )
-            {
-                reservation = new Reservation();
-                reservation.ReservationType = ReservationType;
-                reservation.ReservationTypeId = ReservationType.Id;
-            }
-
-            BuildAttributeEdits( reservation, true );
+            LoadAdditionalInfo( resetControls: true );
 
             SetRequiredFieldsBasedOnReservationType( ReservationType );
 
@@ -2066,7 +2052,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 btnDelete.Visible = true;
             }
 
-            lApproval.Text = hlStatus.Text = reservation.ApprovalState.ConvertToString();
+            hlStatus.Text = reservation.ApprovalState.ConvertToString();
             switch ( reservation.ApprovalState )
             {
                 case ReservationApprovalState.Approved:
@@ -2090,20 +2076,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             }
 
             hfApprovalState.Value = reservation.ApprovalState.ConvertToString();
-
-            reservation.LoadAttributes();
-            var viewableAttributes = reservation.Attributes.Where( a => a.Value.IsAuthorized( Authorization.VIEW, this.CurrentPerson ) ).Select( a => a.Key ).ToList();
-
-            if ( reservation.AttributeValues.Where( av => av.Value != null && av.Value.Value.IsNotNullOrWhiteSpace() && viewableAttributes.Contains( av.Value.AttributeKey ) ).Count() > 0 )
-            {
-                var headingTitle = new HtmlGenericControl( "h3" );
-                headingTitle.InnerText = "Reservation Attributes";
-                phAttributes.Controls.Add( headingTitle );
-                var excludeKeys = reservation.Attributes.Where( a => !viewableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
-                Rock.Attribute.Helper.AddDisplayControls( reservation, phAttributes, excludeKeys, showHeading: false );
-            }
-
-            LoadQuestionsAndAnswers( false, true );
+            LoadAdditionalInfo( false, true );
 
             gViewLocations.EntityTypeId = EntityTypeCache.Get<com.bemaservices.RoomManagement.Model.ReservationLocation>().Id;
             gViewLocations.SetLinqDataSource( LocationsState.AsQueryable().OrderBy( l => l.Location.Name ) );
@@ -2159,9 +2132,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 hfReservationId.SetValue( reservation.Id );
                 SetRequiredFieldsBasedOnReservationType( ReservationType, reservation );
 
-                BuildAttributeEdits( reservation, true );
-
-
                 sbSchedule.iCalendarContent = string.Empty;
                 if ( reservation.Schedule != null )
                 {
@@ -2207,8 +2177,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     reservationResource.IsNew = true;
                 }
 
-                reservation.LoadAttributes( rockContext );
-                LoadQuestionsAndAnswers( resetControls: true );
+                LoadAdditionalInfo( resetControls: true );
 
                 ddlCampus.Items.Clear();
                 ddlCampus.Items.Add( new ListItem( string.Empty, string.Empty ) );
@@ -2245,9 +2214,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                 if ( reservation.Id != 0 )
                 {
-
-                    pnlReadApprovalState.Visible = true;
-                    lApprovalState.Text = hlStatus.Text = reservation.ApprovalState.ConvertToString();
+                    hlStatus.Text = reservation.ApprovalState.ConvertToString();
                     switch ( reservation.ApprovalState )
                     {
                         case ReservationApprovalState.Approved:
@@ -2278,24 +2245,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             }
         }
 
-        private void BuildAttributeEdits( Reservation reservation, bool setValues )
-        {
-            phAttributeEdits.Controls.Clear();
-
-            reservation.ReservationType = ReservationType;
-            reservation.ReservationTypeId = ReservationType.Id;
-            reservation.LoadAttributes();
-            var editableAttributes = reservation.Attributes.Where( a => a.Value.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) ).Select( a => a.Key ).ToList();
-            var excludeKeys = reservation.Attributes.Where( a => !editableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
-
-            if ( editableAttributes.Count() > 0 )
-            {
-                var headingTitle = new HtmlGenericControl( "h3" );
-                headingTitle.InnerText = "Reservation Attributes";
-                phAttributeEdits.Controls.Add( headingTitle );
-                Rock.Attribute.Helper.AddEditControls( reservation, phAttributeEdits, setValues, BlockValidationGroup, excludeKeys );
-            }
-        }
 
         /// <summary>
         /// Sets the type of the required fields based on reservation.
@@ -2344,9 +2293,10 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         /// </summary>
         /// <param name="locationList">The location list.</param>
         /// <param name="resourceList">The resource list.</param>
-        private void LoadQuestionsAndAnswers( bool isEditMode = true, bool resetControls = false )
+        private void LoadAdditionalInfo( bool isEditMode = true, bool resetControls = false )
         {
             var rockContext = new RockContext();
+            RequiredAdditionalInfoFieldCount = AdditionalInfoFieldCount = 0;
             var locationService = new LocationService( rockContext );
             var locationLayoutService = new LocationLayoutService( rockContext );
             var resourceService = new ResourceService( rockContext );
@@ -2373,9 +2323,72 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 reservationResource.Resource = resourceService.Get( reservationResource.ResourceId );
             }
 
+            BuildReservationQuestions( isEditMode, resetControls );
+
             BuildLocationQuestions( isEditMode, resetControls );
 
             BuildResourceQuestions( isEditMode, resetControls );
+
+            if ( isEditMode )
+            {
+                wpAdditionalInfo.Visible = ( AdditionalInfoFieldCount > 0 );
+                var warningBadge = String.Format( "<span class='badge badge-critical'>{0}</span>", RequiredAdditionalInfoFieldCount );
+                wpAdditionalInfo.Title = String.Format( "Additional Info {0}", ( RequiredAdditionalInfoFieldCount > 0 ) ? warningBadge : "" );
+            }
+        }
+
+        private void BuildReservationQuestions( bool isEditMode, bool resetControls )
+        {
+            Reservation reservation = null;
+            int? reservationId = PageParameter( "ReservationId" ).AsIntegerOrNull();
+            if ( reservationId.HasValue )
+            {
+                reservation = new ReservationService( new RockContext() ).Get( reservationId.Value );
+            }
+
+            if ( reservation == null )
+            {
+                reservation = new Reservation();
+                reservation.ReservationType = ReservationType;
+                reservation.ReservationTypeId = ReservationType.Id;
+            }
+
+            if ( reservation != null )
+            {
+                reservation.LoadAttributes();
+
+                var headingTitle = new HtmlGenericControl( "h5" );
+                headingTitle.InnerText = reservation.ReservationType.Name;
+
+                var editableAttributes = reservation.Attributes.Where( a => a.Value.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) ).Select( a => a.Key ).ToList();
+                var viewableAttributes = reservation.Attributes.Where( a => a.Value.IsAuthorized( Authorization.VIEW, this.CurrentPerson ) ).Select( a => a.Key ).ToList();
+
+                if ( isEditMode )
+                {
+                    phAttributeEdits.Controls.Clear();
+                    var excludeKeys = reservation.Attributes.Where( a => !editableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
+                    RequiredAdditionalInfoFieldCount += reservation.Attributes.Where( a => a.Value.IsRequired && a.Value.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) ).Count();
+                    AdditionalInfoFieldCount += editableAttributes.Count();
+
+                    if ( editableAttributes.Count() > 0 )
+                    {
+                        phAttributeEdits.Controls.Add( headingTitle );
+                        Rock.Attribute.Helper.AddEditControls( reservation, phAttributeEdits, resetControls, BlockValidationGroup, excludeKeys );
+                    }
+                }
+                else
+                {
+                    var excludeKeys = reservation.Attributes.Where( a => !viewableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
+                    RequiredAdditionalInfoFieldCount += reservation.Attributes.Where( a => a.Value.IsRequired && a.Value.IsAuthorized( Authorization.VIEW, this.CurrentPerson ) ).Count();
+                    AdditionalInfoFieldCount += viewableAttributes.Count();
+
+                    if ( reservation.AttributeValues.Where( av => av.Value != null && av.Value.Value.IsNotNullOrWhiteSpace() && viewableAttributes.Contains( av.Value.AttributeKey ) ).Count() > 0 )
+                    {
+                        phAttributes.Controls.Add( headingTitle );
+                        Rock.Attribute.Helper.AddDisplayControls( reservation, phAttributes, excludeKeys, showHeading: false );
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -2930,14 +2943,13 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     var editableAttributes = isEditMode ? reservationLocation.Attributes.Where( a => a.Value.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) ).Select( a => a.Key ).ToList() : new List<string>();
                     var viewableAttributes = reservationLocation.Attributes.Where( a => a.Value.IsAuthorized( Authorization.VIEW, this.CurrentPerson ) ).Select( a => a.Key ).ToList();
 
-
                     if ( ( isEditMode && editableAttributes.Count > 0 ) ||
                         ( !isEditMode && viewableAttributes.Count > 0 ) )
                     {
                         Control childControl = new Control();
                         HiddenField hfReservationLocationGuid = new HiddenField();
                         PlaceHolder phAttributes = new PlaceHolder();
-                        var headingTitle = new HtmlGenericControl( "h3" );
+                        var headingTitle = new HtmlGenericControl( "h5" );
 
                         headingTitle.InnerText = reservationLocation.Location.Name;
                         hfReservationLocationGuid.Value = reservationLocation.Guid.ToString();
@@ -2949,12 +2961,18 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                         if ( isEditMode )
                         {
+                            RequiredAdditionalInfoFieldCount += reservationLocation.Attributes.Where( a => a.Value.IsRequired && a.Value.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) ).Count();
+                            AdditionalInfoFieldCount += editableAttributes.Count();
+
                             var excludeKeys = reservationLocation.Attributes.Where( a => !editableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
                             Rock.Attribute.Helper.AddEditControls( reservationLocation, phAttributes, reservationLocation.IsNew, BlockValidationGroup, excludeKeys );
                             reservationLocation.IsNew = false;
                         }
                         else
                         {
+                            RequiredAdditionalInfoFieldCount += reservationLocation.Attributes.Where( a => a.Value.IsRequired && a.Value.IsAuthorized( Authorization.VIEW, this.CurrentPerson ) ).Count();
+                            AdditionalInfoFieldCount += viewableAttributes.Count();
+
                             var excludeKeys = reservationLocation.Attributes.Where( a => !viewableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
                             Rock.Attribute.Helper.AddDisplayControls( reservationLocation, phAttributes, excludeKeys, showHeading: false );
                         }
@@ -3192,7 +3210,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             // Re load the pickers because changing a location should include/exclude resources attached
             // to locations.
             LoadPickers();
-            LoadQuestionsAndAnswers();
+            LoadAdditionalInfo();
         }
 
         /// <summary>
@@ -3258,7 +3276,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                         Control childControl = new Control();
                         HiddenField hfReservationResourceGuid = new HiddenField();
                         PlaceHolder phAttributes = new PlaceHolder();
-                        var headingTitle = new HtmlGenericControl( "h3" );
+                        var headingTitle = new HtmlGenericControl( "h5" );
 
                         headingTitle.InnerText = reservationResource.Resource.Name;
                         hfReservationResourceGuid.Value = reservationResource.Guid.ToString();
@@ -3270,12 +3288,18 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                         if ( isEditMode )
                         {
+                            RequiredAdditionalInfoFieldCount += reservationResource.Attributes.Where( a => a.Value.IsRequired && a.Value.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) ).Count();
+                            AdditionalInfoFieldCount += editableAttributes.Count();
+
                             var excludeKeys = reservationResource.Attributes.Where( a => !editableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
                             Rock.Attribute.Helper.AddEditControls( reservationResource, phAttributes, reservationResource.IsNew, BlockValidationGroup, excludeKeys );
                             reservationResource.IsNew = false;
                         }
                         else
                         {
+                            RequiredAdditionalInfoFieldCount += reservationResource.Attributes.Where( a => a.Value.IsRequired && a.Value.IsAuthorized( Authorization.VIEW, this.CurrentPerson ) ).Count();
+                            AdditionalInfoFieldCount += viewableAttributes.Count();
+
                             var excludeKeys = reservationResource.Attributes.Where( a => !viewableAttributes.Contains( a.Key ) ).Select( a => a.Key ).ToList();
                             Rock.Attribute.Helper.AddDisplayControls( reservationResource, phAttributes, excludeKeys, showHeading: false );
                         }
@@ -3449,7 +3473,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             }
 
             BindReservationResourcesGrid();
-            LoadQuestionsAndAnswers();
+            LoadAdditionalInfo();
         }
 
         /// <summary>
