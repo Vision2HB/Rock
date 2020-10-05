@@ -828,6 +828,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
             }
             else
             {
+
                 // Load values from controls into the state objects
                 ParseDynamicControls();
 
