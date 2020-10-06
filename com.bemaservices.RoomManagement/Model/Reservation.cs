@@ -247,6 +247,42 @@ namespace com.bemaservices.RoomManagement.Model
         [DataMember]
         public DateTime? LastOccurrenceEndDateTime { get; set; }
 
+        /// <summary>
+        /// Gets or sets the initial approver alias identifier.
+        /// </summary>
+        /// <value>The initial approver alias identifier.</value>
+        public int? InitialApproverAliasId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the initial approval date time.
+        /// </summary>
+        /// <value>The initial approval date time.</value>
+        public DateTime? InitialApprovalDateTime { get; set; }
+
+        /// <summary>
+        /// Gets or sets the special approver alias identifier.
+        /// </summary>
+        /// <value>The special approver alias identifier.</value>
+        public int? SpecialApproverAliasId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the special approval date time.
+        /// </summary>
+        /// <value>The special approval date time.</value>
+        public DateTime? SpecialApprovalDateTime { get; set; }
+
+        /// <summary>
+        /// Gets or sets the final approver alias identifier.
+        /// </summary>
+        /// <value>The final approver alias identifier.</value>
+        public int? FinalApproverAliasId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the final approval date time.
+        /// </summary>
+        /// <value>The final approval date time.</value>
+        public DateTime? FinalApprovalDateTime { get; set; }
+
         #endregion
 
         #region Virtual Properties
@@ -417,6 +453,24 @@ namespace com.bemaservices.RoomManagement.Model
         /// </value>
         [DataMember]
         public virtual PersonAlias AdministrativeContactPersonAlias { get; set; }
+
+        /// <summary>
+        /// Gets or sets the initial approver person alias.
+        /// </summary>
+        /// <value>The initial approver person alias.</value>
+        public virtual PersonAlias InitialApproverAlias { get; set; }
+
+        /// <summary>
+        /// Gets or sets the special approver person alias.
+        /// </summary>
+        /// <value>The special approver person alias.</value>
+        public virtual PersonAlias SpecialApproverAlias { get; set; }
+
+        /// <summary>
+        /// Gets or sets the final approver person alias.
+        /// </summary>
+        /// <value>The final approver person alias.</value>
+        public virtual PersonAlias FinalApproverAlias { get; set; }
 
         /// <summary>
         /// Gets the friendly reservation time.
@@ -730,6 +784,9 @@ namespace com.bemaservices.RoomManagement.Model
             this.HasRequired( r => r.Schedule ).WithMany().HasForeignKey( r => r.ScheduleId ).WillCascadeOnDelete( false );
             this.HasRequired( r => r.RequesterAlias ).WithMany().HasForeignKey( r => r.RequesterAliasId ).WillCascadeOnDelete( false );
             this.HasRequired( r => r.ApproverAlias ).WithMany().HasForeignKey( r => r.ApproverAliasId ).WillCascadeOnDelete( false );
+            this.HasRequired( r => r.InitialApproverAlias ).WithMany().HasForeignKey( r => r.InitialApproverAliasId ).WillCascadeOnDelete( false );
+            this.HasRequired( r => r.SpecialApproverAlias ).WithMany().HasForeignKey( r => r.SpecialApproverAliasId ).WillCascadeOnDelete( false );
+            this.HasRequired( r => r.FinalApproverAlias ).WithMany().HasForeignKey( r => r.FinalApproverAliasId ).WillCascadeOnDelete( false );
             this.HasOptional( p => p.SetupPhoto ).WithMany().HasForeignKey( p => p.SetupPhotoId ).WillCascadeOnDelete( false );
             this.HasOptional( p => p.EventContactPersonAlias ).WithMany().HasForeignKey( p => p.EventContactPersonAliasId ).WillCascadeOnDelete( false );
             this.HasOptional( p => p.AdministrativeContactPersonAlias ).WithMany().HasForeignKey( p => p.AdministrativeContactPersonAliasId ).WillCascadeOnDelete( false );
