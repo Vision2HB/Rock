@@ -345,6 +345,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 //reservationType.IsActive = cbActive.Checked;
                 reservationType.IsActive = true;
                 reservationType.IconCssClass = tbIconCssClass.Text;
+                reservationType.InitialApprovalGroupId = ddlInitialApprovalGroup.SelectedValueAsId();
                 reservationType.FinalApprovalGroupId = ddlFinalApprovalGroup.SelectedValueAsId();
                 reservationType.OverrideApprovalGroupId = ddlSuperAdminGroup.SelectedValueAsId();
                 reservationType.NotificationEmailId = ddlNotificationEmail.SelectedValueAsId();
@@ -1151,17 +1152,21 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             if ( reservationType.NotificationEmailId.HasValue )
             {
                 ddlNotificationEmail.SetValue( reservationType.NotificationEmailId.Value );
-
             }
+
+            if ( reservationType.InitialApprovalGroupId.HasValue )
+            {
+                ddlInitialApprovalGroup.SetValue( reservationType.InitialApprovalGroupId.Value );
+            }
+
             if ( reservationType.FinalApprovalGroupId.HasValue )
             {
                 ddlFinalApprovalGroup.SetValue( reservationType.FinalApprovalGroupId.Value );
-
             }
+
             if ( reservationType.OverrideApprovalGroupId.HasValue )
             {
                 ddlSuperAdminGroup.SetValue( reservationType.OverrideApprovalGroupId.Value );
-
             }
 
             ReservationWorkflowTriggersState = reservationType.ReservationWorkflowTriggers.ToList();
@@ -1186,9 +1191,11 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
         private void LoadDropDowns()
         {
+            ddlInitialApprovalGroup.Items.Clear();
             ddlFinalApprovalGroup.Items.Clear();
             ddlSuperAdminGroup.Items.Clear();
 
+            ddlInitialApprovalGroup.Items.Add( new ListItem( string.Empty, string.Empty ) );
             ddlFinalApprovalGroup.Items.Add( new ListItem( string.Empty, string.Empty ) );
             ddlSuperAdminGroup.Items.Add( new ListItem( string.Empty, string.Empty ) );
 
@@ -1197,6 +1204,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             {
                 foreach ( var role in roles )
                 {
+                    ddlInitialApprovalGroup.Items.Add( new ListItem( role.Name, role.Id.ToString() ) );
                     ddlFinalApprovalGroup.Items.Add( new ListItem( role.Name, role.Id.ToString() ) );
                     ddlSuperAdminGroup.Items.Add( new ListItem( role.Name, role.Id.ToString() ) );
                 }

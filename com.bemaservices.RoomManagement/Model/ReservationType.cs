@@ -95,6 +95,12 @@ namespace com.bemaservices.RoomManagement.Model
         public int? FinalApprovalGroupId { get; set; }
 
         /// <summary>
+        /// Gets or sets the initial approval group identifier.
+        /// </summary>
+        /// <value>The initial approval group identifier.</value>
+        public int? InitialApprovalGroupId { get; set; }
+
+        /// <summary>
         /// Gets or sets the super admin group identifier.
         /// </summary>
         /// <value>
@@ -187,6 +193,13 @@ namespace com.bemaservices.RoomManagement.Model
         /// </value>
         [LavaInclude]
         public virtual Group FinalApprovalGroup { get; set; }
+
+        /// <summary>
+        /// Gets or sets the initial approval group.
+        /// </summary>
+        /// <value>The initial approval group.</value>
+        [LavaInclude]
+        public virtual Group InitialApprovalGroup { get; set; }
 
         /// <summary>
         /// Gets or sets the super admin group.
@@ -296,6 +309,7 @@ namespace com.bemaservices.RoomManagement.Model
         /// </summary>
         public ReservationTypeConfiguration()
         {
+            this.HasOptional( r => r.InitialApprovalGroup ).WithMany().HasForeignKey( r => r.InitialApprovalGroupId ).WillCascadeOnDelete( false );
             this.HasOptional( r => r.FinalApprovalGroup ).WithMany().HasForeignKey( r => r.FinalApprovalGroupId ).WillCascadeOnDelete( false );
             this.HasOptional( r => r.OverrideApprovalGroup ).WithMany().HasForeignKey( r => r.OverrideApprovalGroupId ).WillCascadeOnDelete( false );
             this.HasOptional( r => r.NotificationEmail ).WithMany().HasForeignKey( r => r.NotificationEmailId ).WillCascadeOnDelete( false );

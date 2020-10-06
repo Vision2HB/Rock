@@ -58,6 +58,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <Rock:DataTextBox ID="tbIconCssClass" runat="server" SourceTypeName="com.bemaservices.RoomManagement.Model.ReservationType, com.bemaservices.RoomManagement" PropertyName="IconCssClass" ValidateRequestMode="Disabled" />
+                            <Rock:RockDropDownList ID="ddlInitialApprovalGroup" runat="server" Label="Initial Approval Group" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
                             <Rock:RockDropDownList ID="ddlFinalApprovalGroup" runat="server" Label="Final Approval Group" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
                             <Rock:RockDropDownList ID="ddlSuperAdminGroup" runat="server" Label="Override Approval Group" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
                             <Rock:RockDropDownList ID="ddlNotificationEmail" runat="server" Label="Notification Email" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
