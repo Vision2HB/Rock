@@ -95,6 +95,7 @@
     <Compile Include="Field\Types\ReservationFieldType.cs" />
     <Compile Include="Jobs\FireWorkflowFromReservationInDateRange.cs" />
     <Compile Include="Jobs\PopulateFirstLastOccurrenceDateTimes.cs" />
+    <Compile Include="Migrations\034_ApprovalProcessWorkflow.cs" />
     <Compile Include="Migrations\033_InitialApprovalGroup.cs" />
     <Compile Include="Migrations\032_ApprovalSqlChanges.cs" />
     <Compile Include="Migrations\031_Rollup200.cs" />
