@@ -85,6 +85,9 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
                 .FirstOrDefault();
 
             isGroupLaunchGroup = group.IsNotNull<Rock.Model.Group>() && groupTypeGuids.Contains( group.GroupType.Guid );
+
+
+            CheckForEditPermissions( group );
         }
 
         private void SetBlockVisibility()
@@ -146,6 +149,20 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
             {
                 //Do Not Unfreeze a Rock Group just because you don't receive a group object back from GroupLaunch
             }
+        }
+
+        private void CheckForEditPermissions( Rock.Model.Group group )
+        {
+            // Check this block's EDIT permissions OR group's permissions
+            bool canEdit = this.IsUserAuthorized( Rock.Security.Authorization.EDIT );
+
+            if ( group != null && !canEdit )
+            {
+                canEdit = group.IsAuthorized( Rock.Security.Authorization.EDIT, CurrentPerson );
+            }
+
+            ConnectButton.Visible = canEdit;
+            ReConnectButton.Visible = canEdit;
         }
 
         protected void btnConnect_Click( object sender, EventArgs e )
