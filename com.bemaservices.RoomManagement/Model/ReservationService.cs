@@ -362,6 +362,28 @@ namespace com.bemaservices.RoomManagement.Model
             return reservation;
         }
 
+        public bool AreLocationOrResourceChangesNeeded( Reservation reservation )
+        {
+            var areChangesNeeded = false;
+            foreach ( var reservationResource in reservation.ReservationResources )
+            {
+                if ( reservationResource.ApprovalState == ReservationResourceApprovalState.Denied )
+                {
+                    areChangesNeeded = true;
+                }
+            }
+
+            foreach ( var reservationLocation in reservation.ReservationLocations )
+            {
+                if ( reservationLocation.ApprovalState == ReservationLocationApprovalState.Denied )
+                {
+                    areChangesNeeded = true;
+                }
+            }
+
+            return areChangesNeeded;
+        }
+
         /// <summary>
         /// Determines whether this instance [can person approve reservation resource] the specified person.
         /// </summary>

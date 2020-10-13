@@ -148,8 +148,10 @@
                         <asp:LinkButton ID="btnEdit" runat="server" AccessKey="e" ToolTip="Alt+e" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_OnClick" CausesValidation="false" />
                         <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" OnClick="btnDelete_OnClick" CausesValidation="false" />
                         <div class="pull-right">
+                            <asp:LinkButton ID="btnSubmit" runat="server" ToolTip="Submit" CssClass="btn btn-success" OnClick="btnSubmit_Click" CausesValidation="false">Submit</asp:LinkButton>
                             <asp:LinkButton ID="btnApprove" runat="server" ToolTip="Approve Reservation" CssClass="btn btn-success" OnClick="btnApprove_Click" CausesValidation="false">Approve</asp:LinkButton>
                             <asp:LinkButton ID="btnDeny" runat="server" ToolTip="Approve Reservation" CssClass="btn btn-danger" OnClick="btnDeny_Click" CausesValidation="false">Deny</asp:LinkButton>
+                            <asp:LinkButton ID="btnRequestChanges" runat="server" ToolTip="Request Changes" CssClass="btn btn-warning" OnClick="btnRequestChanges_Click" CausesValidation="false">Request Changes</asp:LinkButton>
                             <asp:LinkButton ID="btnOverride" runat="server" ToolTip="Override Reservation" CssClass="btn btn-warning" OnClick="btnOverride_Click" CausesValidation="false">Override</asp:LinkButton>
                             <asp:Literal ID="btnDownload" runat="server" />
                             <asp:LinkButton ID="btnCopy" runat="server" ToolTip="Copy Reservation" CssClass="btn btn-default btn-sm fa fa-clone" OnClick="btnCopy_Click" CausesValidation="false" />

@@ -807,7 +807,7 @@ namespace com.bemaservices.RoomManagement.Model
         /// <summary>
         /// The created
         /// </summary>
-        Created = 0,
+        Draft = 0,
 
         /// <summary>
         /// The pending initial approval
