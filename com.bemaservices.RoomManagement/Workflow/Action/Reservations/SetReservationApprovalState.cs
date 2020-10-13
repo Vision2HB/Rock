@@ -34,7 +34,7 @@ namespace com.bemaservices.RoomManagement.Workflow.Actions.Reservations
     /// <summary>
     /// Sets the approval state of a reservation.
     /// </summary>
-    [ActionCategory( "Reservation" )]
+    [ActionCategory( "Room Management" )]
     [Description( "Sets the state of a reservation." )]
     [Export( typeof( ActionComponent ) )]
     [ExportMetadata( "ComponentName", "Reservation Set State" )]
