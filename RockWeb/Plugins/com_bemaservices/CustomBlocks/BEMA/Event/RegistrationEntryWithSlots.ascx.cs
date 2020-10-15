@@ -46,6 +46,7 @@ using Helper = Rock.Attribute.Helper;
  *
  * Additional Features:
  * - FE1) Added Ability to waitlist someone if a single select option they have does not have available slots left
+ * - UI1) Added Ability to modify the error message presented when there's no match on the registration instance
  */
 namespace RockWeb.Plugins.com_bemaservices.Event
 {
@@ -135,12 +136,16 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         Order = 11 )]
 
     /* BEMA.FE1.Start */
-    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Slots Attribute", "The Attribute dictating the slots", Key = BemaAttributeKey.SlotsAttribute )]
-    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Single Select Key Attribute", "The Attribute Containing the key of the field the slots are divided by", Key = BemaAttributeKey.SingleSelectKeyAttribute )]
-    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Filter Key Attribute", "The Attribute Containing the key of the field the slots are filtered by", Key = BemaAttributeKey.FilterKeyAttribute )]
+    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Slots Attribute", "The Attribute dictating the slots", false, false, "", "BEMA Additional Features", 11, BemaAttributeKey.SlotsAttribute )]
+    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Single Select Key Attribute", "The Attribute Containing the key of the field the slots are divided by", false, false, "", "BEMA Additional Features", 12, BemaAttributeKey.SingleSelectKeyAttribute )]
+    [AttributeField( "5CD9C0C8-C047-61A0-4E36-0FDB8496F066", "Filter Key Attribute", "The Attribute Containing the key of the field the slots are filtered by", false, false, "", "BEMA Additional Features", 13, BemaAttributeKey.FilterKeyAttribute )]
     /* BEMA.FE1.End */
-	
-	#endregion BlockAttributes
+
+    /* BEMA.UI1.Start */
+    [TextField( "Custom Error Message", "The custom error message displayed when no matching registration instances are found.", false, "", "BEMA Additional Features", 14, BemaAttributeKey.CustomErrorMessage )]
+    /* BEMA.UI1.End */
+    #endregion BlockAttributes
+    
     public partial class RegistrationEntryWithSlots : RockBlock
     {
         private static class AttributeKey
@@ -159,14 +164,15 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         }
 
         /* BEMA.Start */
-		
+
         private static class BemaAttributeKey
         {
             public const string SlotsAttribute = "SlotsAttribute";
             public const string SingleSelectKeyAttribute = "SingleSelectKeyAttribute";
             public const string FilterKeyAttribute = "FilterKeyAttribute";
+            public const string CustomErrorMessage = "CustomErrorMessage";
         }
-		
+
         /* BEMA.End */
 
         #region Fields
@@ -822,6 +828,21 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                         else
                         {
                             ShowWarning( "Sorry", string.Format( "The selected {0} could not be found or is no longer active.", RegistrationTerm.ToLower() ) );
+
+                            /* BEMA.UI1.Start */
+                            string customErrorMessage = GetAttributeValue( BemaAttributeKey.CustomErrorMessage );
+                            if ( !String.IsNullOrEmpty( customErrorMessage ) )
+                            {
+                                try
+                                {
+                                    ShowWarning( "Sorry", string.Format( customErrorMessage, RegistrationTerm.ToLower() ) );
+                                }
+                                catch
+                                {
+                                    ShowWarning( "Sorry", customErrorMessage );
+                                }
+                            }
+                            /* BEMA.UI1.End */
                         }
                     }
                 }
