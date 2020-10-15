@@ -32,7 +32,7 @@ using System.Data.Entity;
 using Rock.Security;
 
 /*
- * BEMA Modified Core Block ( v11.1.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:

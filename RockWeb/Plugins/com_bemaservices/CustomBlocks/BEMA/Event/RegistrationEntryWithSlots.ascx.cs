@@ -41,7 +41,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 using Helper = Rock.Attribute.Helper;
 /*
- * BEMA Modified Core Block ( v11.1.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  *
  * Additional Features:
@@ -4996,6 +4996,10 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 {
                     registrant.FamilyGuid = Guid.NewGuid();
                 }
+
+                // Apply the FieldVisibilityRules to all the fields before we do ParseAttributeField.
+                // This will make sure that we know whether to get the updated values.
+                FieldVisibilityWrapper.ApplyFieldVisibilityRules( phRegistrantControls );
 
                 var form = RegistrationTemplate.Forms.OrderBy( f => f.Order ).ToList()[CurrentFormIndex];
                 foreach ( var field in form.Fields
