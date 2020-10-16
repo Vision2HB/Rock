@@ -719,11 +719,11 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                         if ( group.GroupType.AttendanceRule == AttendanceRule.AddOnCheckIn )
                         {
                             var groupRoleId = group.GroupType.DefaultGroupRoleId;
-                            var groupMember = groupMemberService.GetByGroupIdAndPersonIdAndPreferredGroupRoleId( group.Id, person.Id, groupRoleId.Value );
+                            var groupMember = groupMemberService.GetByGroupIdAndPersonIdAndPreferredGroupRoleId( group.Id, attendancePerson.Id, groupRoleId.Value );
                             if ( groupMember == null )
                             {
                                 groupMember = new GroupMember();
-                                groupMember.PersonId = person.Id;
+                                groupMember.PersonId = attendancePerson.Id;
                                 groupMember.GroupId = group.Id;
                                 groupMember.GroupRoleId = groupRoleId.Value;
                                 groupMember.GroupMemberStatus = GroupMemberStatus.Active;
