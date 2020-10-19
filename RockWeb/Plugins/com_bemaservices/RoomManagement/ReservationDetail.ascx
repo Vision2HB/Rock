@@ -168,7 +168,11 @@
                                                 <asp:Literal ID="lLayoutPhoto" runat="server" />
                                             </ItemTemplate>
                                         </Rock:RockTemplateField>
-                                        <Rock:RockBoundField DataField="ApprovalState" HeaderText="Approved?" />
+                                        <Rock:RockTemplateField HeaderText="Status">
+                                            <ItemTemplate>
+                                                <Rock:HighlightLabel ID="hlApprovalStatus" runat="server" />
+                                            </ItemTemplate>
+                                        </Rock:RockTemplateField>
                                         <Rock:LinkButtonField CssClass="btn btn-success btn-sm" OnClick="gViewLocations_ApproveClick" ToolTip="Approve" Text="<i class='fa fa-check'></i>" Visible="true" />
                                         <Rock:LinkButtonField CssClass="btn btn-danger btn-sm" OnClick="gViewLocations_DenyClick" ToolTip="Deny" Text="<i class='fa fa-ban'></i>" Visible="true" />
                                     </Columns>
@@ -184,7 +188,11 @@
                                             <ItemTemplate><em class="text-muted"><%# Convert.ToString( Eval( "Resource.Location.Name") ) == string.Empty ? "" : "(attached to " +  Eval("Resource.Location.Name") + ")" %></em></ItemTemplate>
                                         </Rock:RockTemplateField>
                                         <Rock:RockBoundField DataField="Quantity" HeaderText="Qty" />
-                                        <Rock:RockBoundField DataField="ApprovalState" HeaderText="Approved?" />
+                                        <Rock:RockTemplateField HeaderText="Status">
+                                            <ItemTemplate>
+                                                <Rock:HighlightLabel ID="hlApprovalStatus" runat="server" />
+                                            </ItemTemplate>
+                                        </Rock:RockTemplateField>
                                         <Rock:LinkButtonField CssClass="btn btn-sm btn-success" OnClick="gViewResources_ApproveClick" ToolTip="Approve"  Text="<i class='fa fa-check'></i>" Visible="true" />
                                         <Rock:LinkButtonField CssClass="btn btn-sm btn-danger" OnClick="gViewResources_DenyClick" ToolTip="Deny" Text="<i class='fa fa-ban'></i>" Visible="true" />
                                     </Columns>
