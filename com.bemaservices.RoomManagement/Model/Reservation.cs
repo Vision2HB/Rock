@@ -450,11 +450,16 @@ namespace com.bemaservices.RoomManagement.Model
         /// <returns></returns>
         public virtual List<ReservationDateTime> GetReservationTimes( DateTime beginDateTime, DateTime endDateTime )
         {
-            if ( Schedule != null )
+            return GetReservationTimes( Schedule, beginDateTime, endDateTime );
+        }
+
+        public static List<ReservationDateTime> GetReservationTimes( Schedule schedule, DateTime beginDateTime, DateTime endDateTime )
+        {
+            if ( schedule != null )
             {
                 var result = new List<ReservationDateTime>();
 
-                DDay.iCal.Event calEvent = Schedule.GetCalenderEvent();
+                DDay.iCal.Event calEvent = schedule.GetCalendarEvent();
                 if ( calEvent != null && calEvent.DTStart != null )
                 {
                     var occurrences = ScheduleICalHelper.GetOccurrences( calEvent, beginDateTime, endDateTime );
@@ -620,13 +625,18 @@ namespace com.bemaservices.RoomManagement.Model
         /// <returns></returns>
         public string GetFriendlyReservationScheduleText()
         {
+            return GetFriendlyReservationScheduleText( Schedule, SetupTime, CleanupTime, FirstOccurrenceStartDateTime, LastOccurrenceEndDateTime );
+        }
+
+        public static string GetFriendlyReservationScheduleText( Schedule schedule, int? setupTime = null, int? cleanupTime = null, DateTime? firstOccurrenceStartDateTime = null, DateTime? lastOccurrenceEndDateTime = null )
+        {
             string result = "";
-            if ( Schedule != null )
+            if ( schedule != null )
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append( Schedule.ToFriendlyScheduleText() );
+                sb.Append( schedule.ToFriendlyScheduleText() );
 
-                var calendarEvent = Schedule.GetCalendarEvent();
+                var calendarEvent = schedule.GetCalendarEvent();
                 if ( calendarEvent != null )
                 {
                     if ( calendarEvent.Duration != null )
@@ -658,14 +668,52 @@ namespace com.bemaservices.RoomManagement.Model
                     }
                     if ( calendarEvent.RecurrenceRules.Any() )
                     {
-                        if ( FirstOccurrenceStartDateTime.HasValue )
+                        if ( !firstOccurrenceStartDateTime.HasValue || !lastOccurrenceEndDateTime.HasValue )
                         {
-                            sb.AppendFormat( " from {0}", FirstOccurrenceStartDateTime.Value.ToShortDateString() );
+                            var beginDateTime = DateTime.MinValue;
+                            var endDateTime = DateTime.MaxValue;
+
+                            DDay.iCal.Event calEvent = schedule.GetCalendarEvent();
+                            if ( !calEvent.RecurrenceRules.Any( r => ( r.Until != null && r.Until != DateTime.MinValue ) || ( r.Count != null && r.Count != -2147483648 ) ) )
+                            {
+                                endDateTime = RockDateTime.Now.AddYears( 20 );
+                            }
+
+                            var occurrences = GetReservationTimes( schedule, beginDateTime, endDateTime ).ToList();
+                            if ( occurrences.Count > 0 )
+                            {
+                                var firstReservationOccurrence = occurrences.First();
+                                var lastReservationOccurrence = occurrences.Last();
+
+                                try
+                                {
+                                    firstOccurrenceStartDateTime = firstReservationOccurrence.StartDateTime.AddMinutes( -setupTime ?? 0 );
+                                }
+                                catch
+                                {
+                                    firstOccurrenceStartDateTime = firstReservationOccurrence.StartDateTime;
+                                }
+
+                                try
+                                {
+                                    lastOccurrenceEndDateTime = lastReservationOccurrence.EndDateTime.AddMinutes( cleanupTime ?? 0 );
+                                }
+                                catch
+                                {
+                                    lastOccurrenceEndDateTime = lastReservationOccurrence.EndDateTime;
+                                }
+
+                            }
                         }
 
-                        if ( LastOccurrenceEndDateTime.HasValue )
+                        if ( firstOccurrenceStartDateTime.HasValue )
                         {
-                            sb.AppendFormat( " to {0}", LastOccurrenceEndDateTime.Value.ToShortDateString() );
+                            sb.AppendFormat( " from {0}", firstOccurrenceStartDateTime.Value.ToShortDateString() );
+                        }
+
+                        if ( lastOccurrenceEndDateTime.HasValue )
+                        {
+                            sb.AppendFormat( " to {0}", lastOccurrenceEndDateTime.Value.ToShortDateString() );
                         }
                     }
 

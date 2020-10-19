@@ -1162,7 +1162,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             nbError.Visible = false;
 
             var schedule = new Schedule { iCalendarContent = sbSchedule.iCalendarContent };
-            lScheduleText.Text = schedule.FriendlyScheduleText;
+            lScheduleText.Text = Reservation.GetFriendlyReservationScheduleText( schedule, nbSetupTime.Text.AsIntegerOrNull(), nbCleanupTime.Text.AsIntegerOrNull(), null, null );
 
             if ( EventItemOccurrence != null && EventItemOccurrence.Id == 0 )
             {
@@ -2638,7 +2638,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 if ( reservation.Schedule != null )
                 {
                     sbSchedule.iCalendarContent = reservation.Schedule.iCalendarContent;
-                    lScheduleText.Text = reservation.Schedule.FriendlyScheduleText;
+                    lScheduleText.Text = reservation.GetFriendlyReservationScheduleText();
                     srpResource.Enabled = true;
                     slpLocation.Enabled = true;
                 }
