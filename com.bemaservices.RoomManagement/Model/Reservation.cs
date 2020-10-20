@@ -424,6 +424,31 @@ namespace com.bemaservices.RoomManagement.Model
             }
         }
 
+        [LavaInclude]
+        [NotMapped]
+        public virtual DateTime? NextStartDateTime
+        {
+            get
+            {
+                DateTime? startDate = null;
+                startDate = Schedule.GetNextStartDateTime( RockDateTime.Now );
+
+                try
+                {
+                    if ( startDate.HasValue )
+                    {
+                        startDate = startDate.Value.AddMinutes( SetupTime ?? 0 );
+                    }
+                }
+                catch
+                {
+
+                }
+
+                return startDate;
+            }
+        }
+
         #endregion
 
         #region Methods
