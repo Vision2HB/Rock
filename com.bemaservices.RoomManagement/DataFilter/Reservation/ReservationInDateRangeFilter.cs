@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.Data.Entity;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Web.UI;
@@ -142,7 +143,7 @@ function() {
                     includeOnlyStarting = selectionValues[4].AsBoolean();
                 }
 
-                var statesValues = selectionValues[2].Split( ',' ).ToList();
+                var statesValues = selectionValues[2].Split( ',' ).Select( a => a.ConvertToEnumOrNull<ReservationApprovalState>() ).Where( a => a.HasValue ).ToList();
                 var statesNames = statesValues.AsDelimited( "," );
 
                 result = string.Format(
@@ -235,7 +236,7 @@ function() {
             string[] selectionValues = selection.Split( '|' );
             if ( selectionValues.Length >= 3 )
             {
-                RockCheckBoxList cblStates = new RockCheckBoxList();
+                RockCheckBoxList cblStates = controls[0] as RockCheckBoxList;
                 cblStates.BindToEnum<ReservationApprovalState>();
                 var slidingDateRangePicker = controls[1] as SlidingDateRangePicker;
                 var checkbox = controls[2] as CheckBox;
