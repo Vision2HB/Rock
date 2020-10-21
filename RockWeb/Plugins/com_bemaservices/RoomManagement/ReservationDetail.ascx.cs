@@ -339,7 +339,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 if ( reservation == null )
                 {
                     reservation = new Reservation { Id = 0 };
-                    reservation.ApprovalState = ReservationApprovalState.PendingInitialApproval;
+                    reservation.ApprovalState = ReservationApprovalState.Draft;
                     reservation.RequesterAliasId = CurrentPersonAliasId;
 
                     if ( PageParameter( "ForeignKey" ).IsNotNullOrWhiteSpace() )
@@ -582,7 +582,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     return;
                 }
 
-                reservation = reservationService.UpdateApproval( reservation, hfApprovalState.Value.ConvertToEnum<ReservationApprovalState>( ReservationApprovalState.PendingInitialApproval ) );
+                //reservation = reservationService.UpdateApproval( reservation, hfApprovalState.Value.ConvertToEnum<ReservationApprovalState>( ReservationApprovalState.PendingInitialApproval ) );
                 reservation = reservationService.SetFirstLastOccurrenceDateTimes( reservation );
 
                 changes = EvaluateLocationAndResourceChanges( changes, oldReservation, reservation );
