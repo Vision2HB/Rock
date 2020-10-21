@@ -44,7 +44,7 @@ namespace com.bemaservices.RoomManagement.Workflow.Actions.Reservations
 
     [WorkflowAttribute( "Approval State Attribute", "The attribute that contains the reservation approval state.", false, "", "", 1, null,
         new string[] { "com.bemaservices.RoomManagement.Field.Types.ReservationApprovalStateFieldType" } )]
-    [ReservationApprovalStateField( "Approval State", "The connection state to use (if Connection State Attribute is not specified).", false, "", "", 2 )]
+    [ReservationApprovalStateField( "Approval State", "The approval state to use (if Approval State Attribute is not specified).", false, "", "", 2 )]
     public class SetReservationApprovalState : ActionComponent
     {
         /// <summary>
