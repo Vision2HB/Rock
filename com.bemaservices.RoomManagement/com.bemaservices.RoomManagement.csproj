@@ -84,12 +84,16 @@
   <ItemGroup>
     <Compile Include="Attribute\Helper.cs" />
     <Compile Include="Attribute\ReportTemplateFieldAttribute.cs" />
+    <Compile Include="Attribute\ReservationResourceApprovalStateFieldAttribute.cs" />
+    <Compile Include="Attribute\ReservationLocationApprovalStateFieldAttribute.cs" />
     <Compile Include="Attribute\ReservationApprovalStateFieldAttribute.cs" />
     <Compile Include="Attribute\ReservationFieldAttribute.cs" />
     <Compile Include="Controllers\ScheduledLocationsController.Partial.cs" />
     <Compile Include="Controllers\ReservationsController.Partial.cs" />
     <Compile Include="Controllers\ScheduledResourcesController.Partial.cs" />
     <Compile Include="DataFilter\Reservation\ReservationInDateRangeFilter.cs" />
+    <Compile Include="Field\Types\ReservationResourceApprovalStateFieldType.cs" />
+    <Compile Include="Field\Types\ReservationLocationApprovalStateFieldType.cs" />
     <Compile Include="Field\Types\ReservationApprovalStateFieldType.cs" />
     <Compile Include="Field\Types\ReportTemplateFieldType.cs" />
     <Compile Include="Field\Types\ReservationFieldType.cs" />
@@ -175,6 +179,8 @@
     <Compile Include="Web\UI\Controls\Pickers\ScheduledResourcePicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ResourcePicker.cs" />
     <Compile Include="Web\UI\Controls\SimpleAttributeEditor.cs" />
+    <Compile Include="Workflow\Action\Reservations\SetReservationResourcesApprovalStates.cs" />
+    <Compile Include="Workflow\Action\Reservations\SetReservationLocationsApprovalStates.cs" />
     <Compile Include="Workflow\Action\Reservations\SetReservationApprovalState.cs" />
   </ItemGroup>
   <ItemGroup>
