@@ -963,6 +963,26 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             }
         }
 
+        protected void btnCancelReservation_Click( object sender, EventArgs e )
+        {
+            using ( var rockContext = new RockContext() )
+            {
+                var reservationService = new ReservationService( rockContext );
+
+                var reservation = reservationService.Get( hfReservationId.ValueAsInt() );
+                if ( reservation != null )
+                {
+                    Reservation oldReservation = BuildOldReservation( new ResourceService( rockContext ), new LocationService( rockContext ), reservationService, reservation );
+
+                    reservation.ApprovalState = ReservationApprovalState.Cancelled;
+
+                    SaveReservationChanges( rockContext, reservation, oldReservation );
+                }
+
+                ShowDetail( hfReservationId.ValueAsInt() );
+            }
+        }
+
         /// <summary>
         /// Handles the SaveSchedule event of the sbSchedule control.
         /// </summary>
@@ -2071,8 +2091,8 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 || ( reservation.ApprovalState == ReservationApprovalState.PendingInitialApproval && isInInitialGroup );
 
             btnOverride.Visible = isInOverrideGroup;
-
-            btnEdit.Visible = ( canEditReservation || canApproveReservation );
+            btnCancelReservation.Visible = canEditReservation && reservation.ApprovalState != ReservationApprovalState.Cancelled;
+            btnEdit.Visible = ( canEditReservation || canApproveReservation ) && reservation.ApprovalState != ReservationApprovalState.Cancelled;
             btnSubmit.Visible = ( canEditReservation || canApproveReservation ) && ( reservation.ApprovalState == ReservationApprovalState.Draft || reservation.ApprovalState == ReservationApprovalState.ChangesNeeded );
             btnDelete.Visible = canEditReservation || canApproveReservation || reservation.IsAuthorized( Authorization.DELETE, CurrentPerson );
 
