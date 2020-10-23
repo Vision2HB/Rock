@@ -147,6 +147,8 @@ namespace com.bemaservices.RoomManagement.Model
             var newReservationSummaries = GetReservationSummaries( new List<Reservation>() { newReservation }.AsQueryable(), RockDateTime.Now.AddMonths( -1 ), RockDateTime.Now.AddYears( 1 ) );
             var conflictingSummaryList = GetReservationSummaries( existingReservationQry.AsNoTracking().Where( r => r.Id != newReservation.Id
                                                                     && r.ApprovalState != ReservationApprovalState.Denied
+                                                                    && r.ApprovalState != ReservationApprovalState.Draft
+                                                                    && r.ApprovalState != ReservationApprovalState.Cancelled
                                                                     && (
                                                                         ( arePotentialConflictsReturned == false && ( !r.ReservationType.IsReservationBookedOnApproval || r.ApprovalState == ReservationApprovalState.Approved ) ) ||
                                                                         ( arePotentialConflictsReturned == true && r.ReservationType.IsReservationBookedOnApproval && r.ApprovalState != ReservationApprovalState.Approved )
@@ -763,6 +765,8 @@ namespace com.bemaservices.RoomManagement.Model
                 Queryable().AsNoTracking()
                 .Where( r => r.Id != reservation.Id
                         && r.ApprovalState != ReservationApprovalState.Denied
+                        && r.ApprovalState != ReservationApprovalState.Cancelled
+                        && r.ApprovalState != ReservationApprovalState.Draft
                         && (
                             ( arePotentialConflictsReturned == false && ( !r.ReservationType.IsReservationBookedOnApproval || r.ApprovalState == ReservationApprovalState.Approved ) ) ||
                             ( arePotentialConflictsReturned == true && r.ReservationType.IsReservationBookedOnApproval && r.ApprovalState != ReservationApprovalState.Approved )

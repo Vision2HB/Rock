@@ -300,7 +300,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         {
             var rockContext = new RockContext();
             var reservationService = new ReservationService( rockContext );
-            var qry = reservationService.Queryable().AsNoTracking().Where( r => r.ApprovalState != ReservationApprovalState.Denied );
+            var qry = reservationService.Queryable().AsNoTracking().Where( r => r.ApprovalState != ReservationApprovalState.Denied && r.ApprovalState != ReservationApprovalState.Draft && r.ApprovalState != ReservationApprovalState.Cancelled );
             var locationService = new LocationService( rockContext );
 
             List<int> locationIdList = new List<int>();
@@ -362,7 +362,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             var rockContext = new RockContext();
             var reservationService = new ReservationService( rockContext );
             var resourceService = new ResourceService( rockContext );
-            var qry = reservationService.Queryable().AsNoTracking().Where( r => r.ApprovalState != ReservationApprovalState.Denied );
+            var qry = reservationService.Queryable().AsNoTracking().Where( r => r.ApprovalState != ReservationApprovalState.Denied && r.ApprovalState != ReservationApprovalState.Draft && r.ApprovalState != ReservationApprovalState.Cancelled );
 
             List<Resource> resourceList = new List<Resource>();
             if ( cpResource.SelectedValueAsInt().HasValue )
