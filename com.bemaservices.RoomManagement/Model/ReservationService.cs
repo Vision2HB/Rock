@@ -364,6 +364,39 @@ namespace com.bemaservices.RoomManagement.Model
             return reservation;
         }
 
+        /// <summary>
+        /// Are all locations and resources approved.
+        /// </summary>
+        /// <param name="reservation">The reservation.</param>
+        /// <returns><c>true</c> if all locations and resources are approved, <c>false</c> otherwise.</returns>
+        public bool AreAllLocationsAndResourcesApproved( Reservation reservation )
+        {
+            var areAllItemsApproved = true;
+
+            foreach ( var reservationResource in reservation.ReservationResources )
+            {
+                if ( reservationResource.ApprovalState != ReservationResourceApprovalState.Approved )
+                {
+                    areAllItemsApproved = false;
+                }
+            }
+
+            foreach ( var reservationLocation in reservation.ReservationLocations )
+            {
+                if ( reservationLocation.ApprovalState != ReservationLocationApprovalState.Approved )
+                {
+                    areAllItemsApproved = false;
+                }
+            }
+
+            return areAllItemsApproved;
+        }
+
+        /// <summary>
+        /// Are the location or resource changes needed.
+        /// </summary>
+        /// <param name="reservation">The reservation.</param>
+        /// <returns><c>true</c> if changes are needed, <c>false</c> otherwise.</returns>
         public bool AreLocationOrResourceChangesNeeded( Reservation reservation )
         {
             var areChangesNeeded = false;

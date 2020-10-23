@@ -582,7 +582,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     return;
                 }
 
-                //reservation = reservationService.UpdateApproval( reservation, hfApprovalState.Value.ConvertToEnum<ReservationApprovalState>( ReservationApprovalState.PendingInitialApproval ) );
                 reservation = reservationService.SetFirstLastOccurrenceDateTimes( reservation );
 
                 changes = EvaluateLocationAndResourceChanges( changes, oldReservation, reservation );
@@ -830,8 +829,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     Reservation oldReservation = BuildOldReservation( new ResourceService( rockContext ), new LocationService( rockContext ), reservationService, reservation );
 
                     reservation.ApprovalState = ReservationApprovalState.Approved;
-                    reservationService.UpdateApproval( reservation, reservation.ApprovalState, true );
-
                     SaveReservationChanges( rockContext, reservation, oldReservation );
                 }
 
@@ -851,8 +848,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     Reservation oldReservation = BuildOldReservation( new ResourceService( rockContext ), new LocationService( rockContext ), reservationService, reservation );
 
                     reservation.ApprovalState = ReservationApprovalState.Denied;
-                    reservationService.UpdateApproval( reservation, reservation.ApprovalState );
-
                     SaveReservationChanges( rockContext, reservation, oldReservation );
                 }
 
@@ -1273,7 +1268,10 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                         Reservation oldReservation = BuildOldReservation( resourceService, locationService, reservationService, reservation );
 
                         reservationResource.ApprovalState = ReservationResourceApprovalState.Approved;
-                        reservationService.UpdateApproval( reservation, reservation.ApprovalState );
+                        if ( reservationService.AreAllLocationsAndResourcesApproved( reservation ) )
+                        {
+                            reservation.ApprovalState = ReservationApprovalState.PendingFinalApproval;
+                        }
 
                         changes = EvaluateLocationAndResourceChanges( changes, oldReservation, reservation );
                         History.EvaluateChange( changes, "Approval State", oldReservation.ApprovalState.ToString(), reservation.ApprovalState.ToString() );
@@ -1330,7 +1328,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                         Reservation oldReservation = BuildOldReservation( resourceService, locationService, reservationService, reservation );
 
                         reservationResource.ApprovalState = ReservationResourceApprovalState.Denied;
-                        reservationService.UpdateApproval( reservation, reservation.ApprovalState );
+                        reservation.ApprovalState = ReservationApprovalState.ChangesNeeded;
 
                         changes = EvaluateLocationAndResourceChanges( changes, oldReservation, reservation );
                         History.EvaluateChange( changes, "Approval State", oldReservation.ApprovalState.ToString(), reservation.ApprovalState.ToString() );
@@ -1653,7 +1651,11 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                         Reservation oldReservation = BuildOldReservation( resourceService, locationService, reservationService, reservation );
 
                         reservationLocation.ApprovalState = ReservationLocationApprovalState.Approved;
-                        reservationService.UpdateApproval( reservation, reservation.ApprovalState );
+                        if ( reservationService.AreAllLocationsAndResourcesApproved( reservation ) )
+                        {
+                            reservation.ApprovalState = ReservationApprovalState.PendingFinalApproval;
+                        }
+
                         changes = EvaluateLocationAndResourceChanges( changes, oldReservation, reservation );
                         History.EvaluateChange( changes, "Approval State", oldReservation.ApprovalState.ToString(), reservation.ApprovalState.ToString() );
 
@@ -1709,7 +1711,8 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                         Reservation oldReservation = BuildOldReservation( resourceService, locationService, reservationService, reservation );
 
                         reservationLocation.ApprovalState = ReservationLocationApprovalState.Denied;
-                        reservationService.UpdateApproval( reservation, reservation.ApprovalState );
+                        reservation.ApprovalState = ReservationApprovalState.ChangesNeeded;
+
                         changes = EvaluateLocationAndResourceChanges( changes, oldReservation, reservation );
                         History.EvaluateChange( changes, "Approval State", oldReservation.ApprovalState.ToString(), reservation.ApprovalState.ToString() );
 
