@@ -84,6 +84,8 @@
   <ItemGroup>
     <Compile Include="Attribute\Helper.cs" />
     <Compile Include="Attribute\ReportTemplateFieldAttribute.cs" />
+    <Compile Include="Attribute\ResourceFieldAttribute.cs" />
+    <Compile Include="Attribute\ReservationTypeFieldAttribute.cs" />
     <Compile Include="Attribute\ReservationResourceApprovalStateFieldAttribute.cs" />
     <Compile Include="Attribute\ReservationLocationApprovalStateFieldAttribute.cs" />
     <Compile Include="Attribute\ReservationApprovalStateFieldAttribute.cs" />
@@ -92,6 +94,8 @@
     <Compile Include="Controllers\ReservationsController.Partial.cs" />
     <Compile Include="Controllers\ScheduledResourcesController.Partial.cs" />
     <Compile Include="DataFilter\Reservation\ReservationInDateRangeFilter.cs" />
+    <Compile Include="Field\Types\ResourceFieldType.cs" />
+    <Compile Include="Field\Types\ReservationTypeFieldType.cs" />
     <Compile Include="Field\Types\ReservationResourceApprovalStateFieldType.cs" />
     <Compile Include="Field\Types\ReservationLocationApprovalStateFieldType.cs" />
     <Compile Include="Field\Types\ReservationApprovalStateFieldType.cs" />
@@ -174,11 +178,15 @@
     <Compile Include="VersionInfo.cs" />
     <Compile Include="Web\Cache\ReservationMinistryCache.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ReportTemplatePicker.cs" />
+    <Compile Include="Web\UI\Controls\Pickers\ReservationTypePicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ReservationPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ScheduledLocationItemPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ScheduledResourcePicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ResourcePicker.cs" />
     <Compile Include="Web\UI\Controls\SimpleAttributeEditor.cs" />
+    <Compile Include="Workflow\Action\Reservations\AddReservationLocation.cs" />
+    <Compile Include="Workflow\Action\Reservations\CreateReservation.cs" />
+    <Compile Include="Workflow\Action\Reservations\AddReservationResource.cs" />
     <Compile Include="Workflow\Action\Reservations\SetReservationResourcesApprovalStates.cs" />
     <Compile Include="Workflow\Action\Reservations\SetReservationLocationsApprovalStates.cs" />
     <Compile Include="Workflow\Action\Reservations\SetReservationApprovalState.cs" />
