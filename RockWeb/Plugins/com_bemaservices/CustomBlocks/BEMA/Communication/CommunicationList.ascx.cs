@@ -390,14 +390,6 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
                     .Queryable().AsNoTracking()
                     .Where( c => c.Status != CommunicationStatus.Transient );
 
-            /* BEMA.FE1.Start */
-            if ( GetAttributeValue( BemaAttributeKey.IsCommunicationSecurityHonored ).AsBoolean() )
-            {
-                communications = communications.Where( c => c.IsAuthorized( Rock.Security.Authorization.VIEW, CurrentPerson ) );
-            }
-            /* BEMA.FE1.End */
-
-
             string subject = tbSubject.Text;
             if ( !string.IsNullOrWhiteSpace( subject ) )
             {
@@ -474,6 +466,13 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             var authorizedCommunicationTemplateIds = new CommunicationTemplateService( rockContext ).Queryable()
                 .Where( a => communications.Where( x => x.CommunicationTemplateId.HasValue ).Select( x => x.CommunicationTemplateId.Value ).Distinct().Contains( a.Id ) )
                 .ToList().Where( a => a.IsAuthorized( Rock.Security.Authorization.VIEW, this.CurrentPerson ) ).Select( a => a.Id ).ToList();
+
+            /* BEMA.FE1.Start */
+            if ( GetAttributeValue( BemaAttributeKey.IsCommunicationSecurityHonored ).AsBoolean() )
+            {
+                communications = communications.ToList().Where( c => c.IsAuthorized( Rock.Security.Authorization.VIEW, CurrentPerson ) ).AsQueryable();
+            }
+            /* BEMA.FE1.End */
 
             var queryable = communications.Where( a => a.CommunicationTemplateId == null || authorizedCommunicationTemplateIds.Contains( a.CommunicationTemplateId.Value ) )
                 .Select( c => new CommunicationItem
