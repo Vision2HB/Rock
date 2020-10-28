@@ -492,6 +492,45 @@ namespace com.bemaservices.RoomManagement.Model
             }
         }
 
+        [LavaInclude]
+        [NotMapped]
+        public virtual DateTime? ReservationModifiedDateTime
+        {
+            get
+            {
+                DateTime? modifiedDateTime = ModifiedDateTime;
+                foreach ( var reservationLocation in ReservationLocations )
+                {
+                    if ( reservationLocation.ModifiedDateTime.HasValue )
+                    {
+                        if ( !modifiedDateTime.HasValue || reservationLocation.ModifiedDateTime > modifiedDateTime )
+                        {
+                            modifiedDateTime = reservationLocation.ModifiedDateTime;
+                        }
+
+                    }
+                }
+
+                foreach ( var reservationResource in ReservationResources )
+                {
+                    if ( reservationResource.ModifiedDateTime.HasValue )
+                    {
+                        if ( !modifiedDateTime.HasValue || reservationResource.ModifiedDateTime > modifiedDateTime )
+                        {
+                            modifiedDateTime = reservationResource.ModifiedDateTime;
+                        }
+
+                    }
+                }
+
+                return modifiedDateTime;
+            }
+            private set
+            {
+
+            }
+        }
+
         #endregion
 
         #region Methods

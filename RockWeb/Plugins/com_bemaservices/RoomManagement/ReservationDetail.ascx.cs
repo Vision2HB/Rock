@@ -144,6 +144,8 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         /// </value>
         private List<ReservationLocationSummary> LocationsState { get; set; }
 
+        private DateTime? ModifiedDateTime { get; set; }
+
         #endregion
 
         #region Base Control Methods
@@ -184,6 +186,16 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             else
             {
                 ReservationType = JsonConvert.DeserializeObject<ReservationType>( json );
+            }
+
+            json = ViewState["ModifiedDateTime"] as string;
+            if ( string.IsNullOrWhiteSpace( json ) )
+            {
+                ModifiedDateTime = null;
+            }
+            else
+            {
+                ModifiedDateTime = JsonConvert.DeserializeObject<DateTime?>( json );
             }
         }
 
@@ -260,6 +272,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             ViewState["ReservationType"] = JsonConvert.SerializeObject( ReservationType, Formatting.None, jsonSetting );
             ViewState["ResourcesState"] = JsonConvert.SerializeObject( ResourcesState, Formatting.None, jsonSetting );
             ViewState["LocationsState"] = JsonConvert.SerializeObject( LocationsState, Formatting.None, jsonSetting );
+            ViewState["ModifiedDateTime"] = JsonConvert.SerializeObject( ModifiedDateTime, Formatting.None, jsonSetting );
 
             return base.SaveViewState();
         }
@@ -334,6 +347,14 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 if ( hfReservationId.Value.AsIntegerOrNull() != null )
                 {
                     reservation = reservationService.Get( hfReservationId.ValueAsInt() );
+                }
+
+                if ( reservation != null && reservation.ReservationModifiedDateTime > ModifiedDateTime )
+                {
+                    nbEditModeMessage.Title = "Warning";
+                    nbEditModeMessage.Text = "This reservation has been modified since it was last opened. Please refresh the page to modify the reservation.";
+                    nbEditModeMessage.Visible = true;
+                    return;
                 }
 
                 if ( reservation == null )
@@ -675,6 +696,14 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         {
             var rockContext = new RockContext();
             var reservation = new ReservationService( rockContext ).Get( hfReservationId.Value.AsInteger() );
+
+            if ( reservation.ReservationModifiedDateTime > ModifiedDateTime )
+            {
+                nbEditModeMessage.Title = "Warning";
+                nbEditModeMessage.Text = "This reservation has been modified since it was last opened. Please refresh the page to modify the reservation.";
+                nbEditModeMessage.Visible = true;
+                return;
+            }
 
             ShowEditDetails( reservation );
         }
@@ -1379,9 +1408,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                 canApprove = ( reservationResource.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationResource.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) &&
                     ( reservationResource.Reservation.ApprovalState == ReservationApprovalState.PendingSpecialApproval && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, reservationResource.Resource.ApprovalGroupId )
-                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId ));
+                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId ) );
 
-                canDeny = canApprove || (( reservationResource.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationResource.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ));
+                canDeny = canApprove || ( ( reservationResource.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationResource.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ) );
 
                 if ( e.Row.RowType == DataControlRowType.DataRow )
                 {
@@ -1787,9 +1816,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                 canApprove = ( reservationLocation.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationLocation.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) &&
                     ( reservationLocation.Reservation.ApprovalState == ReservationApprovalState.PendingSpecialApproval && ReservationTypeService.IsPersonInGroupWithGuid( CurrentPerson, approvalGroupGuid )
-                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId ));
+                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId ) );
 
-                canDeny = canApprove || ( ( reservationLocation.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationLocation.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ));
+                canDeny = canApprove || ( ( reservationLocation.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationLocation.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ) );
 
                 if ( e.Row.RowType == DataControlRowType.DataRow )
                 {
@@ -1947,6 +1976,8 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 var mergeFields = new Dictionary<string, object>();
                 mergeFields.Add( "Reservation", reservation );
                 btnDownload.Text = btnDownloadText.ResolveMergeFields( mergeFields );
+
+                ModifiedDateTime = reservation.ReservationModifiedDateTime;
             }
 
             if ( reservation == null )
