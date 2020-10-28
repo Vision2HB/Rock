@@ -48,6 +48,12 @@ namespace com.bemaservices.RoomManagement.Model
                 return false;
             }
 
+            if ( new Service<Question>( Context ).Queryable().Any( a => a.ResourceId == item.Id ) )
+            {
+                errorMessage = string.Format( "This {0} has one or more {1}s tied to it.", Resource.FriendlyTypeName, Question.FriendlyTypeName );
+                return false;
+            }
+
             return true;
         }
 
