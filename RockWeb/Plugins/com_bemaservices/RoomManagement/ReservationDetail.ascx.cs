@@ -882,10 +882,14 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     {
                         if ( reservation.ApprovalState == ReservationApprovalState.PendingInitialApproval )
                         {
+                            reservation.InitialApprovalDateTime = RockDateTime.Now;
+                            reservation.InitialApproverAliasId = CurrentPersonAliasId;
                             reservation.ApprovalState = ReservationApprovalState.PendingSpecialApproval;
                         }
                         else if ( reservation.ApprovalState == ReservationApprovalState.PendingFinalApproval )
                         {
+                            reservation.FinalApprovalDateTime = RockDateTime.Now;
+                            reservation.FinalApproverAliasId = CurrentPersonAliasId;
                             reservation.ApprovalState = ReservationApprovalState.Approved;
                         }
                     }
@@ -1270,6 +1274,8 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                         reservationResource.ApprovalState = ReservationResourceApprovalState.Approved;
                         if ( reservationService.AreAllLocationsAndResourcesApproved( reservation ) )
                         {
+                            reservation.SpecialApprovalDateTime = RockDateTime.Now;
+                            reservation.SpecialApproverAliasId = CurrentPersonAliasId;
                             reservation.ApprovalState = ReservationApprovalState.PendingFinalApproval;
                         }
 
@@ -1654,6 +1660,8 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                         reservationLocation.ApprovalState = ReservationLocationApprovalState.Approved;
                         if ( reservationService.AreAllLocationsAndResourcesApproved( reservation ) )
                         {
+                            reservation.SpecialApprovalDateTime = RockDateTime.Now;
+                            reservation.SpecialApproverAliasId = CurrentPersonAliasId;
                             reservation.ApprovalState = ReservationApprovalState.PendingFinalApproval;
                         }
 
