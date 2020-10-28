@@ -289,7 +289,7 @@ namespace com.bemaservices.RoomManagement.Model
             {
                 var supportedActions = base.SupportedActions;
                 supportedActions.AddOrReplace( Rock.Security.Authorization.DELETE, "Additional roles and/or users that have access to delete reservations outside of the traditional approval process." );
-                supportedActions.AddOrReplace( "Edit After Approval", "Roles and/or users that have access to edit reservations after they have been approved." );
+                supportedActions.AddOrReplace( "EditAfterApproval", "Roles and/or users that have access to edit reservations after they have been approved." );
                 return supportedActions;
             }
         }

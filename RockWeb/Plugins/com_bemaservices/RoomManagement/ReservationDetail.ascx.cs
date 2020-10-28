@@ -1371,10 +1371,11 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 var canApprove = false;
                 var canDeny = false;
 
-                canApprove = ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, reservationResource.Resource.ApprovalGroupId )
-                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId );
+                canApprove = ( reservationResource.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationResource.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) &&
+                    ( reservationResource.Reservation.ApprovalState == ReservationApprovalState.PendingSpecialApproval && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, reservationResource.Resource.ApprovalGroupId )
+                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId ));
 
-                canDeny = canApprove || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId );
+                canDeny = canApprove || (( reservationResource.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationResource.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ));
 
                 if ( e.Row.RowType == DataControlRowType.DataRow )
                 {
@@ -1776,10 +1777,11 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     }
                 }
 
-                canApprove = ReservationTypeService.IsPersonInGroupWithGuid( CurrentPerson, approvalGroupGuid )
-                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId );
+                canApprove = ( reservationLocation.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationLocation.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) &&
+                    ( reservationLocation.Reservation.ApprovalState == ReservationApprovalState.PendingSpecialApproval && ReservationTypeService.IsPersonInGroupWithGuid( CurrentPerson, approvalGroupGuid )
+                    || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.OverrideApprovalGroupId ));
 
-                canDeny = canApprove || ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId );
+                canDeny = canApprove || ( ( reservationLocation.Reservation.ApprovalState != ReservationApprovalState.Approved || reservationLocation.Reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) ) && ReservationTypeService.IsPersonInGroupWithId( CurrentPerson, ReservationType.FinalApprovalGroupId ));
 
                 if ( e.Row.RowType == DataControlRowType.DataRow )
                 {
@@ -2095,9 +2097,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
             btnOverride.Visible = isInOverrideGroup;
             btnCancelReservation.Visible = canEditReservation && reservation.ApprovalState != ReservationApprovalState.Cancelled;
-            var test = reservation.IsAuthorized( "Edit After Approval", CurrentPerson );
+            var test = reservation.IsAuthorized( "EditAfterApproval", CurrentPerson );
             btnEdit.Visible = ( canEditReservation || canApproveReservation )
-                             && ( reservation.ApprovalState != ReservationApprovalState.Approved || reservation.IsAuthorized( "Edit After Approval", CurrentPerson ) )
+                             && ( reservation.ApprovalState != ReservationApprovalState.Approved || reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) )
                              && reservation.ApprovalState != ReservationApprovalState.Cancelled;
             btnSubmit.Visible = ( canEditReservation || canApproveReservation ) && ( reservation.ApprovalState == ReservationApprovalState.Draft || reservation.ApprovalState == ReservationApprovalState.ChangesNeeded );
             btnDelete.Visible = canEditReservation || canApproveReservation || reservation.IsAuthorized( Authorization.DELETE, CurrentPerson );
