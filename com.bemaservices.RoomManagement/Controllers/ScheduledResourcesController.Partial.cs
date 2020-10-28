@@ -156,7 +156,7 @@ namespace Rock.Rest.Controllers
 
                 var resourceQry = resourceService.Queryable().AsNoTracking();
 
-                if ( !includeAllCampuses )
+                if ( !includeAllCampuses && campusId != 0 && campusId != null )
                 {
                     resourceQry = resourceQry.Where( r => r.CampusId == campusId || r.CampusId == null );
                 }
