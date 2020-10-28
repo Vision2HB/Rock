@@ -2117,6 +2117,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 case ReservationApprovalState.PendingInitialApproval:
                     hlStatus.LabelType = LabelType.Warning;
                     break;
+                case ReservationApprovalState.PendingSpecialApproval:
+                    hlStatus.LabelType = LabelType.Warning;
+                    break;
                 case ReservationApprovalState.ChangesNeeded:
                     hlStatus.LabelType = LabelType.Info;
                     break;
