@@ -108,6 +108,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             gAttributes.GridRebind += gAttributes_GridRebind;
             gAttributes.GridReorder += gAttributes_GridReorder;
 
+            SecurityField securityField = gAttributes.Columns.OfType<SecurityField>().FirstOrDefault();
+            securityField.EntityTypeId = EntityTypeCache.GetId<Attribute>() ?? 0;
+
             gMinistries.DataKeyNames = new string[] { "Guid" };
             gMinistries.Actions.ShowAdd = true;
             gMinistries.Actions.AddClick += gMinistries_Add;
