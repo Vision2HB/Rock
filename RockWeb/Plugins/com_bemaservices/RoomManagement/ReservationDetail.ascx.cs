@@ -1180,15 +1180,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         {
             nbError.Visible = false;
             Guid rowGuid = ( Guid ) e.RowKeyValue;
-            ResourcesState.RemoveEntity( rowGuid );
-
-            var headControl = phResourceAnswers.FindControl( "cReservationResource_" + rowGuid.ToString() ) as Control;
-            if ( headControl != null )
-            {
-                phResourceAnswers.Controls.Remove( headControl );
-            }
-
-            BindReservationResourcesGrid();
+            RemoveResource( rowGuid );
         }
 
         /// <summary>
@@ -1538,40 +1530,8 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             nbError.Visible = false;
             Guid rowGuid = ( Guid ) e.RowKeyValue;
 
-            // check for attached resources and remove them too
-            var reservationLocation = LocationsState.FirstOrDefault( a => a.Guid == rowGuid );
-            if ( reservationLocation != null )
-            {
-                var attachedResources = new ResourceService( new RockContext() ).Queryable().Where( r => r.Location.Id == reservationLocation.LocationId );
-                if ( attachedResources.Any() )
-                {
-                    foreach ( var resource in attachedResources )
-                    {
-                        var item = ResourcesState.FirstOrDefault( a => a.ResourceId == resource.Id );
-                        if ( item != null )
-                        {
-                            ResourcesState.Remove( item );
-                            var headControlResource = phResourceAnswers.FindControl( "cReservationResource_" + item.Guid.ToString() ) as Control;
-                            if ( headControlResource != null )
-                            {
-                                phResourceAnswers.Controls.Remove( headControlResource );
-                            }
-                        }
-                    }
-                    BindReservationResourcesGrid();
-                }
-            }
-
-            LocationsState.RemoveEntity( rowGuid );
-
-            var headControl = phLocationAnswers.FindControl( "cReservationLocation_" + reservationLocation.Guid.ToString() ) as Control;
-            if ( headControl != null )
-            {
-                phLocationAnswers.Controls.Remove( headControl );
-            }
-
-            BindReservationLocationsGrid();
-        }
+            RemoveLocation( rowGuid );
+        }       
 
         /// <summary>
         /// Handles the GridRebind event of the gLocations control.
@@ -3276,6 +3236,17 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 reservationLocation = LocationsState.FirstOrDefault( l => l.Guid.Equals( guid ) );
             }
 
+            if ( reservationLocation != null )
+            {
+                var originalLocationId = reservationLocation.LocationId;
+                var newLocationId = srpResource.SelectedValueAsId().Value;
+                if ( newLocationId != originalLocationId )
+                {
+                    RemoveLocation( guid );
+                    reservationLocation = null;
+                }
+            }
+
             if ( reservationLocation == null )
             {
                 reservationLocation = new ReservationLocationSummary();
@@ -3341,6 +3312,43 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             // to locations.
             LoadPickers();
             LoadAdditionalInfo();
+        }
+
+        private void RemoveLocation( Guid rowGuid )
+        {
+            // check for attached resources and remove them too
+            var reservationLocation = LocationsState.FirstOrDefault( a => a.Guid == rowGuid );
+            if ( reservationLocation != null )
+            {
+                var attachedResources = new ResourceService( new RockContext() ).Queryable().Where( r => r.Location.Id == reservationLocation.LocationId );
+                if ( attachedResources.Any() )
+                {
+                    foreach ( var resource in attachedResources )
+                    {
+                        var item = ResourcesState.FirstOrDefault( a => a.ResourceId == resource.Id );
+                        if ( item != null )
+                        {
+                            ResourcesState.Remove( item );
+                            var headControlResource = phResourceAnswers.FindControl( "cReservationResource_" + item.Guid.ToString() ) as Control;
+                            if ( headControlResource != null )
+                            {
+                                phResourceAnswers.Controls.Remove( headControlResource );
+                            }
+                        }
+                    }
+                    BindReservationResourcesGrid();
+                }
+            }
+
+            LocationsState.RemoveEntity( rowGuid );
+
+            var headControl = phLocationAnswers.FindControl( "cReservationLocation_" + reservationLocation.Guid.ToString() ) as Control;
+            if ( headControl != null )
+            {
+                phLocationAnswers.Controls.Remove( headControl );
+            }
+
+            BindReservationLocationsGrid();
         }
 
         /// <summary>
@@ -3566,6 +3574,17 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     reservationResource = ResourcesState.FirstOrDefault( l => l.Guid.Equals( guid ) );
                 }
 
+                if ( reservationResource != null )
+                {
+                    var originalResourceId = reservationResource.ResourceId;
+                    var newResourceId = srpResource.SelectedValueAsId().Value;
+                    if ( newResourceId != originalResourceId )
+                    {
+                        RemoveResource( guid );
+                        reservationResource = null;
+                    }
+                }
+
                 if ( reservationResource == null )
                 {
                     reservationResource = new ReservationResourceSummary();
@@ -3604,6 +3623,19 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
             BindReservationResourcesGrid();
             LoadAdditionalInfo();
+        }
+
+        private void RemoveResource( Guid rowGuid )
+        {
+            ResourcesState.RemoveEntity( rowGuid );
+
+            var headControl = phResourceAnswers.FindControl( "cReservationResource_" + rowGuid.ToString() ) as Control;
+            if ( headControl != null )
+            {
+                phResourceAnswers.Controls.Remove( headControl );
+            }
+
+            BindReservationResourcesGrid();
         }
 
         /// <summary>
