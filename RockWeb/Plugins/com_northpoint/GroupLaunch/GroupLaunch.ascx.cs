@@ -21,19 +21,18 @@ using Rock.Security;
 namespace RockWeb.Plugins.com_northpoint.GroupLaunch
 {
 
-    [DisplayName( "Group Launch (Action Bar)" )]
-    [Category( "North Point Ministries > GroupLaunch" )]
-    [Description( "Lock and Publish A Group To GroupLaunch and check GroupLaunch Service for any updates on finalized status" )]
+    [DisplayName("Group Launch (Action Bar)")]
+    [Category("North Point Ministries > GroupLaunch")]
+    [Description("Lock and Publish A Group To GroupLaunch and check GroupLaunch Service for any updates on finalized status")]
 
-    [GroupTypesField( "Group Type Visibity", "Show this block for these group types", false )]
-    [TextField("GroupLaunch Service URL","Full URL to the api service. ", true, "https://test.launch.grouplink.org")]
+    [GroupTypesField("Group Type Visibity", "Show this block for these group types", false)]
+    [TextField("GroupLaunch Service URL", "Full URL to the api service. ", true, "https://test.launch.grouplink.org")]
 
     public partial class GroupLaunch : Rock.Web.UI.RockBlock
     {
         private GroupLaunchService groupLaunchService;
-        private Group group;
         private int currentRockGroupId;
-        public string groupLaunchGroupName;
+        private Group group;
         private bool isGroupLaunchGroup = false;
 
         public bool IsConnected()
@@ -41,37 +40,30 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
             return group != null;
         }
 
-        public bool IsFinalized()
-        {
-            return group.Finalized;
-        }
-
         protected override void OnInit( EventArgs e )
         {
             base.OnInit( e );
         }
 
-
-        protected override void OnLoad( EventArgs e )
+        protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
 
-            currentRockGroupId = PageParameter( "GroupId" ).AsInteger();
-            groupLaunchService = new GroupLaunchService( GetAttributeValue("GroupLaunchServiceURL") );
+            currentRockGroupId = PageParameter("GroupId").AsInteger();
+            groupLaunchService = new GroupLaunchService(GetAttributeValue("GroupLaunchServiceURL"));
+            SetGroup((Group)ViewState["group"]);
 
-            
-
-            if ( !Page.IsPostBack )
+            if (!Page.IsPostBack)
             {
-                pnlGroupLaunch.Visible = false;
-                pnlConnectDetails.Visible = false;
-                mdConfirmRePublish.Hide();
-                pnlConnectReadOnlyDetails.Visible = true;
                 CheckBlockAppliesToGroup();
                 SetBlockVisibility();
                 CheckForExistingConnection();
+                
+                if (!IsConnected())
+                {
+                    DisplayUnconnected();
+                }
             }
-            
         }
 
         private void CheckBlockAppliesToGroup()
@@ -86,15 +78,28 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
 
             isGroupLaunchGroup = group.IsNotNull<Rock.Model.Group>() && groupTypeGuids.Contains( group.GroupType.Guid );
 
-
             CheckForEditPermissions( group );
+        }
+
+        private void CheckForEditPermissions( Rock.Model.Group group )
+        {
+            // Check this block's EDIT permissions OR group's permissions
+            bool canEdit = this.IsUserAuthorized( Rock.Security.Authorization.EDIT );
+
+            if ( group != null && !canEdit )
+            {
+                canEdit = group.IsAuthorized( Rock.Security.Authorization.EDIT, CurrentPerson );
+            }
+
+            ConnectButton.Visible = canEdit;
+            ReConnectButton.Visible = canEdit;
         }
 
         private void SetBlockVisibility()
         {
             if ( isGroupLaunchGroup )
             {
-                pnlGroupLaunch.Visible = true;
+                DisplayGroupLaunch();
 
                 // Check for auth token global attributes (if not available, throw up message)
                 if (GlobalAttributesCache.Value("NPMAuthUrl").IsNullOrWhiteSpace())
@@ -119,22 +124,33 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
         {
             if ( isGroupLaunchGroup )
             {
-                var groupResponse = groupLaunchService.FindGroupByRockId( currentRockGroupId );
+                Group groupResponse = null;
+                try
+                {
+                    groupResponse = groupLaunchService.FindGroupByRockId( currentRockGroupId );
+                }
+                catch ( KeyNotFoundException e )
+                {
+                    // If groupLaunch can't find a group, then make sure to unfreeze the permissions
+                    UnFreezeRockGroup( currentRockGroupId );
+                    DisplayUnconnected();
+                }
+                catch ( Exception e )
+                {
+                    // Something is wrong with Group Launch; update interface and dont change permissions
+                    UnconnectedHighlight.Text = "There Was An Issue Connecting to Group Launch. " + e.Message;
+                    UnconnectedHighlight.Visible = true;
+                }
+
 
                 if ( groupResponse != null )
                 {
-                    group = groupResponse;
+                    SetGroup(groupResponse);
 
-                    ManageGroupLaunchLink.NavigateUrl = groupResponse.GroupLaunchAdminUrl;
-                    groupLaunchGroupName = group.Name;
-
-                    //Hidden Fields
-                    glGroupId.Value = group.Id.ToString();
-                    glGroupCollectionId.Value = group.CollectionId.ToString();
-                    glGroupName.Value = group.Name.ToString();
+                    DisplayConnected();
 
                     // Check if group was finalized in GroupLaunch, allowing Rock to unfreeze group security
-                    if( group.Finalized )
+                    if ( group.Finalized )
                     {
                         UnFreezeRockGroup( currentRockGroupId );
                     }
@@ -143,26 +159,15 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
                         // Else, lock down this Rock group
                         FreezeRockGroup( currentRockGroupId );
                     }
+                } else
+                {
+                    SetGroup(null);
                 }
             }
             else
             {
                 //Do Not Unfreeze a Rock Group just because you don't receive a group object back from GroupLaunch
             }
-        }
-
-        private void CheckForEditPermissions( Rock.Model.Group group )
-        {
-            // Check this block's EDIT permissions OR group's permissions
-            bool canEdit = this.IsUserAuthorized( Rock.Security.Authorization.EDIT );
-
-            if ( group != null && !canEdit )
-            {
-                canEdit = group.IsAuthorized( Rock.Security.Authorization.EDIT, CurrentPerson );
-            }
-
-            ConnectButton.Visible = canEdit;
-            ReConnectButton.Visible = canEdit;
         }
 
         protected void btnConnect_Click( object sender, EventArgs e )
@@ -174,8 +179,14 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
 
         protected void btnCancelConnect_Click( object sender, EventArgs e )
         {
-            pnlConnectReadOnlyDetails.Visible = true;
-            pnlConnectDetails.Visible = false;
+            if (IsConnected())
+            {
+                DisplayConnected();
+            }
+            else
+            {
+                DisplayUnconnected();
+            }
         }
 
         protected void btnPublish_Click( object sender, EventArgs e )
@@ -188,23 +199,65 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
 
         private void ShowConnectDetails()
         {
-            pnlConnectReadOnlyDetails.Visible = false;
-            pnlConnectDetails.Visible = true;
-
-            nbWarning.Visible = false;
-
-            
+            DisplayBuildConnection();
+            nbWarning.Visible = false;         
 
             //If Re-Populating, change options
-            if ( glGroupId.Value.IsNotNullOrWhiteSpace() && glGroupName.Value.IsNotNullOrWhiteSpace() )
+            if ( IsConnected() )
             {
                 btnConnectPublish.Visible = false;
                 btnRePublish.Visible = true;
 
                 ddlGroupCollections.Enabled = false;
                 groupNameText.Enabled = false;
-                groupNameText.Text = glGroupName.Value;
+                groupNameText.Text = group.Name;
             }
+        }
+
+        private void DisplayGroupLaunch()
+        {
+            pnlGroupLaunch.Visible = true;
+        }
+
+        private void DisplayUnconnected()
+        {
+            pnlConnected.Visible = false;
+            pnlBuildConnection.Visible = false;
+            pnlUnconnected.Visible = true;
+        }
+
+        private void DisplayConnected()
+        {
+            pnlBuildConnection.Visible = false;
+            pnlUnconnected.Visible = false;
+            pnlConnected.Visible = true;
+
+            ManageGroupLaunchLink.NavigateUrl = group.GroupLaunchAdminUrl;
+            groupLaunchGroupName.Text = group.Name;
+
+            if (group.Finalized)
+            {
+                FinalizedNotification.Visible = false;
+                ReConnectButton.Visible = true;
+            }
+            else
+            {
+                FinalizedNotification.Visible = true;
+                ReConnectButton.Visible = false;
+            }
+        }
+
+        private void DisplayBuildConnection()
+        {
+            pnlUnconnected.Visible = false;
+            pnlConnected.Visible = false;
+            pnlBuildConnection.Visible = true;
+        }
+
+        private void SetGroup(Group newGroup)
+        {
+            ViewState["group"] = newGroup;
+            group = newGroup;
         }
 
         private void PopulateGroupCollectionDropdown()
@@ -216,8 +269,12 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
                 ddlGroupCollections.DataSource = groupCollections;
                 ddlGroupCollections.DataTextField = "Name";
                 ddlGroupCollections.DataValueField = "Id";
-
                 ddlGroupCollections.DataBind();
+
+                if (IsConnected())
+                {
+                    ddlGroupCollections.SelectedValue = group.CollectionId.ToString();
+                }  
             }
         }
 
@@ -250,14 +307,15 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
 
             if ( creationResponse != null )
             {
-                group = creationResponse;
+                SetGroup(creationResponse);
+                DisplayConnected();
             }
         }
 
         private void RePublishGroupLaunch( string leaderRoleId )
         {
             string warnings = "";
-            Group creationResponse = groupLaunchService.ReCreateGroup( glGroupId.ValueAsInt(), glGroupCollectionId.ValueAsInt(), currentRockGroupId, leaderRoleId, out warnings );
+            Group creationResponse = groupLaunchService.ReCreateGroup(group.Id, group.CollectionId, currentRockGroupId, leaderRoleId, out warnings );
 
             // If we get back a warning, post here
             if ( warnings.IsNotNullOrWhiteSpace() )
@@ -268,7 +326,8 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
 
             if ( creationResponse != null )
             {
-                group = creationResponse;
+                SetGroup(creationResponse);
+                DisplayConnected();
             }
         }
 
@@ -308,8 +367,7 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
                 }
             }
 
-            // Add UI Text of "No Edits Allowed"
-            ConnectedHighlight.Text = "Connected: Active In GroupLaunch";
+            // ConnectedHighlight.Text = "Connected: Active In GroupLaunch";
 
             Authorization.RefreshAction( rockGroup.TypeId, rockGroupId, Authorization.MANAGE_MEMBERS );
 
@@ -345,9 +403,9 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
                     this.RemoveRule( rule );
                 }
             }
-            
+
             // Add UI Text of "No Edits Allowed"
-            ConnectedHighlight.Text = "Connected: GroupLaunch Finalized";
+            // ConnectedHighlight.Text = "Connected: GroupLaunch Finalized";
 
             Authorization.RefreshAction( rockGroup.TypeId, rockGroupId, Authorization.MANAGE_MEMBERS );
 

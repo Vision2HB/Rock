@@ -4,11 +4,7 @@
     <ContentTemplate>
 
         <asp:Panel ID="pnlContent" runat="server">
-            <asp:HiddenField ID="glGroupId" runat="server" />
-            <asp:HiddenField ID="glGroupCollectionId" runat="server" />
-            <asp:HiddenField ID="glGroupName" runat="server" />
-
-            <div id="pnlGroupLaunch" runat="server">
+            <div id="pnlGroupLaunch" runat="server" visible="false">
                 <div class="panel panel-block">
 
                     <div class="panel-heading">
@@ -23,55 +19,44 @@
                     </div>
 
                     <div class="panel-body">
-                        <div id="pnlConnectReadOnlyDetails" runat="server">
-                            <style>
-                                .actions {
-                                    margin-top: 2rem;
-                                }
-                            </style>
-                            <% if (IsConnected() ) { %>
-                                <div>
-                                    <p>Status: <Rock:HighlightLabel ID="ConnectedHighlight" runat="server" LabelType="Success" Text="Connected" /></p>
-                                    <p>Name: <%= groupLaunchGroupName %></p>
-                                    <div class="actions">
-                                        <asp:HyperLink 
-                                            ID="ManageGroupLaunchLink"
-                                            runat="server"
-                                            Text="Manage in GroupLaunch"
-                                            Class="btn btn-primary"
-                                            Target="_blank"
-                                            >
-                                        </asp:HyperLink>
+                        <style>
+                            .actions {
+                                margin-top: 2rem;
+                            }
+                        </style>
+
+                        <div id="pnlConnected" runat="server" visible="false">
+                            <Rock:NotificationBox ID="FinalizedNotification" runat="server" CssClass="padding-top-md" NotificationBoxType="Info" Title="Please DO NOT Make Any Changes To This Group"
+                                        Text="It is currently open for registration in GroupLaunch and will interfere with the synchronization between systems." Visible="false" />
+
+                            <p>Status: <Rock:HighlightLabel ID="ConnectedHighlight" runat="server" LabelType="Success" Text="Connected" /></p>
+                            <p>Name: <asp:Literal id="groupLaunchGroupName" runat="server" /></p>
+                            <div class="actions">
+                                <asp:HyperLink 
+                                    ID="ManageGroupLaunchLink"
+                                    runat="server"
+                                    Text="Manage in GroupLaunch"
+                                    Class="btn btn-primary"
+                                    Target="_blank"
+                                    >
+                                </asp:HyperLink>
                                         
-                                        <% if ( IsFinalized() )
-                                            { %>
-                                            <asp:LinkButton ID="ReConnectButton" runat="server" Text="Re-Publish" CssClass="btn btn-primary" OnClick="btnConnect_Click" CausesValidation="false" />
-                                        
-                                        <% }
-                                        else
-                                        { %>
-                                        </div>
-                                        <div style="margin-top: 1em;">
-                                            <Rock:NotificationBox ID="nbConnected" runat="server" CssClass="padding-top-md" NotificationBoxType="Info" Title="Please DO NOT Make Any Changes To This Group"
-                                                Text="It is currently open for registration in GroupLaunch and will interfere with the synchronization between systems." />
-                                        <% } %>
-                                    </div>
-                                </div>
-                            <% } else { %>
-                                <div>
-                                    Status: <Rock:HighlightLabel ID="UnconnectedHighlight" runat="server" LabelType="Default" Text="Unconnected" />   
-                                    <br /><br />
-                                    <div class="actions">
-                                        <asp:LinkButton ID="ConnectButton" runat="server" Text="Connect" CssClass="btn btn-primary" OnClick="btnConnect_Click" CausesValidation="false" />
-                                    </div>
-                                </div>
-                            <% } %>
+                                <asp:LinkButton ID="ReConnectButton" runat="server" Text="Re-Publish" CssClass="btn btn-primary" OnClick="btnConnect_Click" CausesValidation="false" Visible="false" />
+                            </div>
                         </div>
 
-                        <div id="pnlConnectDetails" runat="server">
+                        <div id="pnlUnconnected" runat="server" visible="false">
+                            Status: <Rock:HighlightLabel ID="UnconnectedHighlight" runat="server" LabelType="Default" Text="Unconnected" />   
+                            <br /><br />
+                            <div class="actions">
+                                <asp:LinkButton ID="ConnectButton" runat="server" Text="Connect" CssClass="btn btn-primary" OnClick="btnConnect_Click" CausesValidation="false" />
+                            </div>
+                        </div>
+
+                        <div id="pnlBuildConnection" runat="server" visibe="false">
                             <Rock:NotificationBox ID="nbWarning" runat="server" Dismissable="true" Visible="false" />
                             <Rock:RockDropDownList ID="ddlGroupCollections" runat="server" Label="Group Collections" Help="Pick the Group Collection" Required="true" />
-                            <Rock:RockDropDownList ID="ddlGroupLeaderRole" runat="server" Label="Rock Leader Role" Help="Select the Rock Group Role that Leaders will map to from GroupLaunch" Required="true" />
+                            <Rock:RockDropDownList ID="ddlGroupLeaderRole" runat="server" Label="Rock Leader Role" Help="If someone has the role of Leader in the Groups Reg system, what role do you want them to have in Rock?" Required="true" />
                             <Rock:RockTextBox ID="groupNameText" runat="server" Label="Group Name" Help="Name of the group in GroupLaunch" />
 
                             <Rock:ModalDialog ID="mdConfirmRePublish" runat="server" Title="Confirm GroupLaunch Remove and Create"
