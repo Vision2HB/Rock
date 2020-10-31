@@ -159,6 +159,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.bemaservices.ClientTool
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.bemaservices.RoomManagement", "com.bemaservices.RoomManagement\com.bemaservices.RoomManagement.csproj", "{E3C37E39-0DAE-4826-B38F-EB6A4D23842F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.bemaservices.SMSActions", "com.bemaservices.SMSActions\com.bemaservices.SMSActions.csproj", "{7DD14EF3-E467-44D5-82B7-50588DC8F4B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -425,6 +427,10 @@ Global
 		{E3C37E39-0DAE-4826-B38F-EB6A4D23842F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3C37E39-0DAE-4826-B38F-EB6A4D23842F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3C37E39-0DAE-4826-B38F-EB6A4D23842F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DD14EF3-E467-44D5-82B7-50588DC8F4B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DD14EF3-E467-44D5-82B7-50588DC8F4B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DD14EF3-E467-44D5-82B7-50588DC8F4B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DD14EF3-E467-44D5-82B7-50588DC8F4B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
