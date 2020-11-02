@@ -37,11 +37,16 @@ namespace com.bemaservices.RoomManagement.Migrations
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_Resource] ADD [LocationId] INT
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_Resource] WITH CHECK ADD  CONSTRAINT [FK__com_bemaservices_RoomManagement_Resource_Location] FOREIGN KEY([LocationId])
                 REFERENCES [dbo].[Location] ([Id])
-" );
-            RockMigrationHelper.AddBlockAttributeValue( "AF897B42-21AA-4A56-B0D7-9E5303D4CE53", "1322186A-862A-4CF1-B349-28ECB67229BA", @"{% include '~~/Assets/Lava/PageListAsTabs.lava' %}<hr class='margin-t-sm'></hr>" ); // Template
+            " );
 
-            // Add New Reservation Detail page to the Available Resources block page.
-            RockMigrationHelper.AddBlockAttributeValue( "1B4F3A33-656B-4FCB-A446-D481782DE8B4", "85ECB608-B64E-43C0-986C-FC8FD38F9D81", "4CBD2B96-E076-46DF-A576-356BCA5E577F" ); // Detail Page
+            var isExistingUser = IsExistingUser();
+            if ( !isExistingUser )
+            {
+                RockMigrationHelper.AddBlockAttributeValue( "AF897B42-21AA-4A56-B0D7-9E5303D4CE53", "1322186A-862A-4CF1-B349-28ECB67229BA", @"{% include '~~/Assets/Lava/PageListAsTabs.lava' %}<hr class='margin-t-sm'></hr>" ); // Template
+
+                // Add New Reservation Detail page to the Available Resources block page.
+                RockMigrationHelper.AddBlockAttributeValue( "1B4F3A33-656B-4FCB-A446-D481782DE8B4", "85ECB608-B64E-43C0-986C-FC8FD38F9D81", "4CBD2B96-E076-46DF-A576-356BCA5E577F" ); // Detail Page
+            }
         }
 
         /// <summary>
@@ -56,6 +61,22 @@ namespace com.bemaservices.RoomManagement.Migrations
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_Resource] DROP CONSTRAINT  [FK__com_bemaservices_RoomManagement_Resource_Location]
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_Resource] DROP COLUMN [LocationId]
 " );
+        }
+
+        private bool IsExistingUser()
+        {
+            var isExistingUser = false;
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 1" );
+            if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
+            {
+                isExistingUser = false;
+            }
+            else
+            {
+                isExistingUser = true;
+            }
+
+            return isExistingUser;
         }
     }
 }
