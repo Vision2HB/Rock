@@ -17,18 +17,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-
+using com.bemaservices.RoomManagement.Migrations;
 using Rock;
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Web.Cache;
 using Rock.Web.UI.Controls;
-using Rock.Attribute;
-using System.Data.Entity;
 /*
  * BEMA Modified Core Block ( v10.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
@@ -36,8 +35,11 @@ using System.Data.Entity;
  * Additional Features:
  * - UI1) Added ability to relabel the weekend dropdown
  * - UI2) Added ability to switch the the time and weekend columns
+ * - UI3) Added ability to hide the campus dropdown if a single campus is configured in the block attributes
+ * - UI4) Added ability to set the weekend dropdown date based on the most recent upcoming schedule's date
+ * - FE1) Added ability to display service times as individual rows instead of a dropdown
  */
-namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
+namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Reporting
 {
     /// <summary>
     /// Block for easily adding/editing metric values for any metric that has partitions of campus and service time.
@@ -74,7 +76,20 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
         IsRequired = true,
         Order = 3,
         Key = AttributeKey.MetricCategories )]
-    [CampusesField( "Campuses", "Select the campuses you want to limit this block to.", false, "", "", 4 )]
+    [CampusesField( "Campuses", "Select the campuses you want to limit this block to.", false, "", "", 4, AttributeKey.Campuses )]
+    [BooleanField(
+        "Insert 0 for Blank Items",
+        Description = "If enabled, a zero will be added to any metrics that are left empty when entering data.",
+        DefaultValue = "false",
+        Order = 5,
+        Key = AttributeKey.DefaultToZero )]
+    [CustomDropdownListField(
+        "Metric Date Determined By",
+        Description = "This setting determines what date to use when entering the metric. 'Sunday Date' would use the selected Sunday date. 'Day from Schedule' will use the first day configured from the selected schedule.",
+        DefaultValue = "0",
+        ListSource = "0^Sunday Date,1^Day from Schedule",
+        Order = 6,
+        Key = AttributeKey.MetricDateDeterminedBy )]
 
     /* BEMA.UI1.Start */
     [TextField(
@@ -94,6 +109,33 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
         Category = "BEMA Additional Features" )]
     /* BEMA.UI2.End */
 
+    /* BEMA.UI3.Start */
+    [BooleanField(
+        "Is the Campus Dropdown hidden?",
+        Key = BemaAttributeKey.IsCampusDropdownHidden,
+        Description = "Should the campus dropdown be hidden if a single campus is configured?",
+        DefaultValue = "False",
+        Category = "BEMA Additional Features" )]
+    /* BEMA.UI3.End */
+
+    /* BEMA.UI4.Start */
+    [BooleanField(
+        "Is the Weekend dropdown based on the next upcoming schedule?",
+        Key = BemaAttributeKey.IsWeekendDropdownBasedOnNextSchedule,
+        Description = "Should the weekend dropdown bebased on the next upcoming schedule?",
+        DefaultValue = "False",
+        Category = "BEMA Additional Features" )]
+    /* BEMA.UI4.End */
+
+    /* BEMA.FE1.Start */
+    [BooleanField(
+        "Are Service Times Shown as Rows?",
+        Key = BemaAttributeKey.AreServiceTimesShownAsRows,
+        Description = "Should the service times be shown as rows instead of a dropdown?",
+        DefaultValue = "False",
+        Category = "BEMA Additional Features" )]
+    /* BEMA.FE1.End */
+
     public partial class ServiceMetricsEntry : Rock.Web.UI.RockBlock
     {
         #region Attribute Keys
@@ -104,6 +146,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
             public const string WeeksBack = "WeeksBack";
             public const string WeeksAhead = "WeeksAhead";
             public const string MetricCategories = "MetricCategories";
+            public const string Campuses = "Campuses";
+            public const string DefaultToZero = "DefaultToZero";
+            public const string MetricDateDeterminedBy = "MetricDateDeterminedBy";
         }
 
         #endregion Attribute Keys
@@ -115,6 +160,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
         {
             public const string WeekendDropdownLabel = "WeekendDropdownLabel";
             public const string AreScheduleAndWeekendDropdownsSwitched = "AreScheduleAndWeekendDropdownsSwitched";
+            public const string IsCampusDropdownHidden = "IsCampusDropdownHidden";
+            public const string IsWeekendDropdownBasedOnNextSchedule = "IsWeekendDropdownBasedOnNextSchedule";
+            public const string AreServiceTimesShownAsRows = "AreServiceTimesShownAsRows";
         }
 
         #endregion
@@ -306,6 +354,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnSave_Click( object sender, EventArgs e )
         {
+            /* BEMA.FE1.Start */
+            if ( GetAttributeValue( BemaAttributeKey.AreServiceTimesShownAsRows ).AsBoolean() )
+            {
+                SaveMetricsAndSchedules();
+                return;
+            }
+            /* BEMA.FE1.End */
+
             int campusEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Campus ) ).Id;
             int scheduleEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Schedule ) ).Id;
 
@@ -320,6 +376,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
                     var metricService = new MetricService( rockContext );
                     var metricValueService = new MetricValueService( rockContext );
 
+                    weekend = GetWeekendDate( scheduleId, weekend, rockContext );
+
                     foreach ( RepeaterItem item in rptrMetric.Items )
                     {
                         var hfMetricIId = item.FindControl( "hfMetricId" ) as HiddenField;
@@ -327,6 +385,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
 
                         if ( hfMetricIId != null && nbMetricValue != null )
                         {
+                            var metricYValue = nbMetricValue.Text.AsDecimalOrNull();
+
+                            // If no value was provided and the block is not configured to default to "0" then just skip this metric.
+                            if ( metricYValue == null && !GetAttributeValue( AttributeKey.DefaultToZero ).AsBoolean() )
+                            {
+                                continue;
+                            }
+
                             int metricId = hfMetricIId.ValueAsInt();
                             var metric = new MetricService( rockContext ).Get( metricId );
 
@@ -364,7 +430,15 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
                                     metricValue.MetricValuePartitions.Add( scheduleValuePartition );
                                 }
 
-                                metricValue.YValue = nbMetricValue.Text.AsDecimalOrNull();
+                                if ( metricYValue == null )
+                                {
+                                    metricValue.YValue = 0;
+                                }
+                                else
+                                {
+                                    metricValue.YValue = metricYValue;
+                                }
+
                                 metricValue.Note = tbNote.Text;
                             }
                         }
@@ -379,6 +453,118 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
 
                 BindMetrics();
             }
+        }
+
+        /* BEMA.FE1.Start */
+        protected void SaveMetricsAndSchedules()
+        {
+            int campusEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Campus ) ).Id;
+            int scheduleEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Schedule ) ).Id;
+
+            int? campusId = bddlCampus.SelectedValueAsInt();
+            DateTime? weekend = bddlWeekend.SelectedValue.AsDateTime();
+
+            if ( campusId.HasValue && weekend.HasValue )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var metricService = new MetricService( rockContext );
+                    var metricValueService = new MetricValueService( rockContext );
+
+                    foreach ( var service in GetServices().OrderBy( s => s.GetNextStartDateTime( weekend.Value ) ) )
+                    {
+                        weekend = GetWeekendDate( service.Id, weekend, rockContext );
+                        foreach ( RepeaterItem item in rptrMetric.Items )
+                        {
+                            var hfMetricIId = item.FindControl( "hfMetricId" ) as HiddenField;
+                            var hfScheduleId = item.FindControl( "hfScheduleId" ) as HiddenField;
+                            var nbMetricValue = item.FindControl( "nbMetricValue" ) as NumberBox;
+
+                            if ( hfMetricIId != null && hfScheduleId != null && nbMetricValue != null )
+                            {
+                                var metricYValue = nbMetricValue.Text.AsDecimalOrNull();
+
+                                // If no value was provided and the block is not configured to default to "0" then just skip this metric.
+                                if ( metricYValue == null && !GetAttributeValue( AttributeKey.DefaultToZero ).AsBoolean() )
+                                {
+                                    continue;
+                                }
+
+                                int metricId = hfMetricIId.ValueAsInt();
+                                int scheduleId = hfScheduleId.ValueAsInt();
+                                var metric = new MetricService( rockContext ).Get( metricId );
+                                var schedule = new MetricService( rockContext ).Get( scheduleId );
+
+                                if ( metric != null )
+                                {
+                                    int campusPartitionId = metric.MetricPartitions.Where( p => p.EntityTypeId.HasValue && p.EntityTypeId.Value == campusEntityTypeId ).Select( p => p.Id ).FirstOrDefault();
+                                    int schedulePartitionId = metric.MetricPartitions.Where( p => p.EntityTypeId.HasValue && p.EntityTypeId.Value == scheduleEntityTypeId ).Select( p => p.Id ).FirstOrDefault();
+
+                                    var metricValue = metricValueService
+                                        .Queryable()
+                                        .Where( v =>
+                                            v.MetricId == metric.Id &&
+                                            v.MetricValueDateTime.HasValue && v.MetricValueDateTime.Value == weekend.Value &&
+                                            v.MetricValuePartitions.Count == 2 &&
+                                            v.MetricValuePartitions.Any( p => p.MetricPartitionId == campusPartitionId && p.EntityId.HasValue && p.EntityId.Value == campusId.Value ) &&
+                                            v.MetricValuePartitions.Any( p => p.MetricPartitionId == schedulePartitionId && p.EntityId.HasValue && p.EntityId.Value == scheduleId ) )
+                                        .FirstOrDefault();
+
+                                    if ( metricValue == null )
+                                    {
+                                        metricValue = new MetricValue();
+                                        metricValue.MetricValueType = MetricValueType.Measure;
+                                        metricValue.MetricId = metric.Id;
+                                        metricValue.MetricValueDateTime = weekend.Value;
+                                        metricValueService.Add( metricValue );
+
+                                        var campusValuePartition = new MetricValuePartition();
+                                        campusValuePartition.MetricPartitionId = campusPartitionId;
+                                        campusValuePartition.EntityId = campusId.Value;
+                                        metricValue.MetricValuePartitions.Add( campusValuePartition );
+
+                                        var scheduleValuePartition = new MetricValuePartition();
+                                        scheduleValuePartition.MetricPartitionId = schedulePartitionId;
+                                        scheduleValuePartition.EntityId = scheduleId;
+                                        metricValue.MetricValuePartitions.Add( scheduleValuePartition );
+                                    }
+
+                                    if ( metricYValue == null )
+                                    {
+                                        metricValue.YValue = 0;
+                                    }
+                                    else
+                                    {
+                                        metricValue.YValue = metricYValue;
+                                    }
+
+                                    metricValue.Note = tbNote.Text;
+                                }
+                            }
+                        }
+
+                        rockContext.SaveChanges();
+                    }
+                }
+
+                nbMetricsSaved.Text = string.Format( "Your metrics for the services on {0} at the {1} Campus have been saved.",
+                     bddlWeekend.SelectedItem.Text, bddlCampus.SelectedItem.Text );
+                nbMetricsSaved.Visible = true;
+
+                BindMetrics();
+            }
+        }
+        /* BEMA.FE1.End */
+
+        private static DateTime? GetFirstScheduledDate( DateTime? weekend, Schedule schedule )
+        {
+            var date = schedule.GetNextStartDateTime( weekend.Value );
+            if ( date.Value.Date > weekend.Value )
+            {
+                date = schedule.GetNextStartDateTime( weekend.Value.AddDays( -7 ) );
+            }
+
+            return date;
         }
 
         /// <summary>
@@ -508,6 +694,16 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
 
             bddlCampus.SetValue( _selectedCampusId );
 
+            /* BEMA.UI3.Start */
+            if ( GetAttributeValue( BemaAttributeKey.IsCampusDropdownHidden ).AsBoolean() )
+            {
+                if ( campuses.Count == 1 && _selectedCampusId == campuses.First().Id )
+                {
+                    bddlCampus.Visible = false;
+                }
+            }
+            /* BEMA.UI3.End */
+
             // Load Weeks
             var weeksBack = GetAttributeValue( AttributeKey.WeeksBack ).AsInteger();
             var weeksAhead = GetAttributeValue( AttributeKey.WeeksAhead ).AsInteger();
@@ -528,7 +724,15 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
             // Load service times
             foreach ( var service in GetServices() )
             {
-                bddlService.Items.Add( new ListItem( service.Name, service.Id.ToString() ) );
+                var listItemText = service.Name;
+
+                if ( _selectedWeekend != null && GetAttributeValue( AttributeKey.MetricDateDeterminedBy ).AsInteger() == 1 )
+                {
+                    var date = GetFirstScheduledDate( _selectedWeekend, service );
+                    listItemText = string.Format( "{0} ({1})", service.Name, date.ToShortDateString() );
+                }
+
+                bddlService.Items.Add( new ListItem( listItemText, service.Id.ToString() ) );
             }
             bddlService.SetValue( _selectedServiceId );
 
@@ -538,7 +742,15 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
             {
                 foreach ( var service in GetServices() )
                 {
-                    bddlPreWeekendService.Items.Add( new ListItem( service.Name, service.Id.ToString() ) );
+                    var listItemText = service.Name;
+
+                    if ( _selectedWeekend != null && GetAttributeValue( AttributeKey.MetricDateDeterminedBy ).AsInteger() == 1 )
+                    {
+                        var date = GetFirstScheduledDate( _selectedWeekend, service );
+                        listItemText = string.Format( "{0} ({1})", service.Name, date.ToShortDateString() );
+                    }
+
+                    bddlPreWeekendService.Items.Add( new ListItem( listItemText, service.Id.ToString() ) );
                 }
                 bddlPreWeekendService.SetValue( _selectedServiceId );
             }
@@ -546,6 +758,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
             bddlPreWeekendService.Visible = areScheduleAndWeekendDropdownsSwitched;
             bddlService.Visible = !areScheduleAndWeekendDropdownsSwitched;
             /* BEMA.UI2.End */
+
+            /* BEMA.FE1.Start */
+            if ( GetAttributeValue( BemaAttributeKey.AreServiceTimesShownAsRows ).AsBoolean() )
+            {
+                bddlPreWeekendService.Visible = false;
+                bddlService.Visible = false;
+            }
+            /* BEMA.FE1.End */
         }
 
         /// <summary>
@@ -578,6 +798,27 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
 
             // Load Weeks
             var sundayDate = RockDateTime.Today.SundayDate();
+
+            /* BEMA.UI4.Start */
+            if ( GetAttributeValue( BemaAttributeKey.IsWeekendDropdownBasedOnNextSchedule ).AsBoolean() )
+            {
+                DateTime? earliestServiceDate = null;
+                foreach ( var service in GetServices() )
+                {
+                    var serviceDate = GetFirstScheduledDate( sundayDate, service );
+                    if ( !earliestServiceDate.HasValue || serviceDate < earliestServiceDate )
+                    {
+                        earliestServiceDate = serviceDate;
+                    }
+                }
+
+                if ( earliestServiceDate.HasValue )
+                {
+                    sundayDate = earliestServiceDate.Value;
+                }
+            }
+            /* BEMA.UI4.End */
+
             var daysBack = weeksBack * 7;
             var daysAhead = weeksAhead * 7;
             var startDate = sundayDate.AddDays( 0 - daysBack );
@@ -625,6 +866,14 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
         /// </summary>
         private void BindMetrics()
         {
+            /* BEMA.FE1.Start */
+            if ( GetAttributeValue( BemaAttributeKey.AreServiceTimesShownAsRows ).AsBoolean() )
+            {
+                BindMetricsAndSchedules();
+                return;
+            }
+            /* BEMA.FE1.End */
+
             var serviceMetricValues = new List<ServiceMetric>();
 
             int campusEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Campus ) ).Id;
@@ -646,6 +895,8 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
                 var metricGuids = metricCategories.Select( a => a.MetricGuid ).ToList();
                 using ( var rockContext = new RockContext() )
                 {
+                    weekend = GetWeekendDate( scheduleId, weekend, rockContext );
+
                     var metricValueService = new MetricValueService( rockContext );
                     foreach ( var metric in new MetricService( rockContext )
                         .GetByGuids( metricGuids )
@@ -700,6 +951,104 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
             tbNote.Text = notes.AsDelimited( Environment.NewLine + Environment.NewLine );
         }
 
+        /* BEMA.FE1.Start */
+        /// <summary>
+        /// Binds the metrics.
+        /// </summary>
+        private void BindMetricsAndSchedules()
+        {
+            var serviceMetricValues = new List<ServiceMetric>();
+
+            int campusEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Campus ) ).Id;
+            int scheduleEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Schedule ) ).Id;
+
+            int? campusId = bddlCampus.SelectedValueAsInt();
+            DateTime? weekend = bddlWeekend.SelectedValue.AsDateTime();
+
+            var notes = new List<string>();
+
+            if ( campusId.HasValue && weekend.HasValue )
+            {
+
+                SetBlockUserPreference( UserPreferenceKey.CampusId, campusId.HasValue ? campusId.Value.ToString() : "" );
+
+                var metricCategories = MetricCategoriesFieldAttribute.GetValueAsGuidPairs( GetAttributeValue( AttributeKey.MetricCategories ) );
+                var metricGuids = metricCategories.Select( a => a.MetricGuid ).ToList();
+                using ( var rockContext = new RockContext() )
+                {
+                    foreach ( var service in GetServices().OrderBy( s => s.GetNextStartDateTime( weekend.Value ) ) )
+                    {
+                        weekend = GetWeekendDate( service.Id, weekend, rockContext );
+
+                        var metricValueService = new MetricValueService( rockContext );
+                        foreach ( var metric in new MetricService( rockContext )
+                            .GetByGuids( metricGuids )
+                            .Where( m =>
+                                m.MetricPartitions.Count == 2 &&
+                                m.MetricPartitions.Any( p => p.EntityTypeId.HasValue && p.EntityTypeId.Value == campusEntityTypeId ) &&
+                                m.MetricPartitions.Any( p => p.EntityTypeId.HasValue && p.EntityTypeId.Value == scheduleEntityTypeId ) )
+                            .OrderBy( m => m.Title )
+                            .Select( m => new
+                            {
+                                m.Id,
+                                m.Title,
+                                CampusPartitionId = m.MetricPartitions.Where( p => p.EntityTypeId.HasValue && p.EntityTypeId.Value == campusEntityTypeId ).Select( p => p.Id ).FirstOrDefault(),
+                                SchedulePartitionId = m.MetricPartitions.Where( p => p.EntityTypeId.HasValue && p.EntityTypeId.Value == scheduleEntityTypeId ).Select( p => p.Id ).FirstOrDefault(),
+                            } ) )
+                        {
+                            var serviceMetric = new ServiceMetric( metric.Id, string.Format( "{0} ({1})", metric.Title, service.Name ) );
+
+                            if ( campusId.HasValue && weekend.HasValue )
+                            {
+                                var metricValue = metricValueService
+                                    .Queryable().AsNoTracking()
+                                    .Where( v =>
+                                        v.MetricId == metric.Id &&
+                                        v.MetricValueDateTime.HasValue && v.MetricValueDateTime.Value == weekend.Value &&
+                                        v.MetricValuePartitions.Count == 2 &&
+                                        v.MetricValuePartitions.Any( p => p.MetricPartitionId == metric.CampusPartitionId && p.EntityId.HasValue && p.EntityId.Value == campusId.Value ) &&
+                                        v.MetricValuePartitions.Any( p => p.MetricPartitionId == metric.SchedulePartitionId && p.EntityId.HasValue && p.EntityId.Value == service.Id ) )
+                                    .FirstOrDefault();
+
+                                if ( metricValue != null )
+                                {
+                                    serviceMetric.Value = metricValue.YValue;
+
+                                    if ( !string.IsNullOrWhiteSpace( metricValue.Note ) &&
+                                        !notes.Contains( metricValue.Note ) )
+                                    {
+                                        notes.Add( metricValue.Note );
+                                    }
+
+                                }
+                            }
+
+                            serviceMetricValues.Add( serviceMetric );
+                        }
+                    }
+
+                }
+            }
+
+            rptrMetric.DataSource = serviceMetricValues;
+            rptrMetric.DataBind();
+
+            tbNote.Text = notes.AsDelimited( Environment.NewLine + Environment.NewLine );
+        }
+        /* BEMA.FE1.End */
+
+        private DateTime? GetWeekendDate( int? scheduleId, DateTime? weekend, RockContext rockContext )
+        {
+            if ( GetAttributeValue( AttributeKey.MetricDateDeterminedBy ).AsInteger() == 1 )
+            {
+                var scheduleService = new ScheduleService( rockContext );
+                var schedule = scheduleService.Get( scheduleId.Value );
+                weekend = GetFirstScheduledDate( weekend, schedule );
+            }
+
+            return weekend;
+        }
+
         #endregion
 
         /* BEMA.UI2.Start */
@@ -727,6 +1076,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
     public class ServiceMetric
     {
         public int Id { get; set; }
+        /* BEMA.FE1.Start */
+        public int ScheduleId { get; set; }
+        /* BEMA.FE1.End */
         public string Name { get; set; }
         public decimal? Value { get; set; }
 
@@ -735,5 +1087,15 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA
             Id = id;
             Name = name;
         }
+
+        /* BEMA.FE1.Start */
+
+        public ServiceMetric( int id, int scheduleId, string name )
+        {
+            Id = id;
+            ScheduleId = scheduleId;
+            Name = name;
+        }
+        /*BEMA.FE1.End */
     }
 }
