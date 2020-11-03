@@ -33,15 +33,34 @@ namespace com.bemaservices.RoomManagement.Migrations
         /// </summary>
         public override void Up()
         {
-            var serviceJob = new ServiceJobService( new Rock.Data.RockContext() ).Get( "6832E24B-5650-41D3-9EBA-1D2D213F768C".AsGuid() );
+            var isExistingUser = IsExistingUser();
+            if ( !isExistingUser )
+            {
+                var serviceJob = new ServiceJobService( new Rock.Data.RockContext() ).Get( "6832E24B-5650-41D3-9EBA-1D2D213F768C".AsGuid() );
 
-            RockMigrationHelper.AddAttributeValue( "8F3BEC15-A076-4C07-8047-D85C319F8DBF", serviceJob.Id, @"Upcoming|1|Day||", "8F3BEC15-A076-4C07-8047-D85C319F8DBF" ); // Reservation Reminder: Date Range
+                RockMigrationHelper.AddAttributeValue( "8F3BEC15-A076-4C07-8047-D85C319F8DBF", serviceJob.Id, @"Upcoming|1|Day||", "8F3BEC15-A076-4C07-8047-D85C319F8DBF" ); // Reservation Reminder: Date Range
 
-            RockMigrationHelper.AddAttributeValue( "3E394836-2175-4C5B-9247-063BCB6CD6D2", serviceJob.Id, @"True", "3E394836-2175-4C5B-9247-063BCB6CD6D2" ); // Reservation Reminder: Include only reservations that start in date range
+                RockMigrationHelper.AddAttributeValue( "3E394836-2175-4C5B-9247-063BCB6CD6D2", serviceJob.Id, @"True", "3E394836-2175-4C5B-9247-063BCB6CD6D2" ); // Reservation Reminder: Include only reservations that start in date range
 
-            RockMigrationHelper.AddAttributeValue( "E14B7BA0-77D8-4553-B2E0-070FF3ECA34E", serviceJob.Id, @"a219357d-4992-415e-bf5f-33c242bb3bd2", "E14B7BA0-77D8-4553-B2E0-070FF3ECA34E" ); // Reservation Reminder: Workflow Type
+                RockMigrationHelper.AddAttributeValue( "E14B7BA0-77D8-4553-B2E0-070FF3ECA34E", serviceJob.Id, @"a219357d-4992-415e-bf5f-33c242bb3bd2", "E14B7BA0-77D8-4553-B2E0-070FF3ECA34E" ); // Reservation Reminder: Workflow Type
 
-            RockMigrationHelper.AddAttributeValue( "49D7EDB4-E2FB-4081-B4D5-43D8217BF105", serviceJob.Id, @"2", "49D7EDB4-E2FB-4081-B4D5-43D8217BF105" ); // Reservation Reminder: Reservation Statuses
+                RockMigrationHelper.AddAttributeValue( "49D7EDB4-E2FB-4081-B4D5-43D8217BF105", serviceJob.Id, @"2", "49D7EDB4-E2FB-4081-B4D5-43D8217BF105" ); // Reservation Reminder: Reservation Statuses
+            }
+        }
+        private bool IsExistingUser()
+        {
+            var isExistingUser = false;
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 12" );
+            if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
+            {
+                isExistingUser = false;
+            }
+            else
+            {
+                isExistingUser = true;
+            }
+
+            return isExistingUser;
         }
 
         /// <summary>

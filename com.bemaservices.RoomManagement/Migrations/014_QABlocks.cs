@@ -14,6 +14,7 @@
 // limitations under the License.
 // </copyright>
 //
+using Rock;
 using Rock.Plugin;
 
 namespace com.bemaservices.RoomManagement.Migrations
@@ -32,10 +33,31 @@ namespace com.bemaservices.RoomManagement.Migrations
         {
             // Page: Resource Detail
             RockMigrationHelper.UpdateBlockTypeByGuid( "Question List", "A list of questions tied to a resource or location", "~/Plugins/com_bemaservices/RoomManagement/QuestionList.ascx", "com_bemaservices > Room Management", "349C4CDB-713E-4E23-9628-17B9938DDFC5" );
-            RockMigrationHelper.AddBlock( true, "B75A0C7E-4A15-4892-A857-BADE8B5DD4CA", "", "349C4CDB-713E-4E23-9628-17B9938DDFC5", "Question List", "Main", "", "", 1, "39D13192-23CC-42BE-BAEF-705DEB77EF28" );
 
-            // Page: Named Locations
-            RockMigrationHelper.AddBlock( true, "2BECFB85-D566-464F-B6AC-0BE90189A418", "", "349C4CDB-713E-4E23-9628-17B9938DDFC5", "Question List", "Main", "", "", 2, "177C531A-F93D-400C-8923-624D07D7B57D" );
+            var isExistingUser = IsExistingUser();
+            if ( !isExistingUser )
+            {
+                RockMigrationHelper.AddBlock( true, "B75A0C7E-4A15-4892-A857-BADE8B5DD4CA", "", "349C4CDB-713E-4E23-9628-17B9938DDFC5", "Question List", "Main", "", "", 1, "39D13192-23CC-42BE-BAEF-705DEB77EF28" );
+
+                // Page: Named Locations
+                RockMigrationHelper.AddBlock( true, "2BECFB85-D566-464F-B6AC-0BE90189A418", "", "349C4CDB-713E-4E23-9628-17B9938DDFC5", "Question List", "Main", "", "", 2, "177C531A-F93D-400C-8923-624D07D7B57D" );
+            }
+        }
+
+        private bool IsExistingUser()
+        {
+            var isExistingUser = false;
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 14" );
+            if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
+            {
+                isExistingUser = false;
+            }
+            else
+            {
+                isExistingUser = true;
+            }
+
+            return isExistingUser;
         }
 
         /// <summary>

@@ -37,16 +37,35 @@ namespace com.bemaservices.RoomManagement.Migrations
         /// </summary>
         public override void Up()
         {
-            RockMigrationHelper.DeleteSecurityAuth( "CE7DF09D-39EF-421F-8304-C025CF9680DD" );
-            RockMigrationHelper.DeleteSecurityAuth( "DBBA7014-31E1-4EF1-AE4B-69DA377076B0" );
-            RockMigrationHelper.AddSecurityAuthForEntityType( "com.bemaservices.RoomManagement.Model.ReservationLocation", 0, "Edit", true, null, 1, "CE7DF09D-39EF-421F-8304-C025CF9680DD" );
-            RockMigrationHelper.AddSecurityAuthForEntityType( "com.bemaservices.RoomManagement.Model.ReservationResource", 0, "Edit", true, null, 1, "DBBA7014-31E1-4EF1-AE4B-69DA377076B0" );
+            var isExistingUser = IsExistingUser();
+            if ( !isExistingUser )
+            {
+                RockMigrationHelper.DeleteSecurityAuth( "CE7DF09D-39EF-421F-8304-C025CF9680DD" );
+                RockMigrationHelper.DeleteSecurityAuth( "DBBA7014-31E1-4EF1-AE4B-69DA377076B0" );
+                RockMigrationHelper.AddSecurityAuthForEntityType( "com.bemaservices.RoomManagement.Model.ReservationLocation", 0, "Edit", true, null, 1, "CE7DF09D-39EF-421F-8304-C025CF9680DD" );
+                RockMigrationHelper.AddSecurityAuthForEntityType( "com.bemaservices.RoomManagement.Model.ReservationResource", 0, "Edit", true, null, 1, "DBBA7014-31E1-4EF1-AE4B-69DA377076B0" );
 
-            var lavaCommands = GlobalAttributesCache.Get().GetValue( "DefaultEnabledLavaCommands" );
-            RockMigrationHelper.UpdateDefinedValue( "32EC3B34-01CF-4513-BC2E-58ECFA91D010", "Calendar", "The calendar view for the Room Management home page.", "0D3367F1-62AE-4B2A-BD64-193940CB343D", true );
-            RockMigrationHelper.AddDefinedValueAttributeValue( "0D3367F1-62AE-4B2A-BD64-193940CB343D", "466DC361-B813-445A-8883-FED7E5D4229B", @"{% include '~/Plugins/com_bemaservices/RoomManagement/Assets/Lava/ReservationCalendar.lava' %}" );
-            RockMigrationHelper.AddDefinedValueAttributeValue( "0D3367F1-62AE-4B2A-BD64-193940CB343D", "EE70E271-EAE1-446B-AFA8-EE2D299B8D7F", lavaCommands );
+                var lavaCommands = GlobalAttributesCache.Get().GetValue( "DefaultEnabledLavaCommands" );
+                RockMigrationHelper.UpdateDefinedValue( "32EC3B34-01CF-4513-BC2E-58ECFA91D010", "Calendar", "The calendar view for the Room Management home page.", "0D3367F1-62AE-4B2A-BD64-193940CB343D", true );
+                RockMigrationHelper.AddDefinedValueAttributeValue( "0D3367F1-62AE-4B2A-BD64-193940CB343D", "466DC361-B813-445A-8883-FED7E5D4229B", @"{% include '~/Plugins/com_bemaservices/RoomManagement/Assets/Lava/ReservationCalendar.lava' %}" );
+                RockMigrationHelper.AddDefinedValueAttributeValue( "0D3367F1-62AE-4B2A-BD64-193940CB343D", "EE70E271-EAE1-446B-AFA8-EE2D299B8D7F", lavaCommands );
+            }
+        }
 
+        private bool IsExistingUser()
+        {
+            var isExistingUser = false;
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 25" );
+            if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
+            {
+                isExistingUser = false;
+            }
+            else
+            {
+                isExistingUser = true;
+            }
+
+            return isExistingUser;
         }
 
         /// <summary>

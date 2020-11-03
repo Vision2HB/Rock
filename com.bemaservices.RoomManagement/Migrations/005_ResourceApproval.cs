@@ -14,6 +14,7 @@
 // limitations under the License.
 // </copyright>
 //
+using Rock;
 using Rock.Plugin;
 
 namespace com.bemaservices.RoomManagement.Migrations
@@ -389,7 +390,7 @@ INSERT [dbo].[_com_bemaservices_RoomManagement_ReservationWorkflowTrigger] ([Wor
         private bool IsExistingUser()
         {
             var isExistingUser = false;
-            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 1" );
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 5" );
             if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
             {
                 isExistingUser = false;

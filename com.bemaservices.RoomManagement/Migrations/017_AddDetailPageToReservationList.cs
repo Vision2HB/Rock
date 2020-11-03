@@ -14,6 +14,7 @@
 // limitations under the License.
 // </copyright>
 //
+using Rock;
 using Rock.Plugin;
 
 namespace com.bemaservices.RoomManagement.Migrations
@@ -30,7 +31,27 @@ namespace com.bemaservices.RoomManagement.Migrations
         /// </summary>
         public override void Up()
         {
-            AddBlockAttributeValue( true, "4D4882F8-5ACC-4AE1-BC75-4FFDDA26F270", "3DD653FB-771D-4EE5-8C75-1BF1B6F773B8", @"4cbd2b96-e076-46df-a576-356bca5e577f,893ff97e-57d2-42e0-bf9a-6027d673773c" ); // Detail Page
+            var isExistingUser = IsExistingUser();
+            if ( !isExistingUser )
+            {
+                AddBlockAttributeValue( true, "4D4882F8-5ACC-4AE1-BC75-4FFDDA26F270", "3DD653FB-771D-4EE5-8C75-1BF1B6F773B8", @"4cbd2b96-e076-46df-a576-356bca5e577f,893ff97e-57d2-42e0-bf9a-6027d673773c" ); // Detail Page
+            }
+        }
+
+        private bool IsExistingUser()
+        {
+            var isExistingUser = false;
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 17" );
+            if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
+            {
+                isExistingUser = false;
+            }
+            else
+            {
+                isExistingUser = true;
+            }
+
+            return isExistingUser;
         }
 
         /// <summary>

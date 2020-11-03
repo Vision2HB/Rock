@@ -64,16 +64,17 @@ namespace com.bemaservices.RoomManagement.Migrations
 		                       From [dbo].[_com_bemaservices_RoomManagement_ReservationType] rt
                     Outer Apply DefinedValue dv where dv.DefinedTypeId = (Select Top 1 Id From DefinedType Where Guid = '3285DCEF-FAA4-43B9-9338-983F4A384ABA')" );
             }
+            
+            RockMigrationHelper.UpdateEntityType( "com.centralaz.RoomManagement.Model.LocationLayout", "Location Layout", "com.centralaz.RoomManagement.Model.LocationLayout, com.centralaz.RoomManagement, Version = 1.2.2.0, Culture = neutral, PublicKeyToken = null", false, false, "79991D84-88EB-4384-8D09-1E514BC3B2BD" );
+            UpdateEntityTypeByGuid( "com.bemaservices.RoomManagement.Model.LocationLayout", "Location Layout", "com.bemaservices.RoomManagement.Model.LocationLayout, com.bemaservices.RoomManagement, Version = 1.2.2.0, Culture = neutral, PublicKeyToken = null", false, false, "79991D84-88EB-4384-8D09-1E514BC3B2BD" );
+
+            RockMigrationHelper.UpdateEntityType( "com.centralaz.RoomManagement.DataFilter.Reservation.ReservationInDateRangeFilter", "Reservation In Date Range Filter", "com.centralaz.RoomManagement.DataFilter.Reservation.ReservationInDateRangeFilter, com.centralaz.RoomManagement, Version = 1.2.2.0, Culture = neutral, PublicKeyToken = null", false, false, "9B2E908E-824D-4C5D-9975-A5E2B72ACC8F" );
+            UpdateEntityTypeByGuid( "com.bemaservices.RoomManagement.DataFilter.Reservation.ReservationInDateRangeFilter", "Reservation In Date Range Filter", "com.bemaservices.RoomManagement.DataFilter.Reservation.ReservationInDateRangeFilter, com.bemaservices.RoomManagement, Version = 1.2.2.0, Culture = neutral, PublicKeyToken = null", false, false, "9B2E908E-824D-4C5D-9975-A5E2B72ACC8F" );
+
+            RockMigrationHelper.UpdateEntityType( "com.centralaz.RoomManagement.Web.Cache.ReservationMinistryCache", "Reservation Ministry Cache", "com.centralaz.RoomManagement.Web.Cache.ReservationMinistryCache, com.centralaz.RoomManagement, Version = 1.2.2.0, Culture = neutral, PublicKeyToken = null", false, false, "4F4C8820-BF5E-404F-8120-0FCB37B184F0" );
+            UpdateEntityTypeByGuid( "com.bemaservices.RoomManagement.Web.Cache.ReservationMinistryCache", "Reservation Ministry Cache", "com.bemaservices.RoomManagement.Web.Cache.ReservationMinistryCache, com.bemaservices.RoomManagement, Version = 1.2.2.0, Culture = neutral, PublicKeyToken = null", false, false, "4F4C8820-BF5E-404F-8120-0FCB37B184F0" );
 
             var sqlQuery = @"
-                Update AttributeValue
-                Set Value = Replace(Value, '_centralaz_RoomManagement', '_bemaservices_RoomManagement')
-                Where Value like '%_centralaz_RoomManagement%'
-
-                Update AttributeValue
-                Set Value = Replace(Value, 'centralaz.RoomManagement', 'bemaservices.RoomManagement')
-                Where Value like '%centralaz.RoomManagement%'
-
                 Update Page
                 Set [Order] = 2
                 Where Guid = 'CFF84B6D-C852-4FC4-B602-9F045EDC8854'
@@ -1267,6 +1268,63 @@ END
         /// </summary>
         public override void Down()
         {
+        }
+
+        public void UpdateEntityTypeByGuid( string name, string friendlyName, string assemblyName, bool isEntity, bool isSecured, string guid )
+        {
+            Sql( string.Format( @"
+                IF EXISTS ( SELECT [Id] FROM [EntityType] WHERE [Guid] = '{5}' )
+                BEGIN
+                    UPDATE [EntityType] SET
+                        [FriendlyName] = '{1}',
+                        [AssemblyName] = '{2}',
+                        [IsEntity] = {3},
+                        [IsSecured] = {4},
+                        [Name] = '{0}'
+                    WHERE [Guid] = '{5}'
+                END
+                ELSE
+                BEGIN
+                    DECLARE @Guid uniqueidentifier
+                    SET @Guid = (SELECT [Guid] FROM [EntityType] WHERE [Name] = '{0}')
+                    IF @Guid IS NULL
+                    BEGIN
+                        INSERT INTO [EntityType] (
+                            [Name],[FriendlyName],[AssemblyName],[IsEntity],[IsSecured],[IsCommon],[Guid])
+                        VALUES(
+                            '{0}','{1}','{2}',{3},{4},0,'{5}')
+                    END
+                    ELSE
+                    BEGIN
+
+                        UPDATE [EntityType] SET
+                            [FriendlyName] = '{1}',
+                            [AssemblyName] = '{2}',
+                            [IsEntity] = {3},
+                            [IsSecured] = {4},
+                            [Guid] = '{5}'
+                        WHERE [Name] = '{0}'
+
+                        -- Update any attribute values that might have been using entity's old guid value
+	                    DECLARE @EntityTypeFieldTypeId int = ( SELECT TOP 1 [Id] FROM [FieldType] WHERE [Class] = 'Rock.Field.Types.EntityTypeFieldType' )
+	                    DECLARE @ComponentFieldTypeId int = ( SELECT TOP 1 [Id] FROM [FieldType] WHERE [Class] = 'Rock.Field.Types.ComponentFieldType' )
+	                    DECLARE @ComponentsFieldTypeId int = ( SELECT TOP 1 [Id] FROM [FieldType] WHERE [Class] = 'Rock.Field.Types.ComponentsFieldType' )
+
+                        UPDATE V SET [Value] = REPLACE( LOWER([Value]), LOWER(CAST(@Guid AS varchar(50))), LOWER('{5}') )
+	                    FROM [AttributeValue] V
+	                    INNER JOIN [Attribute] A ON A.[Id] = V.[AttributeId]
+	                    WHERE ( A.[FieldTypeId] = @EntityTypeFieldTypeId OR A.[FieldTypeId] = @ComponentFieldTypeId	OR A.[FieldTypeId] = @ComponentsFieldTypeId )
+                        OPTION (RECOMPILE)
+
+                    END
+                END
+",
+                    name.Replace( "'", "''" ),
+                    friendlyName.Replace( "'", "''" ),
+                    assemblyName.Replace( "'", "''" ),
+                    isEntity ? "1" : "0",
+                    isSecured ? "1" : "0",
+                    guid ) );
         }
     }
 }

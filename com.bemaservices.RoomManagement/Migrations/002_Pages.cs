@@ -167,7 +167,7 @@ namespace com.bemaservices.RoomManagement.Migrations
         private bool IsExistingUser()
         {
             var isExistingUser = false;
-            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 1" );
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 2" );
             if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
             {
                 isExistingUser = false;

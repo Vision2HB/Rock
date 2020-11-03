@@ -14,6 +14,7 @@
 // limitations under the License.
 // </copyright>
 //
+using Rock;
 using Rock.Plugin;
 
 namespace com.bemaservices.RoomManagement.Migrations
@@ -30,9 +31,12 @@ namespace com.bemaservices.RoomManagement.Migrations
         /// </summary>
         public override void Up()
         {
-            #region Room Reservation Approval Notification (System Email)
+            var isExistingUser = IsExistingUser();
+            if ( !isExistingUser )
+            {
+                #region Room Reservation Approval Notification (System Email)
 
-            RockMigrationHelper.UpdateSystemEmail( "Plugins", "Room Reservation Approval Notification", "", "", "", "", "", "Room Reservation Approval Notification", @"{{ 'Global' | Attribute:'EmailHeader' }}
+                RockMigrationHelper.UpdateSystemEmail( "Plugins", "Room Reservation Approval Notification", "", "", "", "", "", "Room Reservation Approval Notification", @"{{ 'Global' | Attribute:'EmailHeader' }}
 <p>
 A reservation requires approval:<br/>
 </p>
@@ -105,19 +109,19 @@ return reservation.Schedule.GetCalenderEvent().Duration.Hours + "" hrs "" + rese
 <br/>
 {{ 'Global' | Attribute:'EmailFooter' }}
             ", "9D00FEE5-D805-441C-9F96-0582F894B5EB" );
-            #endregion
+                #endregion
 
-            #region Update Reservation Detail Block settings
+                #region Update Reservation Detail Block settings
 
-            RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "08F3003B-F3E2-41EC-BDF1-A2B7AC2908CF", "System Email", "SystemEmail", "", "A system email to use when notifying approvers about a reservation request.", 0, @"", "F3FBDD84-5E9B-40C2-B199-3FAE1C2308DC" );
-            RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "7BD25DC9-F34A-478D-BEF9-0C787F5D39B8", "Final Approval Group", "FinalApprovalGroup", "", "An optional group that provides final approval for a reservation. If used, this should be the same group as in the Reservation Approval Workflow.", 0, @"", "E715D25F-CA53-4B16-B8B2-4A94FD3A3560" );
-            RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "7BD25DC9-F34A-478D-BEF9-0C787F5D39B8", "Super Admin Group", "SuperAdminGroup", "", "The superadmin group that can force an approve / deny status on reservations, i.e. a facilities team.", 0, @"FBE0324F-F29A-4ACF-8EC3-5386C5562D70", "BBA41563-5379-43FA-955B-93C1926A4F66" );
-            RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Save Communication History", "SaveCommunicationHistory", "", "Should a record of this communication be saved to the recipient's profile", 2, @"False", "B90006F5-9B17-48DD-B455-5BAA2BE1A9A2" );
+                RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "08F3003B-F3E2-41EC-BDF1-A2B7AC2908CF", "System Email", "SystemEmail", "", "A system email to use when notifying approvers about a reservation request.", 0, @"", "F3FBDD84-5E9B-40C2-B199-3FAE1C2308DC" );
+                RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "7BD25DC9-F34A-478D-BEF9-0C787F5D39B8", "Final Approval Group", "FinalApprovalGroup", "", "An optional group that provides final approval for a reservation. If used, this should be the same group as in the Reservation Approval Workflow.", 0, @"", "E715D25F-CA53-4B16-B8B2-4A94FD3A3560" );
+                RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "7BD25DC9-F34A-478D-BEF9-0C787F5D39B8", "Super Admin Group", "SuperAdminGroup", "", "The superadmin group that can force an approve / deny status on reservations, i.e. a facilities team.", 0, @"FBE0324F-F29A-4ACF-8EC3-5386C5562D70", "BBA41563-5379-43FA-955B-93C1926A4F66" );
+                RockMigrationHelper.UpdateBlockTypeAttribute( "C938B1DE-9AB3-46D9-AB28-57BFCA362AEB", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Save Communication History", "SaveCommunicationHistory", "", "Should a record of this communication be saved to the recipient's profile", 2, @"False", "B90006F5-9B17-48DD-B455-5BAA2BE1A9A2" );
 
-            RockMigrationHelper.AddBlockAttributeValue( "65091E04-77CE-411C-989F-EAD7D15778A0", "F3FBDD84-5E9B-40C2-B199-3FAE1C2308DC", @"9d00fee5-d805-441c-9f96-0582f894b5eb" ); // System Email
+                RockMigrationHelper.AddBlockAttributeValue( "65091E04-77CE-411C-989F-EAD7D15778A0", "F3FBDD84-5E9B-40C2-B199-3FAE1C2308DC", @"9d00fee5-d805-441c-9f96-0582f894b5eb" ); // System Email
 
-            #endregion
-
+                #endregion
+            }
             #region Increase size of the Note column in the Reservation table
             Sql( @"
     ALTER TABLE[_com_bemaservices_RoomManagement_Reservation]
@@ -132,6 +136,21 @@ return reservation.Schedule.GetCalenderEvent().Duration.Hours + "" hrs "" + rese
         /// </summary>
         public override void Down()
         {
+        }
+        private bool IsExistingUser()
+        {
+            var isExistingUser = false;
+            var migrationId = SqlScalar( "Select Top 1 Id From PluginMigration Where PluginAssemblyName = 'com.centralaz.RoomManagement' and MigrationNumber = 9" );
+            if ( migrationId == null || migrationId.ToString().IsNullOrWhiteSpace() )
+            {
+                isExistingUser = false;
+            }
+            else
+            {
+                isExistingUser = true;
+            }
+
+            return isExistingUser;
         }
     }
 }
