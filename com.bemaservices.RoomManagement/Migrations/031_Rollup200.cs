@@ -437,8 +437,109 @@ namespace com.bemaservices.RoomManagement.Migrations
             ApprovalProcess();
 
             RockMigrationHelper.UpdateWorkflowType( false, false, "(Depreciated) Room Reservation Approval Notification", "A workflow that sends an email to the party responsible for the next step in the room reservation approval process.", "B8E4B3B0-B543-48B6-93BE-604D4F368559", "Approval Request", "fa fa-list-ol", 28800, true, 0, "543D4FCD-310B-4048-BFCB-BAE582CBB890", 0 ); // (Depreciated) Room Reservation Approval Notification
-            RockMigrationHelper.UpdateWorkflowType( false, true, "Reminder Notification", "Used for sending a reminder email to the event contact regarding their upcoming resource reservation. IMPORTANT NOTE: This workflow contains Lava that uses the 'execute' Lava command. (Execute needs to be enabled in Global Attributes: 'Default Enabled Lava Commands')", "B8E4B3B0-B543-48B6-93BE-604D4F368559", "Reservation Reminders", "fa fa-list-ol", 28800, true, 0, "A219357D-4992-415E-BF5F-33C242BB3BD2", 0 ); // Reminder Notification
+            RockMigrationHelper.UpdateWorkflowType( false, true, "Reminder Notification", "Used for sending a reminder email to the event contact regarding their upcoming resource reservation.", "B8E4B3B0-B543-48B6-93BE-604D4F368559", "Reservation Reminders", "fa fa-list-ol", 28800, true, 0, "A219357D-4992-415E-BF5F-33C242BB3BD2", 0 ); // Reminder Notification
+            RockMigrationHelper.AddActionTypeAttributeValue( "9A8EC5B3-D958-4AE9-8AC0-CDB4F2CE6766", "4D245B9E-6B03-46E7-8482-A51FBA190E4D", @"{% assign Reservation = Workflow | Attribute: 'Reservation', 'Object' %}
+
+{{ 'Global' | Attribute:'EmailHeader' }}
+<p>
+    We wanted to remind you about your upcoming scheduled reservation:<br/>
+</p>
+
+<table border='0' cellpadding='2' cellspacing='0' width='600' id='emailContainer'>
+    <tr>
+        <td align='left' valign='top' width='100'>Name:</td>
+        <td>{{ Reservation.Name }}</td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Event Contact:</td>
+        <td><b>{{ Reservation.EventContactPersonAlias.Person.FullName }} ({{ Reservation.EventContactEmail }})</b></td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Administrative Contact:</td>
+        <td><b>{{ Reservation.AdministrativeContactPersonAlias.Person.FullName }} ({{ Reservation.AdministrativeContactEmail }})</b></td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Entered By:</td>
+        <td><b>{{ Reservation.RequesterAlias.Person.FullName }}</b></td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Campus:</td>
+        <td>{{ Reservation.Campus.Name }}</td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Ministry:</td>
+        <td>{{ Reservation.ReservationMinistry.Name }}</td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Number Attending:</td>
+        <td>{{ Reservation.NumberAttending }}</td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Schedule:</td>
+        <td>{{reservation.FriendlyReservationTime}}</td>
+    </tr>
+    <tr>
+        <td align='left' valign='top'>Setup Time:</td>
+        <td>{{ Reservation.SetupTime }} min</td>
+    </tr>
+    
+    <tr>
+        <td align='left' valign='top'>Cleanup Time:</td>
+        <td>{{ Reservation.CleanupTime }} min</td>
+    </tr>
+</table>
+
+<p>&nbsp;</p>
+{% assign locationSize = Reservation.ReservationLocations | Size %}{% if locationSize > 0 %}Location(s): <b>{% assign firstLocation = Reservation.ReservationLocations | First %}{% for location in Reservation.ReservationLocations %}{% if location.Id != firstLocation.Id %}, {% endif %}{{location.Location.Name }}{% endfor %}</b><br/>{% endif %}
+{% assign resourceSize = Reservation.ReservationResources | Size %}{% if resourceSize > 0 %}Resource(s): <b>{% assign firstResource = Reservation.ReservationResources | First %}{% for resource in Reservation.ReservationResources %}{% if resource.Id != firstResource.Id %}, {% endif %}{{resource.Resource.Name }} ({{resource.Quantity}}){% endfor %}</b><br/>{% endif %}
+
+<br/><br/>
+
+{% if Reservation.Note and Reservation.Note != '' %}
+    <p>
+        Notes: {{ Reservation.Note }}<br/>
+    </p>
+{% endif %}
+
+<!-- The button to view the reservation -->
+<table>
+    <tr>
+        <td style='background-color: #ee7624;border-color: #e76812;border: 2px solid #e76812;padding: 10px;text-align: center;'>
+            <a style='display: block;color: #ffffff;font-size: 12px;text-decoration: none;' href='{{ 'Global' | Attribute:'InternalApplicationRoot' }}reservationdetail?ReservationId={{Reservation.Id}}'>
+                View Reservation
+            </a>
+        </td>
+    </tr>
+</table>
+<br/>
+<br/>
+
+{{ 'Global' | Attribute:'EmailFooter' }}
+            " );
+
             RockMigrationHelper.UpdateWorkflowType( false, true, "Post-Approval Modification Process", "A workflow that changes the reservation's approval status if it was modified by someone not in the Final Approval Group after being approved.", "B8E4B3B0-B543-48B6-93BE-604D4F368559", "Approval Update", "fa fa-list-ol", 28800, false, 0, "13D0361C-0552-43CA-8F27-D47DB120608D", 0 ); // Post-Approval Modification Process
+            RockMigrationHelper.UpdateWorkflowActionType( "4CBF518F-AB76-4C67-9B70-597CCDABEEBA", "Send Email", 0, "66197B01-D1F0-4924-A315-47AD54E030DE", true, false, "", "52A9B3E2-0DA0-4972-9172-F5C62ECC8076", 8, "True", "40190F7C-DDC6-4F2D-8E6F-E604B5CA273C" ); // Room Reservation Approval Update:Notify Approval group that the Reservation is Pending Review:Send Email
+            RockMigrationHelper.AddActionTypeAttributeValue( "40190F7C-DDC6-4F2D-8E6F-E604B5CA273C", "4D245B9E-6B03-46E7-8482-A51FBA190E4D", @"{{ 'Global' | Attribute:'EmailHeader' }}
+{% assign reservation = Workflow | Attribute:'Reservation','Object' %} 
+<p>
+A new reservation requires your final approval:<br/><br/>
+Name: {{ reservation.Name }}<br/>
+Requestor: {{ reservation.RequesterAlias.Person.FullName }}<br/>
+Campus: {{ reservation.Campus.Name }}<br/>
+Ministry: {{ reservation.ReservationMinistry.Name }}<br/>
+Number Attending: {{ reservation.NumberAttending }}<br/>
+<br/>
+Schedule: {{reservation.FriendlyReservationTime}}<br/>
+Setup Time: {{ reservation.SetupTime }} min<br/>
+Cleanup Time: {{ reservation.CleanupTime }} min<br/>
+{% assign locationSize = reservation.ReservationLocations | Size %}{% if locationSize > 0 %}Locations: {% assign firstLocation = reservation.ReservationLocations | First %}{% for location in reservation.ReservationLocations %}{% if location.Id != firstLocation.Id %}, {% endif %}{{location.Location.Name }}{% endfor %}<br/>{% endif %}
+{% assign resourceSize = reservation.ReservationResources | Size %}{% if resourceSize > 0 %}Resources: {% assign firstResource = reservation.ReservationResources | First %}{% for resource in reservation.ReservationResources %}{% if resource.Id != firstResource.Id %}, {% endif %}{{resource.Resource.Name }} ({{resource.Quantity}}){% endfor %}<br/>{% endif %}
+<br/>
+Notes: {{ reservation.Note }}<br/>
+<br/>
+<a href='{{ 'Global' | Attribute:'InternalApplicationRoot' }}reservationdetail?ReservationId={{reservation.Id}}'>View Registration</a>
+</p>
+{{ 'Global' | Attribute:'EmailFooter' }}" ); // Room Reservation Approval Update:Notify Approval group that the Reservation is Pending Review:Send Email:Body
 
             Sql( @"
                     Delete From [dbo].[_com_bemaservices_RoomManagement_ReservationWorkflowTrigger] Where [Guid] in ('5339e1c4-ac09-4bd5-9416-628dba200ba5','68f6de62-cdbb-4ec0-8440-8b1740c21e65')
