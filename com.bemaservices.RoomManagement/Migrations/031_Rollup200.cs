@@ -48,7 +48,7 @@ namespace com.bemaservices.RoomManagement.Migrations
 
             Sql( @" UPDATE _com_bemaservices_RoomManagement_ReservationType
                     SET [OverrideApprovalGroupId] = [SuperAdminGroupId]" );
-     
+
             Sql( @"
 
                 CREATE TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationLinkage](
@@ -427,6 +427,12 @@ namespace com.bemaservices.RoomManagement.Migrations
 
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType] CHECK CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationType_InitialApprovalGroupId]             
 " );
+
+            Sql( @"
+                ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType] DROP CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationType_NotificationEmailId]
+                ALTER TABLE [_com_bemaservices_RoomManagement_ReservationType] DROP COLUMN NotificationEmailId;
+                ALTER TABLE [_com_bemaservices_RoomManagement_ReservationType] DROP COLUMN IsCommunicationHistorySaved;
+                " );
 
             RockMigrationHelper.UpdateFieldType( "Reservation Type", "", "com.bemaservices.RoomManagement", "com.bemaservices.RoomManagement.Field.Types.ReservationTypeFieldType", "1AF29883-3028-4867-8DC7-0848953E8B6C" );
             RockMigrationHelper.UpdateFieldType( "Resource", "", "com.bemaservices.RoomManagement", "com.bemaservices.RoomManagement.Field.Types.ResourceFieldType", "7CFF9796-C8A1-4544-A90C-9CA0C07C27D6" );

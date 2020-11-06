@@ -512,58 +512,6 @@ namespace com.bemaservices.RoomManagement.Model
         }
 
         /// <summary>
-        /// Sends the notifications.
-        /// </summary>
-        /// <param name="reservation">The reservation.</param>
-        public void SendNotifications( Reservation reservation )
-        {
-            var groupGuidList = new List<Guid>();
-            groupGuidList.AddRange( reservation.ReservationResources.Where( rr => rr.ApprovalState == ReservationResourceApprovalState.Unapproved && rr.Resource.ApprovalGroupId != null ).Select( rr => rr.Resource.ApprovalGroup.Guid ) );
-            foreach ( var reservationLocation in reservation.ReservationLocations.Where( rl => rl.ApprovalState == ReservationLocationApprovalState.Unapproved ).ToList() )
-            {
-                reservationLocation.Location.LoadAttributes();
-                var approvalGroupGuid = reservationLocation.Location.GetAttributeValue( "ApprovalGroup" ).AsGuidOrNull();
-                if ( approvalGroupGuid != null && approvalGroupGuid != Guid.Empty )
-                {
-                    groupGuidList.Add( approvalGroupGuid.Value );
-                }
-            }
-
-            if ( reservation.ApprovalState == ReservationApprovalState.PendingInitialApproval || reservation.ApprovalState == ReservationApprovalState.ChangesNeeded )
-            {
-                var groups = new GroupService( Context as RockContext ).GetByGuids( groupGuidList.Distinct().ToList() );
-                foreach ( var group in groups )
-                {
-                    var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( null );
-                    mergeFields.Add( "Reservation", reservation );
-                    var recipients = new List<RecipientData>();
-
-                    foreach ( var person in group.Members
-                                       .Where( m => m.GroupMemberStatus == GroupMemberStatus.Active )
-                                       .Select( m => m.Person ) )
-                    {
-                        if ( person.IsEmailActive &&
-                            person.EmailPreference != EmailPreference.DoNotEmail &&
-                            !string.IsNullOrWhiteSpace( person.Email ) )
-                        {
-                            var personDict = new Dictionary<string, object>( mergeFields );
-                            personDict.Add( "Person", person );
-                            recipients.Add( new RecipientData( person.Email, personDict ) );
-                        }
-                    }
-
-                    if ( recipients.Any() )
-                    {
-                        var message = new RockEmailMessage( reservation.ReservationType.NotificationEmail.Guid );
-                        message.CreateCommunicationRecord = reservation.ReservationType.IsCommunicationHistorySaved;
-                        message.SetRecipients( recipients );
-                        message.Send();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Sets the first last occurrence date times.
         /// </summary>
         /// <param name="reservation">The reservation.</param>

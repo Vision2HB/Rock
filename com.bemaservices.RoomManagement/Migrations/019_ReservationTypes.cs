@@ -77,7 +77,7 @@ namespace com.bemaservices.RoomManagement.Migrations
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType] CHECK CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationType_SuperAdminGroupId]
 
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType]  WITH CHECK ADD  CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationType_NotificationEmailId] FOREIGN KEY([NotificationEmailId])
-                REFERENCES [dbo].[SystemEmail] ([Id])
+                REFERENCES [dbo].[SystemCommunication] ([Id])
 
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationType] CHECK CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationType_NotificationEmailId]
 
@@ -314,9 +314,7 @@ namespace com.bemaservices.RoomManagement.Migrations
         {
             string finalApprovalGroupValue = null;
             string superAdminGroupValue = null;
-            string notificationEmailValue = null;
             int? defaultSetupTime = -1;
-            bool isCommunicationHistorySaved = false;
             bool isNumberAttendingRequired = true;
             bool isContactDetailsRequired = true;
             bool isSetupTimeRequired = true;
@@ -331,18 +329,11 @@ namespace com.bemaservices.RoomManagement.Migrations
             {
                 finalApprovalGroupValue = GetAttributeValueFromBlock( blockId.Value, "E715D25F-CA53-4B16-B8B2-4A94FD3A3560".AsGuid() );
                 superAdminGroupValue = GetAttributeValueFromBlock( blockId.Value, "BBA41563-5379-43FA-955B-93C1926A4F66".AsGuid() );
-                notificationEmailValue = GetAttributeValueFromBlock( blockId.Value, "F3FBDD84-5E9B-40C2-B199-3FAE1C2308DC".AsGuid() );
 
                 var defaultSetupTimeValue = GetAttributeValueFromBlock( blockId.Value, "2FA0C64D-9511-4278-9445-BD0A847EA299".AsGuid() );
                 if ( defaultSetupTimeValue != null )
                 {
                     defaultSetupTime = defaultSetupTimeValue.AsIntegerOrNull();
-                }
-
-                var isCommunicationHistorySavedValue = GetAttributeValueFromBlock( blockId.Value, "B90006F5-9B17-48DD-B455-5BAA2BE1A9A2".AsGuid() );
-                if ( isCommunicationHistorySavedValue != null )
-                {
-                    isCommunicationHistorySaved = isCommunicationHistorySavedValue.AsBoolean();
                 }
 
                 var isNumberAttendingRequiredValue = GetAttributeValueFromBlock( blockId.Value, "7162CFE4-FACD-4D75-8F09-2D42DBF1A887".AsGuid() );
@@ -367,11 +358,9 @@ namespace com.bemaservices.RoomManagement.Migrations
             var sqlQry = string.Format( @"
 DECLARE @finalApprovalGroupId INT = NULL;
 DECLARE @superAdminGroupId INT = NULL;
-DECLARE @notificationEmailId INT = NULL;
 
 SET @finalApprovalGroupId = (Select Id From [Group] Where [Guid] = '{2}')
 SET @superAdminGroupId = (Select Id From [Group] Where [Guid] = '{3}')
-SET @notificationEmailId = (Select Id From [SystemEmail] Where [Guid] = '{4}')
 
 INSERT INTO [dbo].[_com_bemaservices_RoomManagement_ReservationType](
 	                [IsSystem],
@@ -381,7 +370,6 @@ INSERT INTO [dbo].[_com_bemaservices_RoomManagement_ReservationType](
                     [IconCssClass],
                     [FinalApprovalGroupId],
                     [SuperAdminGroupId],
-                    [NotificationEmailId],
                     [DefaultSetupTime],
                     [IsCommunicationHistorySaved],
                     [IsNumberAttendingRequired],
@@ -396,20 +384,17 @@ VALUES
                     'fa fa-home',
                     @finalApprovalGroupId,
                     @superAdminGroupId,
-                    @notificationEmailId,
+                    {4},
+                    0,
                     {5},
                     {6},
                     {7},
-                    {8},
-                    {9},
                     'E443F926-0882-41D5-91EF-480EA366F660')"
                     , "Standard Reservation Type" // Name
                     , "The default reservation type." // Description
                     , !String.IsNullOrWhiteSpace( finalApprovalGroupValue ) ? finalApprovalGroupValue : Guid.Empty.ToString() //Final Approval Group Id
                     , !String.IsNullOrWhiteSpace( superAdminGroupValue ) ? superAdminGroupValue : Guid.Empty.ToString() // SuperAdminGroupId
-                    , !String.IsNullOrWhiteSpace( notificationEmailValue ) ? notificationEmailValue : Guid.Empty.ToString() //NotificationEmailId
                     , defaultSetupTime.HasValue ? defaultSetupTime.ToString() : "NULL" //DefaultSetupTime
-                    , isCommunicationHistorySaved ? 1 : 0 // Is Communication History Saved
                     , isNumberAttendingRequired ? 1 : 0 // Is Number Attending Required
                     , isContactDetailsRequired ? 1 : 0 // Is Contact Details Required
                     , isSetupTimeRequired ? 1 : 0 // Is Setup Time Required

@@ -61,7 +61,6 @@
                             <Rock:RockDropDownList ID="ddlInitialApprovalGroup" runat="server" Label="Initial Approval Group" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
                             <Rock:RockDropDownList ID="ddlFinalApprovalGroup" runat="server" Label="Final Approval Group" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
                             <Rock:RockDropDownList ID="ddlSuperAdminGroup" runat="server" Label="Override Approval Group" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
-                            <Rock:RockDropDownList ID="ddlNotificationEmail" runat="server" Label="Notification Email" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0" />
                         </div>
                         <div class="col-md-6">
                             <div class="row">
@@ -69,7 +68,6 @@
                                     <Rock:RockCheckBox ID="cbIsSetupTimeRequired" runat="server" Label="Is Setup Time Required" SourceTypeName="com.bemaservices.RoomManagement.Model.ReservationType, com.bemaservices.RoomManagement" PropertyName="IsSetupTimeRequired" />
                                     <Rock:RockCheckBox ID="cbIsNumberAttendingRequired" runat="server" Label="Is Number Attending Required" SourceTypeName="com.bemaservices.RoomManagement.Model.ReservationType, com.bemaservices.RoomManagement" PropertyName="IsNumberAttendingRequired" />
                                     <Rock:RockCheckBox ID="cbIsContactDetailsRequired" runat="server" Label="Are Contact Details Required" SourceTypeName="com.bemaservices.RoomManagement.Model.ReservationType, com.bemaservices.RoomManagement" PropertyName="IsContactDetailsRequired" />
-                                    <Rock:RockCheckBox ID="cbIsCommunicationHistorySaved" runat="server" Label="Is Communication History Saved" SourceTypeName="com.bemaservices.RoomManagement.Model.ReservationType, com.bemaservices.RoomManagement" PropertyName="IsCommunicationHistorySaved" />
                                 </div>
                                 <div class="col-md-6">
                                     <Rock:NumberBox ID="nbDefaultSetupTime" runat="server" Label="Default Setup Time" Help="If you wish to default to a particular setup time, you can supply a value here. (empty or -1 indicates no default value)" NumberType="Integer" MinimumValue="-1" SourceTypeName="com.bemaservices.RoomManagement.Model.ReservationType, com.bemaservices.RoomManagement" PropertyName="DefaultSetupTime" />

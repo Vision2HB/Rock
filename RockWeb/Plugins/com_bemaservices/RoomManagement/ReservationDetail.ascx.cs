@@ -653,9 +653,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                             changes );
                     }
 
-                    // We can't send emails because it won't have an ID until the request is saved.
-                    reservationService.SendNotifications( reservation );
-
                     BinaryFileService binaryFileService = new BinaryFileService( rockContext );
                     if ( orphanedPhotoId.HasValue )
                     {

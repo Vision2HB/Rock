@@ -351,8 +351,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 reservationType.InitialApprovalGroupId = ddlInitialApprovalGroup.SelectedValueAsId();
                 reservationType.FinalApprovalGroupId = ddlFinalApprovalGroup.SelectedValueAsId();
                 reservationType.OverrideApprovalGroupId = ddlSuperAdminGroup.SelectedValueAsId();
-                reservationType.NotificationEmailId = ddlNotificationEmail.SelectedValueAsId();
-                reservationType.IsCommunicationHistorySaved = cbIsCommunicationHistorySaved.Checked;
                 reservationType.IsContactDetailsRequired = cbIsContactDetailsRequired.Checked;
                 reservationType.IsNumberAttendingRequired = cbIsNumberAttendingRequired.Checked;
                 reservationType.IsSetupTimeRequired = cbIsSetupTimeRequired.Checked;
@@ -1144,7 +1142,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             tbIconCssClass.Text = reservationType.IconCssClass;
             //cbActive.Checked = reservationType.IsActive;
             cbIsReservationBookedOnApproval.Checked = reservationType.IsReservationBookedOnApproval;
-            cbIsCommunicationHistorySaved.Checked = reservationType.IsCommunicationHistorySaved;
             cbIsContactDetailsRequired.Checked = reservationType.IsContactDetailsRequired;
             cbIsNumberAttendingRequired.Checked = reservationType.IsNumberAttendingRequired;
             cbIsSetupTimeRequired.Checked = reservationType.IsSetupTimeRequired;
@@ -1152,10 +1149,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             nbDefaultCleanupTime.Text = reservationType.DefaultCleanupTime.ToStringSafe();
 
             LoadDropDowns();
-            if ( reservationType.NotificationEmailId.HasValue )
-            {
-                ddlNotificationEmail.SetValue( reservationType.NotificationEmailId.Value );
-            }
 
             if ( reservationType.InitialApprovalGroupId.HasValue )
             {
@@ -1210,25 +1203,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     ddlInitialApprovalGroup.Items.Add( new ListItem( role.Name, role.Id.ToString() ) );
                     ddlFinalApprovalGroup.Items.Add( new ListItem( role.Name, role.Id.ToString() ) );
                     ddlSuperAdminGroup.Items.Add( new ListItem( role.Name, role.Id.ToString() ) );
-                }
-
-            }
-
-            ddlNotificationEmail.Items.Clear();
-            ddlNotificationEmail.Items.Add( new ListItem( string.Empty, string.Empty ) );
-
-            using ( var rockContext = new RockContext() )
-            {
-                foreach ( var systemEmail in new SystemEmailService( rockContext )
-                    .Queryable().AsNoTracking()
-                    .OrderBy( e => e.Title )
-                    .Select( e => new
-                    {
-                        e.Id,
-                        e.Title
-                    } ) )
-                {
-                    ddlNotificationEmail.Items.Add( new ListItem( systemEmail.Title, systemEmail.Id.ToString() ) );
                 }
             }
         }

@@ -110,15 +110,6 @@ namespace com.bemaservices.RoomManagement.Model
         public int? OverrideApprovalGroupId { get; set; }
 
         /// <summary>
-        /// Gets or sets the notification email identifier.
-        /// </summary>
-        /// <value>
-        /// The notification email identifier.
-        /// </value>
-        [DataMember]
-        public int? NotificationEmailId { get; set; }
-
-        /// <summary>
         /// Gets or sets the default setup time.
         /// </summary>
         /// <value>
@@ -135,15 +126,6 @@ namespace com.bemaservices.RoomManagement.Model
         /// </value>
         [DataMember]
         public int? DefaultCleanupTime { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether this instance is communication history saved.
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if this instance is communication history saved; otherwise, <c>false</c>.
-        /// </value>
-        [DataMember]
-        public bool IsCommunicationHistorySaved { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is number attending required.
@@ -209,15 +191,6 @@ namespace com.bemaservices.RoomManagement.Model
         /// </value>
         [LavaInclude]
         public virtual Group OverrideApprovalGroup { get; set; }
-
-        /// <summary>
-        /// Gets or sets the notification email.
-        /// </summary>
-        /// <value>
-        /// The notification email.
-        /// </value>
-        [LavaInclude]
-        public virtual SystemEmail NotificationEmail { get; set; }
 
         /// <summary>
         /// Gets or sets the reservations.
@@ -313,7 +286,6 @@ namespace com.bemaservices.RoomManagement.Model
             this.HasOptional( r => r.InitialApprovalGroup ).WithMany().HasForeignKey( r => r.InitialApprovalGroupId ).WillCascadeOnDelete( false );
             this.HasOptional( r => r.FinalApprovalGroup ).WithMany().HasForeignKey( r => r.FinalApprovalGroupId ).WillCascadeOnDelete( false );
             this.HasOptional( r => r.OverrideApprovalGroup ).WithMany().HasForeignKey( r => r.OverrideApprovalGroupId ).WillCascadeOnDelete( false );
-            this.HasOptional( r => r.NotificationEmail ).WithMany().HasForeignKey( r => r.NotificationEmailId ).WillCascadeOnDelete( false );
 
             // IMPORTANT!!
             this.HasEntitySetName( "ReservationType" );
