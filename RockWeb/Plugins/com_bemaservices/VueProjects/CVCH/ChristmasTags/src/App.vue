@@ -143,6 +143,7 @@ export default {
   created(){
    
    
+   
     //  fetch('/Webhooks/Lava.ashx/BEMA/GetAgeRanges')
     //   .then(response => response.json())
     //   .then(data => this.ageRangeOptions = data)
@@ -175,6 +176,18 @@ export default {
      
      pulledTags: function(){
          localStorage.setItem('pulledTags',JSON.stringify(this.pulledTags.map(tag => tag.id)));
+     },
+
+     // These watch for the value of the selects and commits changes to the store on change
+    
+     selectedGenders: function() {
+       this.$store.commit('updateSelectedGenders',this.selectedGenders);
+     },
+      selectedAgeRanges: function() {
+       this.$store.commit('updateSelectedAgeRanges',this.selectedAgeRanges);
+     },
+     selectedCampus: function() {
+       this.$store.commit('updateSelectedCampus',this.selectedCampus);
      }
 
   },
@@ -206,6 +219,8 @@ export default {
     }
   },
    mounted () {
+    // Dispatches action in store get tags when the component mounts.
+    this.$store.dispatch('getTags');
     
     EventBus.$on('addTagToPulledList', (tag) => {
       this.pullTag(tag);
