@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify';
 import { EventBus } from './modules/event-bus.js';
+import store from './store'
 
 // Event listener for warranty transaction success
 window.addEventListener('message', function (e) {
@@ -19,5 +20,6 @@ Vue.config.productionTip = true
 
 new Vue({
   vuetify,
+  store,
   render: h => h(App)
 }).$mount('#app')
