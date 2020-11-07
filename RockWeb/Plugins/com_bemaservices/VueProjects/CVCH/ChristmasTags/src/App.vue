@@ -105,18 +105,13 @@
               </v-btn>
               
             
-       <TagList 
-        :selectedGenders="selectedGenders" 
-        :selectedAgeRanges="selectedAgeRanges"
-        :selectedCampus="selectedCampus"
-        :pulledTags="pulledTags" 
-
-        />
-        <ContactForm
+       <TagList />
+      
+      <ContactForm
         class="vuemodal"
         :class="{showItem:this.showModal}"
         :hideForm="showModal"
-        :tags="this.pulledTags"
+        
          />
 
     </v-main>
@@ -129,7 +124,7 @@ import TagList from "./components/taglist.vue";
   const ContactForm = () => import(
     /* webpackChunkName: "ContactForm" */ './components/contactform.vue'
   );
-import { EventBus } from './modules/event-bus.js';
+
 import { gsap } from "gsap";
 
 export default {
@@ -143,7 +138,6 @@ export default {
   data: () => ({
     hidden:true,
     showCount:true,
-    pulledTags:[],
     showModal:false,
 
     //
@@ -206,7 +200,6 @@ export default {
   },
   methods: {
     pullTag(tag){
-        this.pulledTags.push(tag);
         this.$store.commit('addPulledtag',tag)
     },
     showForm() {
@@ -217,30 +210,9 @@ export default {
             document.body.style.overflow = 'inherit';
         }
     },
-    deleteTag(id){
-        var filteredTags = this.pulledTags.filter(tag => tag.id != id)
-        
-        this.pulledTags = filteredTags;
-    }
+
   },
    mounted () {
-    // Dispatches action in store get tags when the component mounts.
-    this.$store.dispatch('initializeStore');
-    
-    EventBus.$on('addTagToPulledList', (tag) => {
-      this.pullTag(tag);
-    });
-    EventBus.$on('closeModal', () => {
-      this.showModal = false;
-    });
-
-     EventBus.$on('deleteItem', (id) => {
-      this.deleteTag(id)
-    });
-
-    EventBus.$on('deleteAllTags',() =>{
-        this.pulledTags = [];
-    });
 
    
     

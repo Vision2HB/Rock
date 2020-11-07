@@ -81,8 +81,9 @@ export default new Vuex.Store({
       state.selectedCampus = selectedCampus;
     },
     addPulledtag(state, tag){
-      state.pulledTags.push(tag.id);
+      state.pulledTags.push(tag);
     },
+
 
 
   },
@@ -94,13 +95,10 @@ export default new Vuex.Store({
         let tags  = await response.json(); 
         const currentTags = getters.currentTagIds;
         
-        console.log(tags.length)
         if(currentTags.length > 0 ){
           tags = tags.filter( tag => currentTags.includes(tag.id) === false );
         } 
-        console.log(tags)
         commit('updateTags',tags)
-
       },
 
     // Get Age ranges

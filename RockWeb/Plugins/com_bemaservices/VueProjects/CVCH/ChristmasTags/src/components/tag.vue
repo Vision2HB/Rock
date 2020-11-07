@@ -46,6 +46,11 @@ import { gsap } from "gsap";
 export default {
     props:{
         tag: Object,
+        defaultMessage: {
+            type: String,
+            required:false,
+            default:"Make a difference in a family''s life."
+        }
     },
       created () {
     window.addEventListener('scroll', this.handleScroll);
@@ -61,7 +66,6 @@ export default {
             selectedColor:{},
             pulled:false,
             colorOptions:colorOptions,
-            defaultMessage: defaultMessage
         }
     },
     computed: {
@@ -100,19 +104,13 @@ export default {
             let moveLeft = (elleft + btnleft + 60) * -1;
             let moveDown = ((eltop - btntop ) * -1 -150);
            
-            var tl = gsap.timeline({onComplete:() =>{ emitValue(tag)}})
+            var tl = gsap.timeline({onComplete:() =>{  this.$store.commit('addPulledtag',tag)}})
             // moveItem(el,elleft,eltop)
             
             tl.to(el, {x:moveLeft, y:moveDown, scale:.5})
             tl.to(el, {scale:0},">")
             
             tl.duration(1).play();
-            
-
-            //Fire off Emit to APP to remove add the tag to the pulled tag list
-            function emitValue(tag) {
-                EventBus.$emit('addTagToPulledList', tag); 
-            }
             
         },
         tagColor(i) {

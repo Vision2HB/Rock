@@ -68,7 +68,7 @@
 
 
                                                 <tbody>
-                                                    <tr v-for="tag in tags" :key="tag.id">
+                                                    <tr v-for="tag in pulledTags" :key="tag.id">
                                                         <td>{{tag.ageRange.description}}</td>
                                                         <td>{{tag.gender.description}}</td>
                                                         <td>{{tag.description}} <span v-if="tag.requireFinancialDonation" class="warning--text"><br />This tag is fulfilled by a financial donation.</span></td>
@@ -171,9 +171,6 @@ const iFrame = () => import(
 
 export default {
 
-    props:{
-        tags: Array
-    },
     components:{
         iFrame,
         transactionComplete
@@ -216,7 +213,7 @@ export default {
     methods:{
         processTags(){
             
-            let pulledTagIds = this.tags.map(tag => tag.id)
+            let pulledTagIds = this.$store.state.pulledTagIds;
             let url = `/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags/${this.form.firstName}/${this.form.lastName}/${this.form.email}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
             fetch(url)
                 .then(response => response.json())
@@ -228,8 +225,7 @@ export default {
                     
                 })
                 .catch(er => console.log(er));
-            
-            EventBus.$emit('TagsPulled',pulledTagIds);
+        
                     
         },
         setTransactionValue(data){
@@ -276,7 +272,7 @@ export default {
     },
     watch:{
         tags: function(){
-          if( this.tags.some(e => {
+          if( this.pulledTags.some(e => {
                 return e.requireFinancialDonation === true
             })) {
                 this.form.fulfillment = 'donation';
@@ -284,10 +280,12 @@ export default {
         },
     },
     computed:{
-
+        pulledTags() {
+            return this.$store.state.pulledTags;
+        },
         financialTransactionCheck() {
 
-            return this.tags.some(e => {
+            return this.pulledTags.some(e => {
                 return e.requireFinancialDonation == true
             })
 
@@ -302,14 +300,14 @@ export default {
 
         },
         formvalid(){
-            if(this.valid && this.tags.length > 0){
+            if(this.valid && this.pulledTags.length > 0){
                 return true
             } else {
                 return false
             }
         },
         tagDonation(){
-            return this.tags.length * 25;
+            return this.pulledTags.length * 25;
         },
         buttonText(){
             if(this.form.fulfillment == 'donation') {
