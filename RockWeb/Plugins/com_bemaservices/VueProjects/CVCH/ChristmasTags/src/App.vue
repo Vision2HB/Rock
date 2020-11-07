@@ -202,7 +202,7 @@ export default {
   methods: {
     pullTag(tag){
         this.pulledTags.push(tag);
-        
+        this.$store.commit('addPulledtag',tag)
     },
     showForm() {
         this.showModal = !this.showModal;

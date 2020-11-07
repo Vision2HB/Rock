@@ -70,9 +70,9 @@ export default new Vuex.Store({
     updateSelectedCampus(state,selectedCampus){
       state.selectedCampus = selectedCampus;
     },
-
-    
-
+    addPulledtag(state, tag){
+      state.pulledTags.push(tag);
+    }
   },
   actions: {
     // action get tags from the back end  the taglistURl is set above so it can be changed from development to production.
