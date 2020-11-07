@@ -25,89 +25,36 @@ export default {
   components: {
     VueTag
   },
-  props:{
-    selectedGenders: Array,
-    selectedAgeRanges: Array,
-    pulledTags: Array,
-    selectedCampus: Number,
-
-
-  },
+  
   created() {
     window.addEventListener('scroll', () => {
       this.bottom = this.bottomVisible()
     })
     
-    // fetch('/Webhooks/Lava.ashx/BEMA/GetChristmasTags/0/20')
-    //     .then(response => response.json())
-    //     .then(data => {console.log(data); this.taglist = data})
-    //     .catch(er => console.log(er));
-
-    // //gets any pulled tags out of local storage and adds them to the pulle tag list.
-    let tagList = JSON.parse(localStorage.getItem('pulledTags'));
-    this.taglist = tagsSource;
-    
-    if(tagList && tagList.length > 0){
-        let pulledtags = this.taglist.filter(tag => tagList.includes(tag.id) == true);
-        pulledtags.forEach((tag) => {
-            
-                EventBus.$emit('addTagToPulledList', tag); 
-            
-        })
-    }
-  },
-
-  mounted(){
-    
-     EventBus.$on('TagsPulled', (data) =>{
-        this.removeTagsFromList(data);
-    });
   },
 
   watch: {
     bottom(bottom) {
       if (bottom) {
-        // this.step ++;
-        // this.getMoreTags()
+        console.log(bottom)
+        this.$store.dispatch('getTags');
       }
     },
   },
+
   data() {
-    return {
-      taglist: [],
-      start: 0,
-      stepSize: 15,
-      step:2,
-      bottom: false,
-    }
+      return {
+          bottom:false,
+      }
   },
+
   computed:{
-    pulledIds(){
-      return this.pulledTags.map(tag => tag.id);
-    },
-    filterTags(){
-      let filteredList = this.taglist;
-      
-      if(this.pulledTags && this.pulledTags.length > 0 ) {
-        filteredList = filteredList.filter(tag => this.pulledIds.includes(tag.id) == false)
-      }
-
-      if(this.selectedGenders && this.selectedGenders.length > 0){
-        filteredList = filteredList.filter(tag => this.selectedGenders.includes(tag.gender.id) == true)
-      }
-
-      if(this.selectedAgeRanges && this.selectedAgeRanges.length > 0){
-        filteredList = filteredList.filter(tag => this.selectedAgeRanges.includes(tag.ageRange.id) == true)
-      }
-      if(this.selectedCampus && this.selectedCampus> 0){
-        filteredList = filteredList.filter(tag => this.selectedCampus == tag.campusId)
-      }
-      return filteredList.slice(0,this.step * this.stepSize);
-      
-    },
-
-
+      // Get Filtered Tags from the Store Getter
+        filterTags(){
+        return this.$store.getters.filterTags;
+        },
   },
+
   methods: {
     bottomVisible() {
       const scrollY = window.scrollY
