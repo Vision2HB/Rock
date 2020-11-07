@@ -9,8 +9,6 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "gsap": "^3.5.1",
-    "lodash": "^4.17.20",
-    "ngrok": "^3.3.0",
     "vue": "^2.6.11",
     "vuetify": "^2.2.11",
     "vuex": "^3.4.0"
