@@ -14,7 +14,9 @@ export default new Vuex.Store({
     selectedAgeRanges:[],
     selectedCampus: 1,
     pulledTags:[],
-    campusOptions:[{id:1, name:'Mooresville Campus'}],
+    campusOptions:[
+      { "id":1, "description":"Mooresville Campus" }, { "id":31, "description":"Denver Campus" }, { "id":35, "description":"Statesville Campus" }, { "id":36, "description":"West Rowan Campus" }
+    ],
     genderOptions: [{
             description:'Boy',
             id:1
@@ -34,7 +36,6 @@ export default new Vuex.Store({
     currentTagIds(state) {
       return state.tagList.map(tag => tag.id)
     },
-    
     
     filterTags(state){
       let filteredList = state.tagList;
@@ -66,9 +67,9 @@ export default new Vuex.Store({
     },
     //Called by the initializestore action to update the store's age range options.
     addAgeRanges(state, ageRanges){
-      console.log(ageRanges)
       state.ageRangeOptions = ageRanges
     },
+
     //Are called by the changes in the app.vue selects and update the store values.
     updateSelectedGenders(state,selectedGenders){
       state.selectedGenders = selectedGenders;
@@ -105,8 +106,9 @@ export default new Vuex.Store({
     // Get Age ranges
     async getAgeRanges({commit}){
       let response = await fetch(ageRangesUrl);
-      let ageRanges = await response.json()
-      commit('addAgeRanges',ageRanges)
+      let ageRanges = await response.json();
+      
+      commit('addAgeRanges',ageRanges);
 
     },
 

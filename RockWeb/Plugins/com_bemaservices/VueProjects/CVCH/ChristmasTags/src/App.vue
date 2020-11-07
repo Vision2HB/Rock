@@ -139,34 +139,11 @@ export default {
     TagList,
     ContactForm
   },
-  
-  created(){
-   
-   
-   
-    //  fetch('/Webhooks/Lava.ashx/BEMA/GetAgeRanges')
-    //   .then(response => response.json())
-    //   .then(data => this.ageRangeOptions = data)
-    //   .catch(message => console.log(message));
-    this.ageRangeOptions = ageRanges
-  },
 
   data: () => ({
     hidden:true,
     showCount:true,
-    selectedGenders:[],
-    selectedAgeRanges:[],
-    selectedCampus: personCampus,
     pulledTags:[],
-    campusOptions:campuses,
-    genderOptions: [{
-            description:'Boy',
-            id:1
-          },{
-            description:'Girl',
-            id:2
-          }],
-    ageRangeOptions: [],
     showModal:false,
 
     //
@@ -174,28 +151,56 @@ export default {
    
   watch:{
      
-     pulledTags: function(){
-         localStorage.setItem('pulledTags',JSON.stringify(this.pulledTags.map(tag => tag.id)));
-     },
-
-     // These watch for the value of the selects and commits changes to the store on change
-    
-     selectedGenders: function() {
-       this.$store.commit('updateSelectedGenders',this.selectedGenders);
-     },
-      selectedAgeRanges: function() {
-       this.$store.commit('updateSelectedAgeRanges',this.selectedAgeRanges);
-     },
-     selectedCampus: function() {
-       this.$store.commit('updateSelectedCampus',this.selectedCampus);
-     }
+    //  pulledTags: function(){
+    //      localStorage.setItem('pulledTags',JSON.stringify(this.pulledTags.map(tag => tag.id)));
+    //  },
 
   },
   computed:{
     pulledCount(){
 
-        return this.pulledTags.length
-    }
+        return this.$store.state.pulledTags.length
+    },
+    ageRangeOptions(){
+      return this.$store.state.ageRangeOptions
+    },
+    campusOptions(){
+      return this.$store.state.campusOptions
+    },
+
+    genderOptions(){
+      return this.$store.state.genderOptions
+    },
+    
+
+    // When binding to a value in a vuex store you need to use a two way computed property that has a get() function to get a value, and a set(value) that calls a mutation to set a value.  This preserves the two way binding.
+    selectedGenders: {
+      get(){
+        return this.$store.state.selectedGenders;
+      },
+      set(value){
+        this.$store.commit('updateSelectedGenders',value);
+      }
+    },
+
+    selectedAgeRanges: {
+      get(){
+        return this.$store.state.selectedGenders;
+      },
+      set(value){
+        this.$store.commit('updateSelectedAgeRanges',value);
+      }
+    },
+
+
+      selectedCampus: {
+        get() {
+          return this.$store.state.selectedCampus
+        },
+        set(value) {
+          this.$store.commit('updateSelectedCampus',value)
+        }
+      }
 
 
   },
