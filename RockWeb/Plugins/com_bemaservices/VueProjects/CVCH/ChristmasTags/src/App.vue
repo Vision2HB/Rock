@@ -92,8 +92,8 @@
                     <span class="fas fa-tags fa-stack-2x"></span>
                     <!-- a strong element with the custom content, in this case a number -->
                     <transition name="slide-fade" mode="out-in">
-                        <strong :key="pulledCount" class="fa-stack-1x accent--text" style="font-weight: 900; padding-left:5px; transform:translate(-3px,1px) scale(1.2); font-size:13px;">
-                            {{pulledCount}}    
+                        <strong :key="pulledTags.length" class="fa-stack-1x accent--text" style="font-weight: 900; padding-left:5px; transform:translate(-3px,1px) scale(1.2); font-size:13px;">
+                            {{pulledTags.length}}    
                         </strong>
                     </transition>        
                 
@@ -111,7 +111,7 @@
         class="vuemodal"
         :class="{showItem:this.showModal}"
         :hideForm="showModal"
-        
+        :tags="this.pulledTags"
          />
 
     </v-main>
@@ -151,9 +151,9 @@ export default {
 
   },
   computed:{
-    pulledCount(){
+    pulledTags(){
 
-        return this.$store.state.pulledTags.length
+        return this.$store.state.pulledTags
     },
     ageRangeOptions(){
       return this.$store.state.ageRangeOptions

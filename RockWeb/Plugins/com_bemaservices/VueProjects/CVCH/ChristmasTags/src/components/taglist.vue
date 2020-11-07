@@ -18,7 +18,7 @@
 import Vue from "vue";
 import VueTag from "../components/tag.vue";
 import { gsap } from "gsap";
-import {EventBus } from "../modules/event-bus.js"
+
 
 
 export default {
@@ -36,7 +36,6 @@ export default {
   watch: {
     bottom(bottom) {
       if (bottom) {
-        console.log(bottom)
         this.$store.dispatch('getTags');
       }
     },
@@ -62,23 +61,6 @@ export default {
       const pageHeight = document.documentElement.scrollHeight
       const bottomOfPage = visible + scrollY  >= pageHeight - 20
       return bottomOfPage || pageHeight < visible
-    },
-    // getMoreTags() {
-    //      fetch(`/Webhooks/Lava.ashx/BEMA/GetChristmasTags/${this.taglist.length}/20`,{
-            
-    //      })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         let newItems = data.filter(item => this.taglist.includes(item) == false);
-    //         this.taglist.push(newItems);
-            
-    //     })
-    //     .catch(er => console.log(er));
-
-    // },
-    removeTagsFromList(data){
-          this.taglist = this.taglist.filter(tag => data.includes(tag.id) == false )
-          EventBus.$emit('deleteAllTags');
     }
   } 
 
