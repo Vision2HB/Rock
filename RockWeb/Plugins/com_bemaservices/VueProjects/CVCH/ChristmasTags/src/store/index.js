@@ -3,8 +3,13 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
-const tagListUrl = '/backend/tagsList.json';
-const ageRangesUrl = '/backend/ageRanges.json';
+let tagListUrl = '/Webhooks/Lava.ashx/BEMA/GetChristmasTags';
+let ageRangesUrl = '/Webhooks/Lava.ashx/BEMA/GetAgeRanges';
+
+if(process.env.NODE_ENV == 'development') {
+   tagListUrl = '/backend/tagsList.json';
+   ageRangesUrl = '/backend/ageRanges.json';
+}
 
 export default new Vuex.Store({
   state: {
@@ -120,7 +125,13 @@ export default new Vuex.Store({
         
         // Get Tags From Local StorageId and add each to the vuex store pulled Tags
         const tagList = JSON.parse(localStorage.getItem('pulledTags'))
-        tagList.forEach(tag => commit('addPulledtag',{id: tag}))
+        if(tagList && tagList.length > 0){
+        tagList.forEach(tag => {
+        
+        let newtag = this.state.tagList.find(t => t.id = tag)
+        commit('addPulledtag',newtag)
+      })
+    }
     }
   },
   modules: {

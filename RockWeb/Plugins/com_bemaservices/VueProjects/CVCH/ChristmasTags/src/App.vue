@@ -151,10 +151,14 @@ export default {
 
   },
   computed:{
+    //Pulls information from the store for the various filters and display info.
+    //Used to show the number of tags pulled in the icon button(.length) and passed to the form for display.
     pulledTags(){
 
         return this.$store.state.pulledTags
     },
+
+    // The following three items are used for the filters.
     ageRangeOptions(){
       return this.$store.state.ageRangeOptions
     },
@@ -212,9 +216,9 @@ export default {
     },
 
   },
-   mounted () {
+   created () {
 
-   
+     this.$store.dispatch('initializeStore')
     
   },
  
