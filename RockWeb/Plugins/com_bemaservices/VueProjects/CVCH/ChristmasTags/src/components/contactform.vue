@@ -71,7 +71,7 @@
                                                     <tr v-for="tag in tags" :key="tag.id">
                                                         <td>{{tag.ageRange.description}}</td>
                                                         <td>{{tag.gender.description}}</td>
-                                                        <td>{{tag.description}}</td>
+                                                        <td>{{tag.description}} <span v-if="tag.requireFinancialDonation" class="warning--text"><br />This tag is fulfilled by a financial donation.</span></td>
                                                         <td class="text-center">
                                                             <v-icon @click="removeTags(tag.id)" color="secondary" small>
                                                                 fa-trash</v-icon>
@@ -85,25 +85,29 @@
                                 </v-row>
 
                                 <v-row class="d-flex justify-end">
-                                    <v-col cols="12" sm="4" class="d-flex flex-column justify-end">
+                                    <v-col cols="12" sm="4" class="d-flex flex-column justify-start">
 
 
                                         <v-radio-group v-model="form.fulfillment" column
                                             label="How would you like to fulfill these tags?" :rules="fulfillmentRules">
 
                                             <v-radio label="Monetary Donation" value="donation"></v-radio>
-                                            <v-radio label="Buy Gifts" value="buygifts"></v-radio>
+                                            <v-radio v-if="!financialTransactionCheck" label="Buy Gifts" value="buygifts"></v-radio>
                                         </v-radio-group>
 
                                     </v-col>
                                     <v-col cols="12" sm="8" style="min-height:200px;"
-                                        class="d-flex flex-column justify-end">
+                                        class="d-flex flex-column justify-start mt-5">
                                         <transition name="slideleft" mode="out-in">
                                             <v-alert v-if="form.fulfillment == 'donation'" border="top" colored-border
                                                 type="primary" elevation="2" icon="fa-money-bill-alt">
                                                 By selecting "Monetary Donation", you will be redirected to our donation
                                                 page with a suggested donation of $25.00 per tag for a total gift of
                                                 ${{formatToCurrency(tagDonation)}}. Please note that designated funds can be redirected by the Executive Leadership Team to other ministry needs. This will only be done if absolutely necessary.
+                                                <span v-if="financialTransactionCheck && !mixedTagCheck"><br /><br />
+                                                Your pulled tags list included tags that are fulfilled by a financial donation and tags that can be fulfilled by buying gifts.  If you wish to buy and donate gifts, you will need to remove the gift donation tags complete the process separetely for those tags.
+                                                       
+                                                </span> 
                                             </v-alert>
                                         </transition>
                                         <transition name="slideleft" mode="out-in">
@@ -156,8 +160,14 @@
 </template>
 <script>
 import { EventBus } from '../modules/event-bus.js';
-import iFrame from './iFrame';
-import transactionComplete from './transactionComplete'
+const iFrame = () => import(
+    /* webpackChunkName: "iFrame" */ './iFrame'
+  );
+  const transactionComplete = () => import(
+    /* webpackChunkName: "transactionComplete" */ './transactionComplete'
+  );
+
+
 
 export default {
 
@@ -168,6 +178,7 @@ export default {
         iFrame,
         transactionComplete
     },
+
     mounted(){
         EventBus.$on('transactionComplete', (data) => {
            setTimeout(() => {
@@ -183,6 +194,7 @@ export default {
         transactionInfo:null,
         tagResponse:null,
         showSuccess:false,
+      
         form: {
             firstName: firstName,
             lastName: lastName,
@@ -262,7 +274,33 @@ export default {
 
 
     },
+    watch:{
+        tags: function(){
+          if( this.tags.some(e => {
+                return e.requireFinancialDonation === true
+            })) {
+                this.form.fulfillment = 'donation';
+            }
+        },
+    },
     computed:{
+
+        financialTransactionCheck() {
+
+            return this.tags.some(e => {
+                return e.requireFinancialDonation == true
+            })
+
+
+        },
+        mixedTagCheck() {
+
+            return this.tags.every(e => {
+                return e.requireFinancialDonation == true
+            })
+
+
+        },
         formvalid(){
             if(this.valid && this.tags.length > 0){
                 return true

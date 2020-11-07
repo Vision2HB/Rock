@@ -125,7 +125,10 @@
 
 <script>
 import TagList from "./components/taglist.vue";
-import ContactForm from "./components/contactform.vue"
+
+  const ContactForm = () => import(
+    /* webpackChunkName: "ContactForm" */ './components/contactform.vue'
+  );
 import { EventBus } from './modules/event-bus.js';
 import { gsap } from "gsap";
 
@@ -138,11 +141,13 @@ export default {
   },
   
   created(){
-     fetch('/Webhooks/Lava.ashx/BEMA/GetAgeRanges')
-      .then(response => response.json())
-      .then(data => this.ageRangeOptions = data)
-      .catch(message => console.log(message));
-    
+   
+   
+    //  fetch('/Webhooks/Lava.ashx/BEMA/GetAgeRanges')
+    //   .then(response => response.json())
+    //   .then(data => this.ageRangeOptions = data)
+    //   .catch(message => console.log(message));
+    this.ageRangeOptions = ageRanges
   },
 
   data: () => ({

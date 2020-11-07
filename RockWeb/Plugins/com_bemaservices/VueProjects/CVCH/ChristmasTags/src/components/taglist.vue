@@ -20,6 +20,7 @@ import VueTag from "../components/tag.vue";
 import { gsap } from "gsap";
 import {EventBus } from "../modules/event-bus.js"
 
+
 export default {
   components: {
     VueTag
@@ -37,13 +38,15 @@ export default {
       this.bottom = this.bottomVisible()
     })
     
-    fetch('/Webhooks/Lava.ashx/BEMA/GetChristmasTags/0/20')
-        .then(response => response.json())
-        .then(data => {console.log(data); this.taglist = data})
-        .catch(er => console.log(er));
+    // fetch('/Webhooks/Lava.ashx/BEMA/GetChristmasTags/0/20')
+    //     .then(response => response.json())
+    //     .then(data => {console.log(data); this.taglist = data})
+    //     .catch(er => console.log(er));
 
-    //gets any pulled tags out of local storage and adds them to the pulle tag list.
+    // //gets any pulled tags out of local storage and adds them to the pulle tag list.
     let tagList = JSON.parse(localStorage.getItem('pulledTags'));
+    this.taglist = tagsSource;
+    
     if(tagList && tagList.length > 0){
         let pulledtags = this.taglist.filter(tag => tagList.includes(tag.id) == true);
         pulledtags.forEach((tag) => {
@@ -65,7 +68,7 @@ export default {
     bottom(bottom) {
       if (bottom) {
         // this.step ++;
-        this.getMoreTags()
+        // this.getMoreTags()
       }
     },
   },
@@ -113,19 +116,19 @@ export default {
       const bottomOfPage = visible + scrollY  >= pageHeight - 20
       return bottomOfPage || pageHeight < visible
     },
-    getMoreTags() {
-         fetch(`/Webhooks/Lava.ashx/BEMA/GetChristmasTags/${this.taglist.length}/20`,{
+    // getMoreTags() {
+    //      fetch(`/Webhooks/Lava.ashx/BEMA/GetChristmasTags/${this.taglist.length}/20`,{
             
-         })
-        .then(response => response.json())
-        .then(data => {
-            let newItems = data.filter(item => this.taglist.includes(item) == false);
-            this.taglist.push(newItems);
+    //      })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         let newItems = data.filter(item => this.taglist.includes(item) == false);
+    //         this.taglist.push(newItems);
             
-        })
-        .catch(er => console.log(er));
+    //     })
+    //     .catch(er => console.log(er));
 
-    },
+    // },
     removeTagsFromList(data){
           this.taglist = this.taglist.filter(tag => data.includes(tag.id) == false )
           EventBus.$emit('deleteAllTags');
@@ -209,6 +212,7 @@ export default {
     -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
     z-index: 2;
+    
 }
 
 .tag-text {
@@ -484,7 +488,7 @@ export default {
     left: 0;
 }
 .is-back .tag-text{
-    font-size:20px;
+    font-size: .9rem;
 
 }
 .added {

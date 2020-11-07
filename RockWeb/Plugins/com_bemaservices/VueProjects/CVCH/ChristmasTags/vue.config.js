@@ -1,18 +1,17 @@
 // vue.config.js
-const path = require("path");
+const path = require('path');
 
-let newPath = path.resolve(__dirname, "../public/")
-
-console.log(newPath)
+const newPath = path.resolve(__dirname).replace('VueProjects', 'CustomBlocks');
 
 module.exports = {
-  publicPath:process.env.NODE_ENV === 'production' ? '/Plugins/com_bemaservices/CustomBlocks/CVCH/ChristmasTags/' : '/',
-  
-  outputDir: 'dist/Plugins/com_bemaservices/CustomBlocks/CVCH/ChristmasTags/',
-  assetsDir: './assets/',
-  filenameHashing:false,
+  publicPath:
+        process.env.NODE_ENV === 'production'
+          ? newPath.split('RockWeb')[1]
+          : '/',
 
-  "transpileDependencies": [
-    "vuetify"
-  ]
-}
+  outputDir: newPath,
+  assetsDir: './Assets/',
+  filenameHashing: false,
+
+  transpileDependencies: ['vuetify'],
+};
