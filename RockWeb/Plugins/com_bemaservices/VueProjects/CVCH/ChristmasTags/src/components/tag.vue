@@ -65,11 +65,12 @@ export default {
         return {
             selectedColor:{},
             pulled:false,
-            colorOptions:colorOptions,
         }
     },
     computed: {
-      
+    colorOptions(){
+        return this.$store.state.colorOptions;
+      }
   },
     methods: {
         addCard(tag,ref) {
@@ -118,9 +119,6 @@ export default {
                  this.selectedColor = this.colorOptions[i % 3];
                  this.selectedColor.rulesClass = this.selectedColor.rules.join(' ');
         },
-         handleScroll (event) {
-        // Any code to be executed when the window is scrolled
-        }
 
     }
 }

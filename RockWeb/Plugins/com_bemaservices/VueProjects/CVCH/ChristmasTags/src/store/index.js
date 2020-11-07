@@ -19,6 +19,25 @@ export default new Vuex.Store({
     selectedAgeRanges:[],
     selectedCampus: 1,
     pulledTags:[],
+    colorOptions:[{
+      id: 1,
+      scale: 1,
+      rules: ['rule-red', 'rule-shape'],
+      shape: '<i class="fas fa-sleigh" style="transform:translateY(-10px);"></i>', //&starf;
+    },
+    {
+      id: 2,
+      scale: 1,
+      rules: ['rule-diagonal'],
+      shape: '',
+    },
+    {
+      id: 3,
+      scale: .9,
+      rules: ['rule-shape'],
+      shape: '<i class="fas fa-gifts" style="transform:translateY(-15px);"></i>', //&#10052;
+    },
+  ],
     campusOptions:[
       { "id":1, "description":"Mooresville Campus" }, { "id":31, "description":"Denver Campus" }, { "id":35, "description":"Statesville Campus" }, { "id":36, "description":"West Rowan Campus" }
     ],
