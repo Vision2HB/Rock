@@ -220,7 +220,7 @@ export default {
   },
    mounted () {
     // Dispatches action in store get tags when the component mounts.
-    this.$store.dispatch('getTags');
+    this.$store.dispatch('initializeStore');
     
     EventBus.$on('addTagToPulledList', (tag) => {
       this.pullTag(tag);
