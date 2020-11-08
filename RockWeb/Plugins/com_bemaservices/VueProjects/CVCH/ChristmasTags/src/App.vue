@@ -138,17 +138,8 @@ export default {
     hidden:true,
     showCount:true,
     showModal:false,
-
-    //
   }),
    
-  watch:{
-     
-    //  pulledTags: function(){
-    //      localStorage.setItem('pulledTags',JSON.stringify(this.pulledTags.map(tag => tag.id)));
-    //  },
-
-  },
   computed:{
     //Pulls information from the store for the various filters and display info.
     //Used to show the number of tags pulled in the icon button(.length) and passed to the form for display.
@@ -169,7 +160,7 @@ export default {
     },
     
 
-    // When binding to a value in a vuex store you need to use a two way computed property that has a get() function to get a value, and a set(value) that calls a mutation to set a value.  This preserves the two way binding.
+    // When binding to a value in a vuex store you need to use a two way computed property that has a get() function to get a value, and a set(value) that commits a mutation to set a value.  This preserves the two way binding.
     selectedGenders: {
       get(){
         return this.$store.state.selectedGenders;
@@ -189,17 +180,16 @@ export default {
     },
 
 
-      selectedCampus: {
-        get() {
-          return this.$store.state.selectedCampus
-        },
-        set(value) {
-          this.$store.commit('updateSelectedCampus',value)
-        }
+    selectedCampus: {
+      get() {
+        return this.$store.state.selectedCampus
+      },
+      set(value) {
+        this.$store.commit('updateSelectedCampus',value)
       }
-
-
+    }
   },
+
   methods: {
     pullTag(tag){
         this.$store.commit('addPulledtag',tag)
