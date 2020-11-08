@@ -57,6 +57,7 @@
                                                         <th class="text-left">
                                                             Description
                                                         </th>
+                                                        <th>Quantity</th>
                                                         <th class="text-center">Delete</th>
                                                     </tr>
                                                 </thead>
@@ -72,6 +73,14 @@
                                                         <td>{{tag.ageRange.description}}</td>
                                                         <td>{{tag.gender.description}}</td>
                                                         <td>{{tag.description}} <span v-if="tag.requireFinancialDonation" class="warning--text"><br />This tag is fulfilled by a financial donation.</span></td>
+                                                        <td class="text-center">
+                                                            <select v-if="tag.allowMultiple" class="text-center" style="border: 1px solid rgba(0,0,0,0.2); padding:5px 20px; width:100%;">
+                                                                <option class="text-center" v-for="n in tag.quantityRemaining" :key="n" :value="n">{{ n }} <i class="fa fa-angle-down"></i></option>
+                                                            </select>
+                                                            <span v-else>1</span>
+                                                        </td>
+                                                        
+                                                        
                                                         <td class="text-center">
                                                             <v-icon @click="removeTags(tag.id)" color="secondary" small>
                                                                 fa-trash</v-icon>
@@ -214,11 +223,9 @@ export default {
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data)
                     this.responseMessage = data.SuccessText;
                     this.tagResponse = data;
                     this.showSuccess = true;
-                    
                 })
                 .catch(er => console.log(er));
             
@@ -234,7 +241,6 @@ export default {
             this.processTags();
         },
         closeModal(){
-            console.log('showModal from modal')
             this.iframeSource = null;
             this.transactionInfo = null;
             this.showSuccess = false;
@@ -280,6 +286,7 @@ export default {
     },
 
     computed:{
+      
        currentPersonFirstName: {
            get(){
             return this.$store.state.currentPerson.firstName;

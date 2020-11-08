@@ -139,7 +139,14 @@ export default {
     showCount:true,
     showModal:false,
   }),
-   
+  
+  watch: {
+    // save pulled tags from the store to local storage
+    '$store.state.pulledTags': function(n) {
+        localStorage.setItem('pulledTags',JSON.stringify(n.map(t => t.id)))
+    }
+  },
+
   computed:{
     //Pulls information from the store for the various filters and display info.
     //Used to show the number of tags pulled in the icon button(.length) and passed to the form for display.
@@ -195,7 +202,6 @@ export default {
         this.$store.commit('addPulledtag',tag)
     },
     showForm() {
-        console.log('showform')
         this.showModal = !this.showModal;
         if(this.showModal === true ) {
             document.body.style.overflow = 'hidden';
@@ -203,10 +209,9 @@ export default {
             document.body.style.overflow = 'inherit';
         }
     },
-
   },
    created () {
-
+   
      this.$store.dispatch('initializeStore')
     
   },

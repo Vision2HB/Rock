@@ -17,7 +17,6 @@ if(process.env.NODE_ENV == 'development') {
 export default new Vuex.Store({
   state: {
     // From App.Vue
-    pulledTags:[],
     selectedGenders:[],
     selectedAgeRanges:[],
     selectedCampus: 1,
@@ -144,10 +143,9 @@ export default new Vuex.Store({
             let response = await fetch(url)
             let data = await response.json()
       
-        
-                    this.responseMessage = data.SuccessText;
-                    this.tagResponse = data;
-                    this.showSuccess = true;
+            this.responseMessage = data.SuccessText;
+            this.tagResponse = data;
+            this.showSuccess = true;
     },
 
 
@@ -175,7 +173,7 @@ export default new Vuex.Store({
     },
 
     //Called when the app is Created and gets the first set of tags and pulled tags from local storage.
-    initializeStore({commit, dispatch,}){
+    initializeStore({commit, dispatch}){
         // get Age Range Options
         dispatch('getAgeRanges')
 
@@ -184,16 +182,6 @@ export default new Vuex.Store({
         
         //Gets thee current Person from the getCurrentPerson Action
         dispatch('getCurrentPerson')
-        
-        // Get Tags From Local StorageId and add each to the vuex store pulled Tags
-        const tagList = JSON.parse(localStorage.getItem('pulledTags'))
-        if(tagList && tagList.length > 0){
-        tagList.forEach(tag => {
-        
-        let newtag = this.state.tagList.find(t => t.id = tag)
-        commit('addPulledtag',newtag)
-      })
-    }
     },
 
     async getCurrentPerson({commit, dispatch}){
