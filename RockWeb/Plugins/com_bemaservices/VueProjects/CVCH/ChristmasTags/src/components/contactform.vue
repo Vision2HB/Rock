@@ -23,19 +23,19 @@
                                 </v-row>
                                 <v-row>
                                     <v-col cols="12" sm="6">
-                                        <v-text-field v-model="form.firstName" :rules="nameRules"
+                                        <v-text-field v-model="currentPersonFirstName" :rules="nameRules"
                                             hint="Please enter your first name" label="First name" name="fname"
                                             required></v-text-field>
                                     </v-col>
                                     <v-col cols="12" sm="6">
-                                        <v-text-field v-model="form.lastName" :rules="nameRules"
+                                        <v-text-field v-model="currentPersonLastName" :rules="nameRules"
                                             hint="Please enter your last name" label="Last Name" name="lname" required>
                                         </v-text-field>
                                     </v-col>
                                 </v-row>
                                 <v-row>
                                     <v-col cols="12" sm="6">
-                                        <v-text-field v-model="form.email" :rules="emailRules"
+                                        <v-text-field v-model="currentPersonEmail" :rules="emailRules"
                                             hint="Please enter your email" label="Email" name="email" required>
                                         </v-text-field>
                                     </v-col>
@@ -88,7 +88,7 @@
                                     <v-col cols="12" sm="4" class="d-flex flex-column justify-start">
 
 
-                                        <v-radio-group v-model="form.fulfillment" column
+                                        <v-radio-group v-model="fulfillment" column
                                             label="How would you like to fulfill these tags?" :rules="fulfillmentRules">
 
                                             <v-radio label="Monetary Donation" value="donation"></v-radio>
@@ -99,7 +99,7 @@
                                     <v-col cols="12" sm="8" style="min-height:200px;"
                                         class="d-flex flex-column justify-start mt-5">
                                         <transition name="slideleft" mode="out-in">
-                                            <v-alert v-if="form.fulfillment == 'donation'" border="top" colored-border
+                                            <v-alert v-if="fulfillment == 'donation'" border="top" colored-border
                                                 type="primary" elevation="2" icon="fa-money-bill-alt">
                                                 By selecting "Monetary Donation", you will be redirected to our donation
                                                 page with a suggested donation of $25.00 per tag for a total gift of
@@ -111,7 +111,7 @@
                                             </v-alert>
                                         </transition>
                                         <transition name="slideleft" mode="out-in">
-                                            <v-alert v-if="form.fulfillment == 'buygifts'" border="top" colored-border
+                                            <v-alert v-if="fulfillment == 'buygifts'" border="top" colored-border
                                                 type="accent" elevation="2" icon="fa-shopping-cart">
                                                 By selecting "Buy Gifts", you agree to pruchase gifts for the christmas
                                                 store for each tag you select and return them to the church during a
@@ -128,7 +128,7 @@
                                         <v-col cols="12" sm="12">
                                             <div class="float-right">
                                                 <v-btn color="primary" class=" mr-4"
-                                                    :class="form.fulfillment =='donation' ? 'primary' : 'accent'"
+                                                    :class="fulfillment =='donation' ? 'primary' : 'accent'"
                                                     :disabled="!formvalid" @click="submit">
                                                     {{buttonText}}
                                                 </v-btn>
@@ -152,7 +152,7 @@
                 <iFrame :src="iframeSource" />
             </transition>
             <transition name="fade" v-else mode="out-in">
-                <transactionComplete  :transactionInfo="transactionInfo" :fulfillmentType="form.fulfillment" :responseMessage="responseMessage" v-on:closeModal="closeModal()"/>
+                <transactionComplete  :transactionInfo="transactionInfo" :fulfillmentType="fulfillment" :responseMessage="responseMessage" v-on:closeModal="closeModal()"/>
             </transition>
         </v-sheet>
     </v-card>
@@ -191,13 +191,8 @@ export default {
         transactionInfo:null,
         tagResponse:null,
         showSuccess:false,
-      
-        form: {
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
-            fulfillment:null
-        },
+        fulfillment:null,
+    
         nameRules: [
         v => !!v || 'Name is required',
         v => v.length <= 35 || 'Name must be less than 35 characters',
@@ -214,7 +209,7 @@ export default {
         processTags(){
             
             let pulledTagIds = this.$store.state.pulledTagIds;
-            let url = `/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags/${this.form.firstName}/${this.form.lastName}/${this.form.email}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
+            let url = `/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags/${this.currentPerson.firstName}/${this.currentPerson.lastName}/${this.currentPerson.email}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
@@ -225,7 +220,8 @@ export default {
                     
                 })
                 .catch(er => console.log(er));
-        
+            
+            EventBus.$emit('TagsPulled',pulledTagIds);
                     
         },
         setTransactionValue(data){
@@ -236,10 +232,11 @@ export default {
             this.processTags();
         },
         closeModal(){
+            console.log('showModal from modal')
             this.iframeSource = null;
             this.transactionInfo = null;
             this.showSuccess = false;
-            EventBus.$emit('closeModal')
+            this.$emit('close-modal')
         },
         removeTags(id){
             if(id){
@@ -255,7 +252,7 @@ export default {
         },
         submit(){
             
-            if(this.form.fulfillment == 'donation') {
+            if(this.fulfillment == 'donation') {
                 let args = `?AccountIds=166^${this.tagDonation}^true`
                 let url = 'https://my.covechurch.org/page/932' + args
                 this.iframeSource = url
@@ -275,11 +272,37 @@ export default {
           if( this.pulledTags.some(e => {
                 return e.requireFinancialDonation === true
             })) {
-                this.form.fulfillment = 'donation';
+                this.fulfillment = 'donation';
             }
         },
+ 
     },
     computed:{
+       currentPersonFirstName: {
+           get(){
+            return this.$store.state.currentPerson.firstName;
+           },
+            set (value) {
+                this.$store.commit('setCurrentPersonFirstName', value)
+            }
+       },
+        currentPersonLastName: {
+           get(){
+            return this.$store.state.currentPerson.lastName;
+           },
+            set (value) {
+                this.$store.commit('setCurrentPersonLastName', value)
+            }
+       },
+       currentPersonEmail: {
+           get(){
+            return this.$store.state.currentPerson.email;
+           },
+            set (value) {
+                this.$store.commit('setCurrentPersonEmail', value)
+            }
+       },
+
         pulledTags() {
             return this.$store.state.pulledTags;
         },
@@ -310,7 +333,7 @@ export default {
             return this.pulledTags.length * 25;
         },
         buttonText(){
-            if(this.form.fulfillment == 'donation') {
+            if(this.fulfillment == 'donation') {
                 return 'Make Donation'
             } else {
                 return 'Claim Tags'

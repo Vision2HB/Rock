@@ -81,8 +81,6 @@
                 left
                 fab
                 style="z-index:2000"
-                
-
               >
             
                <span id="pulledCount" class="fa-stack" :class="{hide:!showCount}">
@@ -112,6 +110,7 @@
         :class="{showItem:this.showModal}"
         :hideForm="showModal"
         :tags="this.pulledTags"
+        v-on:close-modal="this.showForm"
          />
 
     </v-main>
@@ -154,7 +153,6 @@ export default {
     //Pulls information from the store for the various filters and display info.
     //Used to show the number of tags pulled in the icon button(.length) and passed to the form for display.
     pulledTags(){
-
         return this.$store.state.pulledTags
     },
 
@@ -207,6 +205,7 @@ export default {
         this.$store.commit('addPulledtag',tag)
     },
     showForm() {
+        console.log('showform')
         this.showModal = !this.showModal;
         if(this.showModal === true ) {
             document.body.style.overflow = 'hidden';
