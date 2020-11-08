@@ -206,6 +206,7 @@ export default {
         ],
     }),
     methods:{
+
         processTags(){
             
             let pulledTagIds = this.$store.state.pulledTagIds;
@@ -224,6 +225,7 @@ export default {
             EventBus.$emit('TagsPulled',pulledTagIds);
                     
         },
+
         setTransactionValue(data){
             this.transactionInfo = data;
             this.responseMessage = data.SuccessText;
@@ -239,19 +241,17 @@ export default {
             this.$emit('close-modal')
         },
         removeTags(id){
-            if(id){
-                EventBus.$emit('deleteItem',id);
-            } else {
-                EventBus.$emit('deleteAllTags')
-            }
+           this.$store.commit('removeTag',id);
+        },
+        removeAllTags(id){
+           this.$store.commit('removeAllTags');
         },
         cancelButton(){
-            this.removeTags()
+            this.removeAllTags()
             this.iframeSource = null;
             this.closeModal()
         },
-        submit(){
-            
+        submit(){        
             if(this.fulfillment == 'donation') {
                 let args = `?AccountIds=166^${this.tagDonation}^true`
                 let url = 'https://my.covechurch.org/page/932' + args
@@ -267,8 +267,9 @@ export default {
 
 
     },
+
     watch:{
-        tags: function(){
+        pulledTags: function(){
           if( this.pulledTags.some(e => {
                 return e.requireFinancialDonation === true
             })) {
@@ -277,6 +278,7 @@ export default {
         },
  
     },
+
     computed:{
        currentPersonFirstName: {
            get(){
@@ -311,16 +313,12 @@ export default {
             return this.pulledTags.some(e => {
                 return e.requireFinancialDonation == true
             })
-
-
         },
         mixedTagCheck() {
 
-            return this.tags.every(e => {
+            return this.pulledTags.every(e => {
                 return e.requireFinancialDonation == true
             })
-
-
         },
         formvalid(){
             if(this.valid && this.pulledTags.length > 0){

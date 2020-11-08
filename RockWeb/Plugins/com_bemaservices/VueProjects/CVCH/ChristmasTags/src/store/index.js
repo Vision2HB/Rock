@@ -97,6 +97,14 @@ export default new Vuex.Store({
     updateTags(state, tags) {
         state.tagList = state.tagList.concat(tags);
     },
+    // Remove individual tag from pulled tag list.
+    removeTag(state,tag) {
+        let indexOf = state.pulledTags.findIndex(item => item.id === tag);
+        state.pulledTags.splice(indexOf,1);
+    },
+    removeAllTags(state){
+      state.pulledTags = [];
+    },
     //Called by the initializestore action to update the store's age range options.
     addAgeRanges(state, ageRanges){
       state.ageRangeOptions = ageRanges
@@ -125,7 +133,7 @@ export default new Vuex.Store({
       state.currentPerson.email = email
     },
     setCurrentPersonAliasId(state,id){
-
+      state.currentPerson.currentPersonAliasId = id
     }
   },
   actions: {
