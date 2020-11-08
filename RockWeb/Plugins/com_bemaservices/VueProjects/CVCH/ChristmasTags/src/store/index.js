@@ -5,10 +5,13 @@ Vue.use(Vuex)
 
 let tagListUrl = '/Webhooks/Lava.ashx/BEMA/GetChristmasTags';
 let ageRangesUrl = '/Webhooks/Lava.ashx/BEMA/GetAgeRanges';
+let processTagsUrl = '/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags';
+let getCurrentPersonUrl = '/api/People/GetCurrentPerson';
 
 if(process.env.NODE_ENV == 'development') {
    tagListUrl = '/backend/tagsList.json';
    ageRangesUrl = '/backend/ageRanges.json';
+   getCurrentPersonUrl = '/backend/currentPerson.json';
 }
 
 export default new Vuex.Store({
@@ -54,7 +57,12 @@ export default new Vuex.Store({
     start: 0,
     stepSize: 15,
     step:2,
-
+    currentPerson:{
+      firstName:null,
+      lastName:null,
+      email:null,
+      personAliasId:null
+    }
   },
   getters:{
     currentTagIds(state) {
@@ -107,11 +115,35 @@ export default new Vuex.Store({
     addPulledtag(state, tag){
       state.pulledTags.push(tag);
     },
+    setCurrentPersonFirstName(state, firstName){
+      state.currentPerson.firstName = firstName;
+    },
+    setCurrentLastName(state, lastName){
+      state.currentPerson.lastName = lastName
+    },
+    setCurrentEmail(state, email){
+      state.currentPerson.email = email
+    },
+    setCurrentPersonAliasId(state,id){
 
-
-
+    }
   },
   actions: {
+    //Processing tags when checking out the
+    async processTags({commit, state}) {
+      let pulledTagIds = this.$store.state.pulledTagIds;
+            let url = processTagsUrl + `/${this.form.firstName}/${this.form.lastName}/${this.form.email}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
+            let response = await fetch(url)
+            let data = await response.json()
+      
+        
+                    this.responseMessage = data.SuccessText;
+                    this.tagResponse = data;
+                    this.showSuccess = true;
+    },
+
+
+
     // action get tags from the back end  the tagListURl is set above so it can be changed from development to production. 
     // the new tags are filtered for any tags that have already been downloaded and only new tags are added.
     async getTags({commit, getters}){
@@ -142,6 +174,9 @@ export default new Vuex.Store({
         // Gets new tags from endpont using the getTags store action
         dispatch('getTags')
         
+        //Gets thee current Person from the getCurrentPerson Action
+        dispatch('getCurrentPerson')
+        
         // Get Tags From Local StorageId and add each to the vuex store pulled Tags
         const tagList = JSON.parse(localStorage.getItem('pulledTags'))
         if(tagList && tagList.length > 0){
@@ -151,7 +186,19 @@ export default new Vuex.Store({
         commit('addPulledtag',newtag)
       })
     }
-    }
+    },
+
+    async getCurrentPerson({commit, dispatch}){
+      let response = await fetch(getCurrentPersonUrl,{
+          credentials:'include'
+        })
+
+      let person = await response.json()
+        commit('setCurrentPersonFirstName', person.FirstName)
+        commit('setCurrentLastName', person.LastName)
+        commit('setCurrentEmail', person.Email)
+        commit('setCurrentPersonAliasId',person.PrimaryAliasId)
+      }
   },
   modules: {
   }
