@@ -5,7 +5,7 @@
   "quantityRemaining": 50,
   "quantity": 1,
   "accountId": 166,
-  "allowMultiple": false,
+  "allowMultiple": true,
   "suggestedDonation": 25,
   "ageRange": {
     "id": 1297,
@@ -41,7 +41,7 @@
   "quantityRemaining": 50,
   "quantity": 1,
   "accountId": 166,
-  "allowMultiple": false,
+  "allowMultiple": true,
   "suggestedDonation": 25,
   "ageRange": {
     "id": 1297,
