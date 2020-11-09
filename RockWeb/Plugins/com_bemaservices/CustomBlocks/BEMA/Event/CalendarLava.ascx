@@ -15,7 +15,7 @@
             <asp:Panel ID="pnlBemaFilters" runat="server" Visible="false">
                 <div class="row margin-b-md">
                     <div id="divCampus" runat="server" class="col-md-6">
-                        <Rock:CampusPicker runat="server" ID="cpCampus" AutoPostBack="true" Label="Congregation" OnSelectedIndexChanged="cpCampus_SelectedIndexChanged" />
+                        <Rock:CampusPicker runat="server" ID="cpCampus" AutoPostBack="true" Label="Campus" OnSelectedIndexChanged="cpCampus_SelectedIndexChanged" />
                     </div>
 
                     <div id="divAudience" runat="server" class="col-md-6">
