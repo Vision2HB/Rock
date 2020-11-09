@@ -67,7 +67,26 @@ export default new Vuex.Store({
     currentTagIds(state) {
       return state.tagList.map(tag => tag.id)
     },
-    
+    getAccountTotals(state){
+
+      var result = [];
+      state.pulledTags.reduce(function (res, value) {
+          if (!res[value.accountId]) {
+              res[value.accountId] = {
+                  quantity: 0,
+                  suggestedDonation: value.suggestedDonation,
+                  accountId: value.accountId
+              };
+              result.push(res[value.accountId])
+          }
+          res[value.accountId].quantity += value.quantity
+          return res;
+      }, {});
+
+      return result
+
+
+    },
     filterTags(state){
       let filteredList = state.tagList;
       let pulledIds = state.pulledTags.map(tag => tag.id);  
@@ -196,6 +215,7 @@ export default new Vuex.Store({
         commit('setCurrentPersonAliasId',person.PrimaryAliasId)
       }
   },
+
   modules: {
   }
 })
