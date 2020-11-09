@@ -63,30 +63,8 @@
                                                 </thead>
 
 
-                                                <tr>
-
-                                                </tr>
-
-
                                                 <tbody>
-                                                    <tr v-for="tag in pulledTags" :key="tag.id">
-                                                        <td>{{tag.ageRange.description}}</td>
-                                                        <td>{{tag.gender.description}}</td>
-                                                        <td>{{tag.description}} <span v-if="tag.requireFinancialDonation" class="warning--text"><br />This tag is fulfilled by a financial donation.</span></td>
-                                                        <td class="text-center">
-                                                            <select v-if="tag.allowMultiple" class="text-center" style="border: 1px solid rgba(0,0,0,0.2); padding:5px 20px; width:100%;">
-                                                                <option class="text-center" v-for="n in tag.quantityRemaining" :key="n" :value="n">{{ n }} <i class="fa fa-angle-down"></i></option>
-                                                            </select>
-                                                            <span v-else>1</span>
-                                                        </td>
-                                                        
-                                                        
-                                                        <td class="text-center">
-                                                            <v-icon @click="removeTags(tag.id)" color="secondary" small>
-                                                                fa-trash</v-icon>
-                                                        </td>
-
-                                                    </tr>
+                                                    <tagTableRow v-for="tag in pulledTags" :key="tag.id" :tag="tag" v-on:remove-tag="removeTags"/>
                                                 </tbody>
                                             </template>
                                         </v-simple-table>
@@ -172,9 +150,12 @@ import { EventBus } from '../modules/event-bus.js';
 const iFrame = () => import(
     /* webpackChunkName: "iFrame" */ './iFrame'
   );
-  const transactionComplete = () => import(
-    /* webpackChunkName: "transactionComplete" */ './transactionComplete'
-  );
+const transactionComplete = () => import(
+/* webpackChunkName: "transactionComplete" */ './transactionComplete'
+);
+const tagTableRow = () => import(
+  /* webpackChunkName: "transactionComplete" */ './tagTableRow'  
+)
 
 
 
@@ -182,7 +163,8 @@ export default {
 
     components:{
         iFrame,
-        transactionComplete
+        transactionComplete,
+        tagTableRow
     },
 
     mounted(){
@@ -244,7 +226,7 @@ export default {
             this.iframeSource = null;
             this.transactionInfo = null;
             this.showSuccess = false;
-            this.$emit('close-modal')
+            this.$emit('close-modal');
         },
         removeTags(id){
            this.$store.commit('removeTag',id);
