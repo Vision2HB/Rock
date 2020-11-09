@@ -1,0 +1,121 @@
+{% assign layout = 'Global' | Page:'Layout' %}
+
+{% for batch in Batches %}
+{%- capture transactionCodeList -%}{%- for transaction in batch.Transactions -%}{{ -transaction.RockTransaction.Id- }},{%- endfor -%}{%- endcapture -%}
+{% if batch.BatchTotal > 0 %}
+    {% assign batchtype = 'Deposit' %}
+{% else %}
+    {% assign batchtype = 'Withdrawal' %}
+{% endif %}
+
+<div class="panel panel-default hidden-print" style="page-break-inside:avoid;" id="{{ batch.SettlementBatchId }}">
+    <div class="panel-heading" style="display:flex; flex-direction:column; justify-content: space-between;">
+        <div style="display:flex; flex-direction: row; justify-content: space-between; margin-bottom:20px;">
+            <h4 class="batchid" style="margin:0">Date: {{ batch.SettlementDate | Date:'MM/dd/yyyy' }}</h4>
+            <h4 class="batchid" style="margin:0; text-align:right;"><span class="transactioncount"
+                    style="margin-bottom: 20px;">{{ BankAccountName }}<br></span>
+                <span class="{{ batchtype }}" style="margin-top:4px;">{{ batch.BatchTotal | FormatAsCurrency }} ({{ batchtype }})</span>
+            </h4>
+        </div>
+        <div style="display:flex; flex-direction: row; justify-content: space-between; margin-bottom:20px;">
+            <h5 style="margin:0">Batch Id: {{ batch.SettlementBatchId }}</h5>
+            <h5 style="margin:0">Transaction Count: {{ batch.TransactionCount }}</h5>
+        </div>
+        <div style="display:flex; flex-direction: row; justify-content: space-between;">
+            <ul class="nav nav-pills" style="max-width:50%;">
+                <li class="active"><a data-toggle="pill" href="#FundActivity-{{ batch.SettlementBatchId }}">Fund Activity</a></li>
+                <li class="hidden-print"><a data-toggle="pill" href="#transactions-{{ batch.SettlementBatchId }}">Transactions</a></li>
+                <li>
+                    <a id="confirmbatch-{{ batch.SettlementBatchId }}" class="confirmdeposit {% if batch.TransactionCount == batch.ReconciledCount %}hide{% endif %}"
+                        data-transactionlist="{{ transactionCodeList }}"
+                        data-batchid="{{ batch.SettlementBatchId }}">
+                        Confirm Deposit
+                    </a>
+                </li>
+            </ul>
+           
+            <div class="hidden-print {% if batch.TransactionCount != batch.ReconciledCount %}hide{% endif %}" id="printbatch-{{ batch.SettlementBatchId }}">
+                <input type="checkbox" data-batchid="{{ batch.SettlementBatchId }}" id="{{ batch.SettlementBatchId }}-print"
+                    name="{{ batch.SettlementBatchId }}-IncludeInPrint" value="Print">
+                <label for="{{ batch.SettlementBatchId }}-IncludeInPrint">Include In Print</label>
+            </div>
+        </div>
+    </div>
+    <div class="panel-body">
+        <div class="tab-content">
+            <div id="FundActivity-{{ batch.SettlementBatchId }}" class="tab-pane fade in active">
+                <table class="table table-striped table-hover" style="font-size:1.1em; {% if layout == 'Full Width' %}max-width:50%; min-width:320px;{% else %}min-width:100%;}{% endif %}">
+                    <tbody>
+                        <tr>
+                            <th style="text-align:left;">GL Code:</th>
+                            <th style="text-align:left;">Fund Name:</th>
+                            <th style="text-align:right;">Fund Debit</th>
+                            <th style="text-align:right;">Fund Credit</th>
+                        </tr>
+                        <tr>
+                            <td style="text-align:left;">{{ BankAccountGlCode }}</td>
+                            <td style="text-align:left;">{{ BankAccountName }}</td>
+
+                            {% if batchtype == 'Deposit' %}
+                                <td style="text-align:right;">{{ batch.BatchTotal | FormatAsCurrency }}</td>
+                                <td style="text-align:right;"></td>
+                            {% else %}
+                                <td></td>
+                                <td style="text-align:right;">{{ batch.BatchTotal | Times: -1 | FormatAsCurrency }}</td>
+                            {% endif %}
+                        </tr>
+                        {% for account in batch.accountSummary %}
+                        <tr>
+                            <td style="text-align:left;">{{ account.GlCode }}</td>
+                            <td style="text-align:left;">{{ account.AccountName }}</td>
+                            {% if account.Amount < 0 %}
+                                <td style="text-align:right;">{{ account.Amount | Times: -1 | FormatAsCurrency }}</td>
+                                <td style="text-align:right;"></td>
+                            {% else %}
+                                <td style="text-align:right;"></td>
+                                <td style="text-align:right;">{{ account.Amount | FormatAsCurrency }}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div id="transactions-{{ batch.SettlementBatchId }}" class="tab-pane fade in">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+    
+                            <th style="width: 20%; padding-right: 20px;">Name:</th>
+                            <th style="width: 10%; padding-right: 20px;">Transaction Id:</th>
+                            <th style="width: 10%; padding-right: 20px;">Transaction Total:</th>
+                            <th style="width: 40%; padding-right: 20px;">Transaction Breakdown</th>
+                            <th style="width: 20%; padding-right: 20px;">Transaction Type:</th>
+                            <th>Reconciled On:</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in batch.Transactions %}
+                       
+                        {% assign Person = transaction.RockTransaction.AuthorizedPersonAlias.Person %}
+    
+                        
+                        <tr>
+                            <td style="padding-right: 20px;">{{ Person.FullName }}</td>
+                            <td style="padding-right: 20px;"><a href="../Transaction/{{ transaction.RockTransaction.Id }}">{{ transaction.RockTransaction.Id }}</a></td>
+                            <td style="padding-right: 20px;">{% assign transactionTotal = 0 %}{% for item in transaction.RockTransactionDetails %}{% assign transactionTotal = transactionTotal | Plus:item.Amount %}{% endfor %}{{ transactionTotal | FromatAsCurrency }}</td>
+                            <td style="padding-right: 20px;">
+                            {% for account in transaction.RockTransaction.TransactionDetails %}
+                                <li>{{ account.Account.PublicName }} - {{ account.Amount | FormatAsCurrency }}</li>    
+                            {%endfor %}
+                            </td>
+                            <td>{{ transaction.RockTransaction.FinancialPaymentDetail.CurrencyTypeValue.Value }}</td>
+                            <td id="{{ transaction.RockTransaction.Id }}">{{ transaction.RockTransaction | Attribute:'ReconciledOn' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
