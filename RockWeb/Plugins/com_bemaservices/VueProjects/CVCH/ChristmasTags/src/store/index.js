@@ -67,10 +67,14 @@ export default new Vuex.Store({
     currentTagIds(state) {
       return state.tagList.map(tag => tag.id)
     },
+    getTag: (state) => (id) => {return state.tagList.find(tag => tag.id == id)},
+  
     getAccountTotals(state){
 
       var result = [];
-      state.pulledTags.reduce(function (res, value) {
+      state.pulledTags.filter(e => e.requireFinancialDonation == true || e.fulfillment == 'donation')
+      .reduce(function (res, value) {
+        
           if (!res[value.accountId]) {
               res[value.accountId] = {
                   quantity: 0,
@@ -81,10 +85,10 @@ export default new Vuex.Store({
           }
           res[value.accountId].quantity += value.quantity
           return res;
+        
       }, {});
-
+    
       return result
-
 
     },
     filterTags(state){
@@ -127,7 +131,20 @@ export default new Vuex.Store({
     addAgeRanges(state, ageRanges){
       state.ageRangeOptions = ageRanges
     },
-
+    changeValue(state, payload){
+      let foundIndex =  state.pulledTags.findIndex(x => x.id == payload[0]);
+      state.pulledTags[foundIndex].quantity = payload[1]
+    },
+    updatePulledTagFulfillment(state, payload){
+      
+      state.pulledTags.forEach(e => {
+        if(!e.requireFinancialDonation) {
+          e.fulfillment = payload;
+        } else {
+          e.fulfillment = 'donation';
+        }
+      })
+    },
     //Are called by the changes in the app.vue selects and update the store values.
     updateSelectedGenders(state,selectedGenders){
       state.selectedGenders = selectedGenders;
@@ -139,7 +156,8 @@ export default new Vuex.Store({
       state.selectedCampus = selectedCampus;
     },
     addPulledtag(state, tag){
-      state.pulledTags.push(tag);
+      let tagInfo = {id:tag.id, accountId: tag.accountId, quantity:tag.quantity, suggestedDonation: tag.suggestedDonation, requireFinancialDonation:tag.requireFinancialDonation}
+      state.pulledTags.push(tagInfo);
     },
     setCurrentPersonFirstName(state, firstName){
       state.currentPerson.firstName = firstName;

@@ -58,13 +58,20 @@
                                                             Description
                                                         </th>
                                                         <th>Quantity</th>
+                                                        <th>Suggested Donation</th>
                                                         <th class="text-center">Delete</th>
                                                     </tr>
                                                 </thead>
 
 
                                                 <tbody>
-                                                    <tagTableRow v-for="tag in pulledTags" :key="tag.id" :tag="tag" v-on:remove-tag="removeTags"/>
+                                                    <tagTableRow 
+                                                        v-for="tag in pulledTags" 
+                                                        :key="tag.id" 
+                                                        :pulledTag="tag" 
+                                                        :fulfillment="fulfillment" 
+                                                        v-on:remove-tag="removeTags"
+                                                    />
                                                 </tbody>
                                             </template>
                                         </v-simple-table>
@@ -79,7 +86,7 @@
                                             label="How would you like to fulfill these tags?" :rules="fulfillmentRules">
 
                                             <v-radio label="Monetary Donation" value="donation"></v-radio>
-                                            <v-radio v-if="!financialTransactionCheck" label="Buy Gifts" value="buygifts"></v-radio>
+                                            <v-radio label="Buy Gifts" value="buygifts"></v-radio>
                                         </v-radio-group>
 
                                     </v-col>
@@ -91,10 +98,6 @@
                                                 By selecting "Monetary Donation", you will be redirected to our donation
                                                 page with a suggested donation of $25.00 per tag for a total gift of
                                                 ${{formatToCurrency(tagDonation)}}. Please note that designated funds can be redirected by the Executive Leadership Team to other ministry needs. This will only be done if absolutely necessary.
-                                                <span v-if="financialTransactionCheck && !mixedTagCheck"><br /><br />
-                                                Your pulled tags list included tags that are fulfilled by a financial donation and tags that can be fulfilled by buying gifts.  If you wish to buy and donate gifts, you will need to remove the gift donation tags complete the process separetely for those tags.
-                                                       
-                                                </span> 
                                             </v-alert>
                                         </transition>
                                         <transition name="slideleft" mode="out-in">
@@ -103,6 +106,10 @@
                                                 By selecting "Buy Gifts", you agree to pruchase gifts for the christmas
                                                 store for each tag you select and return them to the church during a
                                                 designated drop off time.
+                                                <span v-if="financialTransactionCheck && !mixedTagCheck"><br /><br />
+                                                Your pulled tags list included tags that are fulfilled by a financial donation and tags that can be fulfilled by buying gifts.  By clicking Claim Tags, you will be taken to a donation form.
+                                                       
+                                                </span> 
                                             </v-alert>
                                         </transition>
 
@@ -257,13 +264,10 @@ export default {
     },
 
     watch:{
-        pulledTags: function(){
-          if( this.pulledTags.some(e => {
-                return e.requireFinancialDonation === true
-            })) {
-                this.fulfillment = 'donation';
-            }
-        },
+
+        fulfillment: function(val){
+            this.$store.commit('updatePulledTagFulfillment',val)
+        }
  
     },
 

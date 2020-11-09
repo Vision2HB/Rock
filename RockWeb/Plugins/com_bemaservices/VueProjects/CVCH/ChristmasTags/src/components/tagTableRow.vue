@@ -1,24 +1,32 @@
 <template>
   <tr>
-      <td>{{tag.ageRange.description}}</td>
-      <td>{{tag.gender.description}}</td>
-      <td>{{tag.description}} <span v-if="tag.requireFinancialDonation" class="warning--text"><br />This tag is fulfilled by a financial donation.</span></td>
+      <td>{{tagInfo.ageRange.description}}</td>
+      <td>{{tagInfo.gender.description}}</td>
+      <td>{{tagInfo.description}} <span v-if="tagInfo.requireFinancialDonation" class="warning--text"><br />This tag is fulfilled by a financial donation.</span></td>
       <td class="text-center" style="width:100px;">
         
           <v-select
-          v-if="tag.allowMultiple"
-          :items="getNumbers(tag.quantityRemaining)"
+          v-if="tagInfo.allowMultiple"
+          :items="getNumbers(tagInfo.quantityRemaining)"
           class="text-center"
-          @change="changeValue(tag.quantity)"
-          v-model="tag.quantity"
+          @change="changeValue(pulledTag.id, pulledTag.quantity)"
+          v-model="pulledTag.quantity"
 
-          ></v-select>
-          <span v-else>1</span>
+          >
+          <template v-slot:selection="{ item }">
+            <span class="d-flex justify-center" style="width: 100%;">
+              {{ item }}
+            </span>
+          </template>
+          
+          </v-select>
+          <span v-else>{{pulledTag.quantity}}</span>
       </td>
       
-      
+      <td v-if="fulfillment === 'donation' || tagInfo.requireFinancialDonation">${{(pulledTag.quantity * pulledTag.suggestedDonation).toFixed(2)}}</td>
+      <td v-else>Gift Donation</td>
       <td class="text-center">
-          <v-icon @click="$emit('remove-tag',tag.id)" color="secondary" small>
+          <v-icon @click="$emit('remove-tag',tagInfo.id)" color="secondary" small>
               fa-trash</v-icon>
       </td>
 
@@ -28,7 +36,7 @@
 <script>
 export default {
   props: {
-    tag: {
+    pulledTag: {
       type: Object,
       required: true
     },
@@ -36,9 +44,22 @@ export default {
       type: Number,
       required: false,
       default:1
-    }
+    },
+    fulfillment: {
+      type: String,
+    },
   },
   
+  computed:{
+    getTotal(){
+      return state.getters.getAccountTotals.reduce((acc, val) => {
+        return accumulator + (val.suggestedDonation * val.quantity)
+      },0)
+    },
+    tagInfo(){
+      return this.$store.getters.getTag(this.pulledTag.id)
+    }
+  },
   
   methods: {
     getNumbers(maxValue){
@@ -48,8 +69,8 @@ export default {
     removeTag(id){
       console.log(id)
     },
-    changeValue(value){
-      console.log(value)
+    changeValue(id,value){
+      this.$store.commit('changeValue',[id,value])
     }
 
   }
