@@ -102,7 +102,7 @@
                         <tr>
                             <td style="padding-right: 20px;">{{ Person.FullName }}</td>
                             <td style="padding-right: 20px;"><a href="../Transaction/{{ transaction.RockTransaction.Id }}">{{ transaction.RockTransaction.Id }}</a></td>
-                            <td style="padding-right: 20px;">{% assign transactionTotal = 0 %}{% for item in transaction.RockTransactionDetails %}{% assign transactionTotal = transactionTotal | Plus:item.Amount %}{% endfor %}{{ transactionTotal | FromatAsCurrency }}</td>
+                            <td style="padding-right: 20px;">{% assign transactionTotal = 0.00 %}{% for item in transaction.RockTransaction.TransactionDetails %}{% assign transactionTotal = transactionTotal | Plus:item.Amount %}{% endfor %}{{ transactionTotal | FormatAsCurrency }}</td>
                             <td style="padding-right: 20px;">
                             {% for account in transaction.RockTransaction.TransactionDetails %}
                                 <li>{{ account.Account.PublicName }} - {{ account.Amount | FormatAsCurrency }}</li>    
