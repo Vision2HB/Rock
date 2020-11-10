@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -190,7 +190,7 @@ namespace RockWeb.Plugins.com_kevinrutledge.Finance
                                 filtered.Add(item);
                             }
                         }
-                        var grouped = filtered.OrderByDescending(x => x.SettledDate)
+                        var grouped = filtered.Distinct().OrderByDescending(x => x.SettledDate)
                                         .GroupBy(x => x.SettledGroupId);
                        
                        var batches  = new List<FinancialGatewayBatch>();
