@@ -72,7 +72,17 @@
                                                         :fulfillment="fulfillment" 
                                                         v-on:remove-tag="removeTags"
                                                     />
-                                                </tbody>
+                                                    </tbody>
+                                                    <tfoot>
+                                                <tr>
+                                                    <th></th>
+                                                    <th></th>
+                                                    
+                                                    <th colspan="2" class="text-right">Suggested Financial Donation:</th>
+                                                    <th>{{financialDonation}}</th>
+                                                </tr>
+                                                    </tfoot>
+                                                  
                                             </template>
                                         </v-simple-table>
                                     </v-col>
@@ -86,7 +96,7 @@
                                             label="How would you like to fulfill these tags?" :rules="fulfillmentRules">
 
                                             <v-radio label="Monetary Donation" value="donation"></v-radio>
-                                            <v-radio label="Buy Gifts" value="buygifts"></v-radio>
+                                            <v-radio label="Buy Gifts" value="buygifts" v-if="financialTransactionCheck && !mixedTagCheck"></v-radio>
                                         </v-radio-group>
 
                                     </v-col>
@@ -96,8 +106,7 @@
                                             <v-alert v-if="fulfillment == 'donation'" border="top" colored-border
                                                 type="primary" elevation="2" icon="fa-money-bill-alt">
                                                 By selecting "Monetary Donation", you will be redirected to our donation
-                                                page with a suggested donation of $25.00 per tag for a total gift of
-                                                ${{formatToCurrency(tagDonation)}}. Please note that designated funds can be redirected by the Executive Leadership Team to other ministry needs. This will only be done if absolutely necessary.
+                                                page with a suggested donation of {{financialDonation}}. Please note that designated funds can be redirected by the Executive Leadership Team to other ministry needs. This will only be done if absolutely necessary.
                                             </v-alert>
                                         </transition>
                                         <transition name="slideleft" mode="out-in">
@@ -107,8 +116,9 @@
                                                 store for each tag you select and return them to the church during a
                                                 designated drop off time.
                                                 <span v-if="financialTransactionCheck && !mixedTagCheck"><br /><br />
-                                                Your pulled tags list included tags that are fulfilled by a financial donation and tags that can be fulfilled by buying gifts.  By clicking Claim Tags, you will be taken to a donation form.
-                                                       
+                                                    By selecting "Monetary Donation", you will be redirected to our donation
+                                                    page with a suggested donation of {{financialDonation}}. You will receive an email with instructions for donating items.
+                            
                                                 </span> 
                                             </v-alert>
                                         </transition>
@@ -272,7 +282,12 @@ export default {
     },
 
     computed:{
-      
+      financialDonation(){
+          let accounts = this.$store.getters.getAccountTotals;
+          
+          return '$ ' + accounts.reduce((acc,val) => { 
+          return val.quantity * val.suggestedDonation},0).toFixed(2)
+      },
        currentPersonFirstName: {
            get(){
             return this.$store.state.currentPerson.firstName;
@@ -335,6 +350,9 @@ export default {
 </script>
 
 <style scoped>
+tfoot th {
+    font-size:1.0rem !important; 
+}
 .vuecard {
     height: 95vh;
     width: 95vw;
