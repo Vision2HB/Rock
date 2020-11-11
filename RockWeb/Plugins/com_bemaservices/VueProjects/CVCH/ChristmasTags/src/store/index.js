@@ -12,7 +12,7 @@ if(process.env.NODE_ENV == 'development') {
    tagListUrl = '/backend/tagsList.json';
    ageRangesUrl = '/backend/ageRanges.json';
    getCurrentPersonUrl = '/backend/currentPerson.json';
-   getCurrentPersonUrl = '/backend/tagProcessResponse.json'
+   processTagsUrl = '/backend/tagProcessResponse.json'
 }
 
 export default new Vuex.Store({
@@ -289,8 +289,9 @@ export default new Vuex.Store({
         let response = await fetch(getCurrentPersonUrl,{
             credentials:'include'
           })
-
+          
         let person = await response.json()
+        
           commit('setCurrentPersonFirstName', person.FirstName)
           commit('setCurrentLastName', person.LastName)
           commit('setCurrentEmail', person.Email)

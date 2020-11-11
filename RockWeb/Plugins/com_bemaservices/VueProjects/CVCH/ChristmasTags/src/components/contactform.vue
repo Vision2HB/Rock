@@ -203,7 +203,7 @@ export default {
     
         nameRules: [
         v => !!v || 'Name is required',
-        v => v.length <= 35 || 'Name must be less than 35 characters',
+        v => !!v && v.length <= 35 || 'Name must be less than 35 characters',
       ],
          emailRules: [
         v => !!v || 'E-mail is required',
@@ -258,13 +258,12 @@ export default {
         },
         submit(){        
             if(this.fulfillment == 'donation' || this.financialTransactionCheck) {
-                // let args = '?AccountIds='
-                // this.calculatedAccountValues.forEach(a => {
-                //     args += `${a.accountId}^${a.quantity * a.suggestedDonation}^true,`
-                // })
-                // let url = 'https://my.covechurch.org/donatetags' + args
-                // this.iframeSource = url
-                this.$store.dispatch('processTags')
+                let args = '?AccountIds='
+                this.calculatedAccountValues.forEach(a => {
+                    args += `${a.accountId}^${a.quantity * a.suggestedDonation}^true,`
+                })
+                let url = 'https://my.covechurch.org/donatetags2' + args
+                this.iframeSource = url
             } else {
                 this.$store.dispatch('processTags')
             }
