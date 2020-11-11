@@ -257,18 +257,18 @@ export default {
             this.closeModal()
         },
         submit(){        
-            if(this.fulfillment == 'donation') {
-                let args = `?AccountIds=166^${this.tagDonation}^true`
-                let url = 'https://my.covechurch.org/page/932' + args
-                this.iframeSource = url
+            if(this.fulfillment == 'donation' || this.financialTransactionCheck) {
+                // let args = '?AccountIds='
+                // this.calculatedAccountValues.forEach(a => {
+                //     args += `${a.accountId}^${a.quantity * a.suggestedDonation}^true,`
+                // })
+                // let url = 'https://my.covechurch.org/donatetags' + args
+                // this.iframeSource = url
+                this.$store.dispatch('processTags')
             } else {
-                this.processTags();
+                this.$store.dispatch('processTags')
             }
-            
         },
-
-
-
     },
 
     watch:{
@@ -280,11 +280,14 @@ export default {
     },
 
     computed:{
+      calculatedAccountValues(){
+            return this.$store.getters.getAccountTotals;
+        },
       financialDonation(){
-          let accounts = this.$store.getters.getAccountTotals;
-          
-          return '$ ' + accounts.reduce((acc,val) => { 
-          return val.quantity * val.suggestedDonation},0).toFixed(2)
+          return '$ ' + this.calculatedAccountValues.reduce((acc,val) => 
+            {
+                return val.quantity * val.suggestedDonation
+            },0).toFixed(2)
       },
        currentPersonFirstName: {
            get(){

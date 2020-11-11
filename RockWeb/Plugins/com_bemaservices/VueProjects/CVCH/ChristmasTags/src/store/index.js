@@ -5,13 +5,14 @@ Vue.use(Vuex)
 
 let tagListUrl = '/Webhooks/Lava.ashx/BEMA/GetChristmasTags';
 let ageRangesUrl = '/Webhooks/Lava.ashx/BEMA/GetAgeRanges';
-let processTagsUrl = '/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags';
+let processTagsUrl = '/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags1';
 let getCurrentPersonUrl = '/api/People/GetCurrentPerson';
 
 if(process.env.NODE_ENV == 'development') {
    tagListUrl = '/backend/tagsList.json';
    ageRangesUrl = '/backend/ageRanges.json';
    getCurrentPersonUrl = '/backend/currentPerson.json';
+   getCurrentPersonUrl = '/backend/tagProcessResponse.json'
 }
 
 export default new Vuex.Store({
@@ -61,6 +62,15 @@ export default new Vuex.Store({
       lastName:null,
       email:null,
       personAliasId:'buygifts'
+    },
+    financialData:{
+      TransactionCode:null,
+      TransactionDateTime:null,
+      PrimaryPerson:null,
+      TotalAmount:null,
+      PaymentType: null,
+      SuccessText:null,
+      TransactionId:null
     }
   },
   getters:{
@@ -177,19 +187,65 @@ export default new Vuex.Store({
     },
     setCurrentPersonAliasId(state,id){
       state.currentPerson.currentPersonAliasId = id
-    }
+    },
+    updateFinancialData(state,financialData){
+      state.financialData = {
+        ...state.Financialdata,
+        TransactionCode:financialData.TransactionCode,
+        TransactionDateTime:financialData.TransactionDateTime,
+        PrimaryPerson:financialData.PrimaryPerson,
+        TotalAmount:financialData.TotalPayment,
+        PaymentType: financialData.paymentType,
+        SuccessText:financialData.SuccessText,
+        TransactionId:financialData.TransactionId
+      }
+    },
   },
   actions: {
     //Processing tags when checking out the
     async processTags({commit, state}) {
-      let pulledTagIds = this.$store.state.pulledTagIds;
-            let url = processTagsUrl + `/${this.form.firstName}/${this.form.lastName}/${this.form.email}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
-            let response = await fetch(url)
-            let data = await response.json()
       
-            this.responseMessage = data.SuccessText;
-            this.tagResponse = data;
-            this.showSuccess = true;
+      let financialDonationTags = state.pulledTags.filter(e => e.fulfillment == 'donation').map(e => e.id);
+      let buyGiftsTags = state.pulledTags.filter(e => e.fulfillment == 'buygifts').map(e => e.id);
+      let tagList ={
+        financialTags: financialDonationTags.length > 0 ? financialDonationTags.join(',') : null,
+        giftDonationTags: buyGiftsTags.length > 0  ? buyGiftsTags.join(',') : null,
+      }
+      
+        let tagBody = {
+          firstName: state.currentPerson.firstName,
+          lastName: state.currentPerson.lastName,
+          email: state.currentPerson.email,
+          transactionId: state.financialData.TransactionId,
+          tagList: tagList,
+        }
+        console.log(JSON.stringify(tagBody));
+        try {
+        let response = await fetch(processTagsUrl,{
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+            },
+            credentials:'include',
+            body: JSON.stringify(tagBody)
+       })
+       let message = await response.json()
+      }
+      catch(err) {
+        console.log(err)
+
+      }
+       console.log(message)
+
+
+     
+      // let url = processTagsUrl + `/${}/$}/${}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
+      //       let response = await fetch(url)
+      //       let data = await response.json()
+      
+      //       this.responseMessage = data.SuccessText;
+      //       this.tagResponse = data;
+      //       this.showSuccess = true;
     },
 
 
@@ -229,18 +285,35 @@ export default new Vuex.Store({
     },
 
     async getCurrentPerson({commit, dispatch}){
-      let response = await fetch(getCurrentPersonUrl,{
-          credentials:'include'
-        })
+      try {
+        let response = await fetch(getCurrentPersonUrl,{
+            credentials:'include'
+          })
 
-      let person = await response.json()
-        commit('setCurrentPersonFirstName', person.FirstName)
-        commit('setCurrentLastName', person.LastName)
-        commit('setCurrentEmail', person.Email)
-        commit('setCurrentPersonAliasId',person.PrimaryAliasId)
+        let person = await response.json()
+          commit('setCurrentPersonFirstName', person.FirstName)
+          commit('setCurrentLastName', person.LastName)
+          commit('setCurrentEmail', person.Email)
+          commit('setCurrentPersonAliasId',person.PrimaryAliasId)
       }
+     catch(err){
+     // Do nothing as the current person is null and that does not error the application. 
+     }
+    },
   },
-
+  
+  plugins,
   modules: {
   }
 })
+
+const plugins = [
+  store => {
+    window.addEventListener('message', async e => {
+      if (e.data.event === 'transactioncomplete') {
+        await store.commit('updateFinancialData',e.data.data)
+        store.dispatch('processTags')
+      }
+    });
+  }
+]
