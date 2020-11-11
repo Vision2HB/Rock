@@ -9,7 +9,7 @@
         :ageRange="tag.ageRange"
         />
         
- 
+        <div ref="bottomDiv" key="lastItem"></div>
   </transition-group> 
 </template>
 

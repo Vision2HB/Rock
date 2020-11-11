@@ -104,7 +104,7 @@
               
             
        <TagList />
-      
+      <div ref="bottomElement"></div>
       <ContactForm
         class="vuemodal"
         :class="{showItem:this.showModal}"
@@ -209,13 +209,24 @@ export default {
             document.body.style.overflow = 'inherit';
         }
     },
+    dispatchGetTags(entries,observer) {
+        entries.forEach(entry => {
+            if(entry.isIntersecting && !this.$store.state.gettingTags){
+              // console.log('Fired Get Tags')
+              this.$store.dispatch('getTags')
+            }
+        })}
   },
    created () {
-   
+     
+     
      this.$store.dispatch('initializeStore')
-    
-  },
- 
+ },
+ mounted(){
+    let observer = new IntersectionObserver(this.dispatchGetTags)
+
+     observer.observe(this.$refs.bottomElement);
+ }
 };
 </script>
 

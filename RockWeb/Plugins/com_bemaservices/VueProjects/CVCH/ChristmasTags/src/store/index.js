@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import listenforIframeMessage from './listenforIframeMessage'
+import listenforIframeMessage from './plugins/listenforIframeMessage'
+// import intersectionObserver from './plugins/intersectionObserver'
 
 Vue.use(Vuex)
 
@@ -67,6 +68,7 @@ export default new Vuex.Store({
       personAliasId:'buygifts'
     },
     tagsProcessed:false,
+    gettingTags:false,
     financialData:{
       TransactionCode:null,
       TransactionDateTime:null,
@@ -219,6 +221,9 @@ export default new Vuex.Store({
       let pulledIds = state.pulledTags.map(tag => tag.id);  
       state.tagList = state.pulledTags.filter(tag => pulledIds.includes(tag.id) == false);
       state.pulledTags = []
+    },
+    gettingTags(state,val){
+      state.gettingTags = val
     }
   },
   actions: {
@@ -276,17 +281,19 @@ export default new Vuex.Store({
     // action get tags from the back end  the tagListURl is set above so it can be changed from development to production. 
     // the new tags are filtered for any tags that have already been downloaded and only new tags are added.
     async getTags({commit, getters}){
+        commit('gettingTags',true)
         //get list of current tags.
         let currentTags = getters.currentTagIds;
         //determin start which is the current tags length. this is set to the endpoint as and offset
         let start = currentTags.length
         //Determine the number of rows to fetch which is the stepsize.  
         let end = getters.getCurrentSteps.stepSize;
+        
         if(process.env.NODE_ENV != 'development') {
         //fetch the next end# of rows ofsetting by start.  Initial request would be offset 0 number of rows 15.
         tagListUrl += `/${start}/${end}`        
         }
-        console.log(tagListUrl)
+        
         let response = await fetch(tagListUrl);
         let tags  = await response.json(); 
       
@@ -297,6 +304,7 @@ export default new Vuex.Store({
 
         //Send the new list of tags to append to the current tag list.
         commit('updateTags',tags)
+        commit('gettingTags',false)
       },
 
     // Get Age ranges
@@ -312,9 +320,6 @@ export default new Vuex.Store({
     initializeStore({commit, dispatch}){
         // get Age Range Options
         dispatch('getAgeRanges')
-
-        // Gets new tags from endpont using the getTags store action
-        dispatch('getTags')
         
         //Gets thee current Person from the getCurrentPerson Action
         dispatch('getCurrentPerson')
