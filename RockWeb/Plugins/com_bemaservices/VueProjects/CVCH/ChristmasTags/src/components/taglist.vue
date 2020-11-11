@@ -7,7 +7,6 @@
         :tag="tag"
         :gender="tag.gender" 
         :ageRange="tag.ageRange"
-        
         />
         
  
@@ -416,10 +415,11 @@ export default {
     bottom: 0;
     left: 0;
 }
+
 .is-back .tag-text{
     font-size: .9rem;
-
 }
+
 .added {
     z-index: 3000;
 }

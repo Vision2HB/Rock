@@ -96,7 +96,7 @@
                                             label="How would you like to fulfill these tags?" :rules="fulfillmentRules">
 
                                             <v-radio label="Monetary Donation" value="donation"></v-radio>
-                                            <v-radio label="Buy Gifts" value="buygifts" v-if="financialTransactionCheck && !mixedTagCheck"></v-radio>
+                                            <v-radio label="Buy Gifts" value="buygifts" v-if=" !everyFinancialTransactionCheck"></v-radio>
                                         </v-radio-group>
 
                                     </v-col>
@@ -115,9 +115,8 @@
                                                 By selecting "Buy Gifts", you agree to pruchase gifts for the christmas
                                                 store for each tag you select and return them to the church during a
                                                 designated drop off time.
-                                                <span v-if="financialTransactionCheck && !mixedTagCheck"><br /><br />
-                                                    By selecting "Monetary Donation", you will be redirected to our donation
-                                                    page with a suggested donation of {{financialDonation}}. You will receive an email with instructions for donating items.
+                                                <span v-if="financialTransactionCheck && !everyFinancialTransactionCheck"><br /><br />
+                                                    You have tags that require a financial donation, you will be asked to make a suggested donation of {{financialDonation}}. You will receive an email with instructions for donating items.
                             
                                                 </span> 
                                             </v-alert>
@@ -192,6 +191,7 @@ export default {
            
         });
     },
+
     data: () => ({
         valid:false,
         baseDonation:25,
@@ -266,9 +266,7 @@ export default {
             }
             
         },
-        formatToCurrency(amount){
-           return (amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'); 
-        }
+
 
 
     },
@@ -317,26 +315,24 @@ export default {
             return this.$store.state.pulledTags;
         },
         financialTransactionCheck() {
-
+            // Checks if some of the items
             return this.pulledTags.some(e => {
                 return e.requireFinancialDonation == true
             })
         },
-        mixedTagCheck() {
-
+        everyFinancialTransactionCheck() {
+            // Returns false if every tag is not a require financial donation.  This checks if there is a mixture of tags to adjust the ui accordingly.
             return this.pulledTags.every(e => {
                 return e.requireFinancialDonation == true
             })
         },
         formvalid(){
+            //Uses the form rules array and makes sure that there are tags pulled. This is used to disable/enable the submit button.
             if(this.valid && this.pulledTags.length > 0){
                 return true
             } else {
                 return false
             }
-        },
-        tagDonation(){
-            return this.pulledTags.length * 25;
         },
         buttonText(){
             if(this.fulfillment == 'donation') {

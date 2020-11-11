@@ -1,10 +1,10 @@
 <template>
   <v-app>
-    <v-img
+    <!-- <v-img
         contain
         max-height="250"
         src="./Assets/images/CWTC_Title_English.jpg"
-      ></v-img>
+      ></v-img> -->
 
      <v-sheet height="64"
      
@@ -226,7 +226,6 @@ export default {
 .v-application {
    /* background-image: url("./assets/images/CWTC_BlueSnowBackground.jpg"); */
   background-repeat: repeat;
-  border: 2rem solid var(--v-primary-base,green);
   padding-bottom:20px;
   font-family: 'Lato', sans-serif !important;
 }
@@ -263,7 +262,6 @@ export default {
     height:100vh;
     width: 100vw;
     transform: scale(0);
-    
     z-index:30000;
     transform-origin:bottom left;
     display:flex;

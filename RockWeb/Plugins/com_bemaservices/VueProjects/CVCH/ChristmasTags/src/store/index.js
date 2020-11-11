@@ -60,7 +60,7 @@ export default new Vuex.Store({
       firstName:null,
       lastName:null,
       email:null,
-      personAliasId:null
+      personAliasId:'buygifts'
     }
   },
   getters:{
@@ -156,7 +156,14 @@ export default new Vuex.Store({
       state.selectedCampus = selectedCampus;
     },
     addPulledtag(state, tag){
-      let tagInfo = {id:tag.id, accountId: tag.accountId, quantity:tag.quantity, suggestedDonation: tag.suggestedDonation, requireFinancialDonation:tag.requireFinancialDonation}
+      let tagInfo = {
+        id: tag.id,
+        accountId: tag.accountId,
+        quantity: tag.quantity,
+        suggestedDonation: tag.suggestedDonation,
+        requireFinancialDonation: tag.requireFinancialDonation,
+        fulfillment: 'donation'
+      }
       state.pulledTags.push(tagInfo);
     },
     setCurrentPersonFirstName(state, firstName){

@@ -14,7 +14,10 @@
 
           >
           <template v-slot:selection="{ item }">
-            <span class="d-flex justify-center" style="width: 100%;">
+            <span style="transform: translateX(-50%);
+    position: absolute;
+    left: 50%;
+    width: 2ch;">
               {{ item }}
             </span>
           </template>
@@ -23,8 +26,8 @@
           <span v-else>{{pulledTag.quantity}}</span>
       </td>
       
-      <td v-if="fulfillment === 'donation' || tagInfo.requireFinancialDonation">${{(pulledTag.quantity * pulledTag.suggestedDonation).toFixed(2)}}</td>
-      <td v-else>Gift Donation</td>
+      <td v-if="fulfillment === 'donation' || tagInfo.requireFinancialDonation || pulledTag.fulfillment == 'donation'">${{(pulledTag.quantity * pulledTag.suggestedDonation).toFixed(2)}}</td>
+      <td v-else>Buy Gifts</td>
       <td class="text-center">
           <v-icon @click="$emit('remove-tag',tagInfo.id)" color="secondary" small>
               fa-trash</v-icon>
