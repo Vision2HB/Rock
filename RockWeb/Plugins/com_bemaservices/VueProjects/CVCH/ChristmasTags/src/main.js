@@ -4,12 +4,12 @@ import vuetify from './plugins/vuetify';
 import { EventBus } from './modules/event-bus.js';
 import store from './store'
 
-// Event listener for warranty transaction success
-window.addEventListener('message', function (e) {
-  if (e.data.event === 'transactioncomplete') {
-      EventBus.$emit('transactionComplete', e.data.data);
-  }
-});
+// // Event listener for warranty transaction success
+// window.addEventListener('message', function (e) {
+//   if (e.data.event === 'transactioncomplete') {
+//       EventBus.$emit('transactionComplete', e.data.data);
+//   }
+// });
 
 let firstName = '{{CurrentPerson.NickName}}';
 let lastName = 'CurrentPerson.LastName';

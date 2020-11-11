@@ -8,11 +8,11 @@
         </v-app-bar>
         <div style="height:30px;"></div>
         <v-sheet id="scrolling-techniques-7" class="overflow-y-auto pt-5" max-height="100%">
-            <transition v-if="!iframeSource && !showSuccess" name="fade" appear>
+            <transition v-if="!iframeSource && !returnTagsProcessed" name="fade" appear>
                 
                 <div>
                
-                    <v-card-text v-show="!transactionInfo">
+                    <v-card-text >
                
                         <v-form ref="form" v-model="valid">
                             <v-container>
@@ -155,7 +155,7 @@
                 <iFrame :src="iframeSource" />
             </transition>
             <transition name="fade" v-else mode="out-in">
-                <transactionComplete  :transactionInfo="transactionInfo" :fulfillmentType="fulfillment" :responseMessage="responseMessage" v-on:closeModal="closeModal()"/>
+                <transactionComplete v-on:closeModal="closeModal()"/>
             </transition>
         </v-sheet>
     </v-card>
@@ -196,11 +196,10 @@ export default {
         valid:false,
         baseDonation:25,
         iframeSource:null,
-        transactionInfo:null,
         tagResponse:null,
         showSuccess:false,
         fulfillment:null,
-    
+        
         nameRules: [
         v => !!v || 'Name is required',
         v => !!v && v.length <= 35 || 'Name must be less than 35 characters',
@@ -215,34 +214,13 @@ export default {
     }),
     methods:{
 
-        processTags(){
-            
-            let pulledTagIds = this.$store.state.pulledTagIds;
-            let url = `/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags/${this.currentPerson.firstName}/${this.currentPerson.lastName}/${this.currentPerson.email}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    this.responseMessage = data.SuccessText;
-                    this.tagResponse = data;
-                    this.showSuccess = true;
-                })
-                .catch(er => console.log(er));
-            
-            EventBus.$emit('TagsPulled',pulledTagIds);
-                    
-        },
-
-        setTransactionValue(data){
-            this.transactionInfo = data;
-            this.responseMessage = data.SuccessText;
-            this.iframeSource = null;
-            this.showSuccess = true;
-            this.processTags();
-        },
+       
+        
         closeModal(){
             this.iframeSource = null;
             this.transactionInfo = null;
             this.showSuccess = false;
+            this.$store.commit('updateTagsProcessed',false);
             this.$emit('close-modal');
         },
         removeTags(id){
@@ -274,11 +252,25 @@ export default {
 
         fulfillment: function(val){
             this.$store.commit('updatePulledTagFulfillment',val)
+        },
+        returnedTransactionInfo: function(val){
+            if(val){
+                this.iframeSource = null;
+            }
         }
- 
     },
 
     computed:{
+        returnedTransactionInfo(){
+          return this.$store.state.financialData.TransactionId;
+       },
+
+     returnTagsProcessed(){
+         return this.$store.state.tagsProcessed;
+     },
+        returnedTransactionInfo(){
+          return this.$store.state.financialData;
+       },
       calculatedAccountValues(){
             return this.$store.getters.getAccountTotals;
         },

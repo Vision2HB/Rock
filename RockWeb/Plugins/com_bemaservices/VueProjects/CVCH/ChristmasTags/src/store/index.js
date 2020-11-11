@@ -1,13 +1,16 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import listenforIframeMessage from './listenforIframeMessage'
 
 Vue.use(Vuex)
 
+//default production endpoints
 let tagListUrl = '/Webhooks/Lava.ashx/BEMA/GetChristmasTags';
 let ageRangesUrl = '/Webhooks/Lava.ashx/BEMA/GetAgeRanges';
 let processTagsUrl = '/Webhooks/Lava.ashx/BEMA/ProcessChristmasTags1';
 let getCurrentPersonUrl = '/api/People/GetCurrentPerson';
 
+//if in development, replace the deefault endponts with sample json objects
 if(process.env.NODE_ENV == 'development') {
    tagListUrl = '/backend/tagsList.json';
    ageRangesUrl = '/backend/ageRanges.json';
@@ -18,7 +21,7 @@ if(process.env.NODE_ENV == 'development') {
 export default new Vuex.Store({
   state: {
     // From App.Vue
-    selectedGenders:[],
+    selectedGenders:[], // the options selected in the dropdown.
     selectedAgeRanges:[],
     selectedCampus: 1,
     pulledTags:[],
@@ -63,6 +66,7 @@ export default new Vuex.Store({
       email:null,
       personAliasId:'buygifts'
     },
+    tagsProcessed:false,
     financialData:{
       TransactionCode:null,
       TransactionDateTime:null,
@@ -123,11 +127,17 @@ export default new Vuex.Store({
         return filteredList.slice(0,state.step * state.stepSize);
     }
     },
+    getCurrentSteps(state){
+      return {currentStep: state.step, stepSize: state.stepSize}
+    },
+ 
+
   },
   mutations: {
     // Initiated by the get tags action to concat the results into the tagsList store item.
     updateTags(state, tags) {
         state.tagList = state.tagList.concat(tags);
+        state.currentStep ++ ;
     },
     // Remove individual tag from pulled tag list.
     removeTag(state,tag) {
@@ -189,17 +199,27 @@ export default new Vuex.Store({
       state.currentPerson.currentPersonAliasId = id
     },
     updateFinancialData(state,financialData){
+
       state.financialData = {
         ...state.Financialdata,
         TransactionCode:financialData.TransactionCode,
         TransactionDateTime:financialData.TransactionDateTime,
         PrimaryPerson:financialData.PrimaryPerson,
-        TotalAmount:financialData.TotalPayment,
-        PaymentType: financialData.paymentType,
+        TotalAmount:financialData.TotalAmount,
+        PaymentType: financialData.PaymentType,
         SuccessText:financialData.SuccessText,
-        TransactionId:financialData.TransactionId
+        TransactionId:financialData.TransactionGuid
       }
     },
+    updateTagsProcessed(state, value){
+      state.tagsProcessed = value;
+      
+    },
+    clearProcessedtags(state){
+      let pulledIds = state.pulledTags.map(tag => tag.id);  
+      state.tagList = state.pulledTags.filter(tag => pulledIds.includes(tag.id) == false);
+      state.pulledTags = []
+    }
   },
   actions: {
     //Processing tags when checking out the
@@ -222,20 +242,23 @@ export default new Vuex.Store({
         console.log(JSON.stringify(tagBody));
         try {
         let response = await fetch(processTagsUrl,{
-            method:'POST',
-            headers:{
-              'Content-Type':'application/json',
-            },
-            credentials:'include',
-            body: JSON.stringify(tagBody)
+            // method:'POST',
+            // headers:{
+            //   'Content-Type':'application/json',
+            // },
+            // credentials:'include',
+            // body: JSON.stringify(tagBody)
        })
-       let message = await response.json()
+       
+       commit('clearProcessedtags')
+       commit('updateTagsProcessed',true)
+       
       }
       catch(err) {
         console.log(err)
 
       }
-       console.log(message)
+       
 
 
      
@@ -253,13 +276,26 @@ export default new Vuex.Store({
     // action get tags from the back end  the tagListURl is set above so it can be changed from development to production. 
     // the new tags are filtered for any tags that have already been downloaded and only new tags are added.
     async getTags({commit, getters}){
+        //get list of current tags.
+        let currentTags = getters.currentTagIds;
+        //determin start which is the current tags length. this is set to the endpoint as and offset
+        let start = currentTags.length
+        //Determine the number of rows to fetch which is the stepsize.  
+        let end = getters.getCurrentSteps.stepSize;
+        if(process.env.NODE_ENV != 'development') {
+        //fetch the next end# of rows ofsetting by start.  Initial request would be offset 0 number of rows 15.
+        tagListUrl += `/${start}/${end}`        
+        }
+        console.log(tagListUrl)
         let response = await fetch(tagListUrl);
         let tags  = await response.json(); 
-        const currentTags = getters.currentTagIds;
-        
+      
+        //Remove from response any tags currently downloaded
         if(currentTags.length > 0 ){
           tags = tags.filter( tag => currentTags.includes(tag.id) === false );
         } 
+
+        //Send the new list of tags to append to the current tag list.
         commit('updateTags',tags)
       },
 
@@ -303,18 +339,7 @@ export default new Vuex.Store({
     },
   },
   
-  plugins,
+  plugins:[listenforIframeMessage],
   modules: {
   }
 })
-
-const plugins = [
-  store => {
-    window.addEventListener('message', async e => {
-      if (e.data.event === 'transactioncomplete') {
-        await store.commit('updateFinancialData',e.data.data)
-        store.dispatch('processTags')
-      }
-    });
-  }
-]
