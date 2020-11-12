@@ -232,7 +232,7 @@ namespace com.bemaservices.RoomManagement.Model
             foreach ( var resource in reservation.ReservationResources )
             {
                 var availableQuantity = GetAvailableResourceQuantity( resource.Resource, reservation, arePotentialConflictsReturned );
-                if ( availableQuantity - resource.Quantity < 0 )
+                if ( availableQuantity.HasValue && availableQuantity - resource.Quantity < 0 )
                 {
                     message = BuildResourceConflictHtmlList( reservation, resource.Resource.Id, detailPageRoute, arePotentialConflictsReturned );
                     sb.AppendFormat( "<li>{0} [note: only {1} available] due to:<ul>{2}</ul></li>", resource.Resource.Name, availableQuantity, message );
@@ -735,40 +735,47 @@ namespace com.bemaservices.RoomManagement.Model
         /// <returns>
         /// a quantity of available resources at
         /// </returns>
-        public int GetAvailableResourceQuantity( Resource resource, Reservation reservation, bool arePotentialConflictsReturned = false )
+        public int? GetAvailableResourceQuantity( Resource resource, Reservation reservation, bool arePotentialConflictsReturned = false )
         {
             // For each new reservation summary, make sure that the quantities of existing summaries that come into contact with it
             // do not exceed the resource's quantity
 
-            // Get all existing non-denied reservations (for a huge time period; a month before now and a year after
-            // now) which have the given resource in them.
-            var existingReservationSummaries = GetReservationSummaries(
-                Queryable().AsNoTracking()
-                .Where( r => r.Id != reservation.Id
-                        && r.ApprovalState != ReservationApprovalState.Denied
-                        && r.ApprovalState != ReservationApprovalState.Cancelled
-                        && r.ApprovalState != ReservationApprovalState.Draft
-                        && (
-                            ( arePotentialConflictsReturned == false && ( !r.ReservationType.IsReservationBookedOnApproval || r.ApprovalState == ReservationApprovalState.Approved ) ) ||
-                            ( arePotentialConflictsReturned == true && r.ReservationType.IsReservationBookedOnApproval && r.ApprovalState != ReservationApprovalState.Approved )
-                            )
-                        && r.ReservationResources.Any( rr => resource.Id == rr.ResourceId )
-                        ),
-                RockDateTime.Now.AddMonths( -1 ), RockDateTime.Now.AddYears( 1 ) );
+            if ( !resource.Quantity.HasValue )
+            {
+                return null;
+            }
+            else
+            {
+                // Get all existing non-denied reservations (for a huge time period; a month before now and a year after
+                // now) which have the given resource in them.
+                var existingReservationSummaries = GetReservationSummaries(
+                    Queryable().AsNoTracking()
+                    .Where( r => r.Id != reservation.Id
+                            && r.ApprovalState != ReservationApprovalState.Denied
+                            && r.ApprovalState != ReservationApprovalState.Cancelled
+                            && r.ApprovalState != ReservationApprovalState.Draft
+                            && (
+                                ( arePotentialConflictsReturned == false && ( !r.ReservationType.IsReservationBookedOnApproval || r.ApprovalState == ReservationApprovalState.Approved ) ) ||
+                                ( arePotentialConflictsReturned == true && r.ReservationType.IsReservationBookedOnApproval && r.ApprovalState != ReservationApprovalState.Approved )
+                                )
+                            && r.ReservationResources.Any( rr => resource.Id == rr.ResourceId )
+                            ),
+                    RockDateTime.Now.AddMonths( -1 ), RockDateTime.Now.AddYears( 1 ) );
 
-            // Now narrow the reservations down to only the ones in the matching/overlapping time frame
-            var reservedQuantities = GetReservationSummaries( new List<Reservation>() { reservation }.AsQueryable(), RockDateTime.Now.AddMonths( -1 ), RockDateTime.Now.AddYears( 1 ) )
-                .Select( newReservationSummary =>
-                    existingReservationSummaries.Where( currentReservationSummary =>
-                     ( currentReservationSummary.ReservationStartDateTime > newReservationSummary.ReservationStartDateTime || currentReservationSummary.ReservationEndDateTime > newReservationSummary.ReservationStartDateTime ) &&
-                     ( currentReservationSummary.ReservationStartDateTime < newReservationSummary.ReservationEndDateTime || currentReservationSummary.ReservationEndDateTime < newReservationSummary.ReservationEndDateTime )
-                    )
-                    .DistinctBy( reservationSummary => reservationSummary.Id )
-                    .Sum( currentReservationSummary => currentReservationSummary.ReservationResources.Where( rr => rr.ApprovalState != ReservationResourceApprovalState.Denied && rr.ResourceId == resource.Id ).Sum( rr => rr.Quantity ) )
-               );
+                // Now narrow the reservations down to only the ones in the matching/overlapping time frame
+                var reservedQuantities = GetReservationSummaries( new List<Reservation>() { reservation }.AsQueryable(), RockDateTime.Now.AddMonths( -1 ), RockDateTime.Now.AddYears( 1 ) )
+                    .Select( newReservationSummary =>
+                        existingReservationSummaries.Where( currentReservationSummary =>
+                         ( currentReservationSummary.ReservationStartDateTime > newReservationSummary.ReservationStartDateTime || currentReservationSummary.ReservationEndDateTime > newReservationSummary.ReservationStartDateTime ) &&
+                         ( currentReservationSummary.ReservationStartDateTime < newReservationSummary.ReservationEndDateTime || currentReservationSummary.ReservationEndDateTime < newReservationSummary.ReservationEndDateTime )
+                        )
+                        .DistinctBy( reservationSummary => reservationSummary.Id )
+                        .Sum( currentReservationSummary => currentReservationSummary.ReservationResources.Where( rr => rr.ApprovalState != ReservationResourceApprovalState.Denied && rr.ResourceId == resource.Id && rr.Quantity.HasValue ).Sum( rr => rr.Quantity.Value ) )
+                   );
 
-            var maxReservedQuantity = reservedQuantities.Count() > 0 ? reservedQuantities.Max() : 0;
-            return resource.Quantity - maxReservedQuantity;
+                var maxReservedQuantity = reservedQuantities.Count() > 0 ? reservedQuantities.Max() : 0;
+                return resource.Quantity - maxReservedQuantity;
+            }
         }
 
         /// <summary>
@@ -788,12 +795,13 @@ namespace com.bemaservices.RoomManagement.Model
             var locationConflicts = conflictingReservationSummaries.SelectMany( currentReservationSummary =>
                     currentReservationSummary.ReservationResources.Where( rr =>
                         rr.ApprovalState != ReservationResourceApprovalState.Denied &&
-                        rr.ResourceId == resourceId )
+                        rr.ResourceId == resourceId &&
+                        rr.Quantity.HasValue)
                      .Select( rr => new ReservationConflict
                      {
                          ResourceId = rr.ResourceId,
                          Resource = rr.Resource,
-                         ResourceQuantity = rr.Quantity,
+                         ResourceQuantity = rr.Quantity.Value,
                          ReservationId = rr.ReservationId,
                          Reservation = rr.Reservation
                      } ) )

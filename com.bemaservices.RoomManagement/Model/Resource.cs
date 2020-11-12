@@ -87,7 +87,7 @@ namespace com.bemaservices.RoomManagement.Model
         /// The quantity.
         /// </value>
         [DataMember]
-        public int Quantity { get; set; }
+        public int? Quantity { get; set; }
 
         /// <summary>
         /// Gets or sets the note.

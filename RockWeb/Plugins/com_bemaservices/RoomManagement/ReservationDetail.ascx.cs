@@ -1118,22 +1118,32 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             {
                 var newReservation = new Reservation() { Id = PageParameter( "ReservationId" ).AsIntegerOrNull() ?? 0, Schedule = ReservationService.BuildScheduleFromICalContent( sbSchedule.iCalendarContent ), SetupTime = nbSetupTime.Text.AsInteger(), CleanupTime = nbCleanupTime.Text.AsInteger() };
                 var availableQuantity = new ReservationService( rockContext ).GetAvailableResourceQuantity( resource, newReservation );
-                nbQuantity.MaximumValue = availableQuantity.ToString();
-                nbQuantity.Label = String.Format( "Quantity ({0} of {1} Available)", availableQuantity, resource.Quantity );
-                if ( availableQuantity >= 1 )
+                if ( availableQuantity.HasValue )
                 {
-                    nbQuantity.Enabled = true;
-
-                    if ( string.IsNullOrWhiteSpace( nbQuantity.Text ) )
+                    nbQuantity.Visible = true;
+                    nbQuantity.MaximumValue = availableQuantity.ToString();
+                    nbQuantity.Label = String.Format( "Quantity ({0} of {1} Available)", availableQuantity, resource.Quantity );
+                    if ( availableQuantity >= 1 )
                     {
-                        nbQuantity.Text = "1";
+                        nbQuantity.Enabled = true;
+
+                        if ( string.IsNullOrWhiteSpace( nbQuantity.Text ) )
+                        {
+                            nbQuantity.Text = "1";
+                        }
+                    }
+                    else
+                    {
+                        nbQuantity.MinimumValue = "0";
+                        nbQuantity.Enabled = false;
                     }
                 }
                 else
                 {
-                    nbQuantity.MinimumValue = "0";
-                    nbQuantity.Enabled = false;
+                    nbQuantity.Required = false;
+                    nbQuantity.Visible = false;
                 }
+
             }
 
             LoadResourceConflictMessage();
@@ -1528,7 +1538,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             Guid rowGuid = ( Guid ) e.RowKeyValue;
 
             RemoveLocation( rowGuid );
-        }       
+        }
 
         /// <summary>
         /// Handles the GridRebind event of the gLocations control.
@@ -3562,7 +3572,9 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
         /// </summary>
         private void SaveReservationResource()
         {
-            if ( nbQuantity.Text.AsInteger() > 0 )
+            var resource = new ResourceService( new RockContext() ).Get( srpResource.SelectedValueAsId().Value );
+
+            if ( resource != null && ( !resource.Quantity.HasValue || nbQuantity.Text.AsInteger() > 0 ) )
             {
                 ReservationResourceSummary reservationResource = null;
                 Guid guid = hfAddReservationResourceGuid.Value.AsGuid();
@@ -3590,13 +3602,13 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                 try
                 {
-                    reservationResource.Resource = new ResourceService( new RockContext() ).Get( srpResource.SelectedValueAsId().Value );
-                    reservationResource.ResourceId = srpResource.SelectedValueAsId().Value;
+                    reservationResource.Resource = resource;
+                    reservationResource.ResourceId = resource.Id;
                 }
                 catch { }
 
                 reservationResource.ApprovalState = ReservationResourceApprovalState.Unapproved;
-                reservationResource.Quantity = nbQuantity.Text.AsInteger();
+                reservationResource.Quantity = nbQuantity.Text.AsIntegerOrNull();
                 reservationResource.ReservationId = 0;
 
                 var existingResourceCount = ResourcesState.Where( rr => rr.Guid != guid && rr.ResourceId == reservationResource.ResourceId ).Count();

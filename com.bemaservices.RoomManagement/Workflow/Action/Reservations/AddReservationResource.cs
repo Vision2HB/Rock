@@ -85,7 +85,7 @@ namespace com.bemaservices.RoomManagement.Workflow.Actions.Reservations
             // Get the Quantity
             int? quantity = GetAttributeValue( action, "Quantity", true ).ResolveMergeFields( mergeFields ).AsIntegerOrNull();
 
-            if ( quantity == null )
+            if ( ( quantity == null && resource.Quantity.HasValue ) || ( quantity != null && !resource.Quantity.HasValue ) )
             {
                 errorMessages.Add( "Invalid Quantity Value!" );
                 return false;
@@ -105,7 +105,7 @@ namespace com.bemaservices.RoomManagement.Workflow.Actions.Reservations
             changes.Add( new History.HistoryChange( History.HistoryVerb.Add, History.HistoryChangeType.Property, String.Format( "Resource ({0} {1})", reservationResource.Quantity, reservationResource.Resource.Name ) ) );
 
             var availableQuantity = reservationService.GetAvailableResourceQuantity( reservationResource.Resource, reservation, false );
-            if ( availableQuantity - reservationResource.Quantity < 0 )
+            if ( availableQuantity.HasValue && availableQuantity - reservationResource.Quantity < 0 )
             {
                 reservationResource.ApprovalState = ReservationResourceApprovalState.Denied;
                 reservation.ApprovalState = ReservationApprovalState.ChangesNeeded;

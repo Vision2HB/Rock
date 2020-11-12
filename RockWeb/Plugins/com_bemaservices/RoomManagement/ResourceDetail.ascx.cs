@@ -192,7 +192,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                     resource.LocationId = null;
                 }
 
-                resource.Quantity = nbQuantity.Text.AsIntegerOrNull() ?? 1;
+                resource.Quantity = nbQuantity.Text.AsIntegerOrNull();
                 resource.Note = tbNote.Text;
                 resource.ApprovalGroupId = gpApprovalGroup.SelectedValueAsId() ?? null;
 

@@ -393,14 +393,14 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 var reservedResources = reservationSummaryList.Where( reservationSummary =>
                      ( reservationSummary.ReservationStartDateTime > filterStartDateTime || reservationSummary.ReservationEndDateTime > filterStartDateTime ) &&
                      ( reservationSummary.ReservationStartDateTime < filterEndDateTime || reservationSummary.ReservationEndDateTime < filterEndDateTime )
-                    ).DistinctBy( reservationSummary => reservationSummary.Id ).Sum( reservationSummary => reservationSummary.ReservationResources.Where( rr => rr.ApprovalState != ReservationResourceApprovalState.Denied && rr.ResourceId == resource.Id ).Sum( rr => rr.Quantity ) );
+                    ).DistinctBy( reservationSummary => reservationSummary.Id ).Sum( reservationSummary => reservationSummary.ReservationResources.Where( rr => rr.Quantity.HasValue && rr.ApprovalState != ReservationResourceApprovalState.Denied && rr.ResourceId == resource.Id ).Sum( rr => rr.Quantity.Value ) );
                 return new
                 {
                     Id = resource.Id,
                     Name = resource.Name,
                     LocationName = ( resource.Location == null ) ? "" : resource.Location.Name,
-                    IsAvailable = resource.Quantity - reservedResources > 0,
-                    Availability = resource.Quantity - reservedResources > 0 ? String.Format( "{0} Available", resource.Quantity - reservedResources ) : reservationSummaryList.Where( reservation => reservation.ReservationResources.Any( rr => rr.ApprovalState != ReservationResourceApprovalState.Denied && rr.ResourceId == resource.Id ) ).Select( reservation => reservation.ReservationName + "</br>" + reservation.ReservationDateTimeDescription ).ToList().AsDelimited( "</br></br>" )
+                    IsAvailable = !resource.Quantity.HasValue ? true : (resource.Quantity - reservedResources > 0),
+                    Availability = ( !resource.Quantity.HasValue || resource.Quantity - reservedResources > 0) ? String.Format( "{0} Available", resource.Quantity - reservedResources ) : reservationSummaryList.Where( reservation => reservation.ReservationResources.Any( rr => rr.ApprovalState != ReservationResourceApprovalState.Denied && rr.ResourceId == resource.Id ) ).Select( reservation => reservation.ReservationName + "</br>" + reservation.ReservationDateTimeDescription ).ToList().AsDelimited( "</br></br>" )
                 };
             } ).OrderBy( l => l.Name ).ToList();
             gResources.EntityTypeId = EntityTypeCache.Get<Reservation>().Id;

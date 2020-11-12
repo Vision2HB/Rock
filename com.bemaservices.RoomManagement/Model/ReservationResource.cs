@@ -56,9 +56,8 @@ namespace com.bemaservices.RoomManagement.Model
         /// <value>
         /// The quantity.
         /// </value>
-        [Required]
         [DataMember]
-        public int Quantity { get; set; }
+        public int? Quantity { get; set; }
 
         /// <summary>
         /// Gets or sets the state of the approval.

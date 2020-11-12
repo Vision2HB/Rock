@@ -103,7 +103,7 @@ namespace com.bemaservices.RoomManagement.ReportTemplates
             // Add logo
             try
             {
-                iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance( logoFileUrl );               
+                iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance( logoFileUrl );
 
                 logo.Alignment = iTextSharp.text.Image.RIGHT_ALIGN;
                 logo.ScaleToFit( 100, 55 );
@@ -192,7 +192,17 @@ namespace com.bemaservices.RoomManagement.ReportTemplates
 
                         foreach ( var reservationResource in reservationSummary.Resources )
                         {
-                            var listItem = new iTextSharp.text.ListItem( String.Format( "{0}({1})", reservationResource.Resource.Name, reservationResource.Quantity ), listItemFontNormal );
+                            var listItemText = string.Empty;
+                            if ( reservationResource.Quantity.HasValue )
+                            {
+                                listItemText = String.Format( "{0}({1})", reservationResource.Resource.Name, reservationResource.Quantity );
+                            }
+                            else
+                            {
+                                listItemText = reservationResource.Resource.Name;
+                            }
+
+                            var listItem = new iTextSharp.text.ListItem( listItemText, listItemFontNormal );
                             if ( reservationResource.ApprovalState == ReservationResourceApprovalState.Approved )
                             {
                                 listItem.Add( new Phrase( "\u0034", zapfdingbats ) );

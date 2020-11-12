@@ -90,6 +90,7 @@ namespace com.bemaservices.RoomManagement.Migrations
                 ALTER TABLE [dbo].[_com_bemaservices_RoomManagement_ReservationLinkage] CHECK CONSTRAINT [FK__com_bemaservices_RoomManagement_ReservationLinkage_ModifiedByPersonAliasId]
 
 " );
+
             RockMigrationHelper.UpdateNoteType( "Reservation Note", "com.bemaservices.RoomManagement.Model.Reservation", true, "2D02BFC9-EE35-4297-9957-146AF9EB1660" );
 
             // Page: New Reservation
@@ -552,6 +553,11 @@ Notes: {{ reservation.Note }}<br/>
                     DECLARE @WorkflowId int = (Select Top 1 Id From WorkflowType Where Guid = '83907883-4803-4AFB-8A20-49FDC0BE4788')
                     INSERT [dbo].[_com_bemaservices_RoomManagement_ReservationWorkflowTrigger] ([WorkflowTypeId],[ReservationTypeId], [TriggerType], [QualifierValue], [CreatedDateTime], [ModifiedDateTime], [CreatedByPersonAliasId], [ModifiedByPersonAliasId], [Guid], [ForeignKey], [ForeignGuid], [ForeignId]) VALUES (@WorkflowId,1, 2, N'|||', CAST(N'2020-10-23 14:02:11.953' AS DateTime), CAST(N'2020-10-23 14:02:11.953' AS DateTime), NULL, NULL, N'68F6DE62-CDBB-4EC0-8440-8B1740C21E65', NULL, NULL, NULL)
             " );
+
+            Sql( @"
+            ALTER TABLE [_com_bemaservices_RoomManagement_Resource] Alter COLUMN Quantity [int] NULL;
+            ALTER TABLE [_com_bemaservices_RoomManagement_ReservationResource] Alter COLUMN Quantity [int] NULL;
+                " );
         }
 
         private void AddReservationCreationWorkflowActions()

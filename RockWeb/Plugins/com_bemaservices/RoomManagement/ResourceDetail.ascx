@@ -48,7 +48,7 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <Rock:NumberBox ID="nbQuantity" runat="server" Label="Quantity" NumberType="Integer" Required="true" MinimumValue="1" Text="1" />
+                            <Rock:NumberBox ID="nbQuantity" runat="server" Label="Quantity" NumberType="Integer" MinimumValue="1" Text="1" />
                         </div>
                         <div class="col-md-3">
                             <Rock:RockDropDownList ID="ddlCampus" runat="server" Label="Campus"/>
