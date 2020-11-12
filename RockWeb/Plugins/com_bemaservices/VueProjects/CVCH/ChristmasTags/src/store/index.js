@@ -59,13 +59,13 @@ export default new Vuex.Store({
     // From tagList.Vue
     tagList: [],
     start: 0,
-    stepSize: 15,
+    stepSize: 10,
     step:2,
     currentPerson:{
       firstName:null,
       lastName:null,
       email:null,
-      personAliasId:'buygifts'
+      id:null,
     },
     tagsProcessed:false,
     gettingTags:false,
@@ -139,7 +139,7 @@ export default new Vuex.Store({
     // Initiated by the get tags action to concat the results into the tagsList store item.
     updateTags(state, tags) {
         state.tagList = state.tagList.concat(tags);
-        state.currentStep ++ ;
+        state.step ++ ;
     },
     // Remove individual tag from pulled tag list.
     removeTag(state,tag) {
@@ -188,18 +188,18 @@ export default new Vuex.Store({
       }
       state.pulledTags.push(tagInfo);
     },
-    setCurrentPersonFirstName(state, firstName){
-      state.currentPerson.firstName = firstName;
+    setCurrentPerson(state, Person){
+      state.currentPerson = {
+        ...state.currentPerson,
+        firstName: Person.FirstName,
+        lastName: Person.LastName,
+        email: Person.Email,
+        id: Person.Id,
+
+      }
     },
-    setCurrentLastName(state, lastName){
-      state.currentPerson.lastName = lastName
-    },
-    setCurrentEmail(state, email){
-      state.currentPerson.email = email
-    },
-    setCurrentPersonAliasId(state,id){
-      state.currentPerson.currentPersonAliasId = id
-    },
+
+
     updateFinancialData(state,financialData){
 
       state.financialData = {
@@ -217,7 +217,7 @@ export default new Vuex.Store({
       state.tagsProcessed = value;
       
     },
-    clearProcessedtags(state){
+    clearProcessedTags(state){
       let pulledIds = state.pulledTags.map(tag => tag.id);  
       state.tagList = state.pulledTags.filter(tag => pulledIds.includes(tag.id) == false);
       state.pulledTags = []
@@ -244,7 +244,7 @@ export default new Vuex.Store({
           transactionId: state.financialData.TransactionId,
           tagList: tagList,
         }
-        console.log(JSON.stringify(tagBody));
+        
         try {
         let response = await fetch(processTagsUrl,{
             // method:'POST',
@@ -255,7 +255,7 @@ export default new Vuex.Store({
             // body: JSON.stringify(tagBody)
        })
        
-       commit('clearProcessedtags')
+       commit('clearProcessedTags')
        commit('updateTagsProcessed',true)
        
       }
@@ -263,17 +263,6 @@ export default new Vuex.Store({
         console.log(err)
 
       }
-       
-
-
-     
-      // let url = processTagsUrl + `/${}/$}/${}/${pulledTagIds.join(',')}/${this.transactionInfo ? this.transactionInfo.PrimaryPerson : 0}/${this.transactionInfo ? this.transactionInfo.TransactionGuid: 0}`
-      //       let response = await fetch(url)
-      //       let data = await response.json()
-      
-      //       this.responseMessage = data.SuccessText;
-      //       this.tagResponse = data;
-      //       this.showSuccess = true;
     },
 
 
@@ -325,18 +314,15 @@ export default new Vuex.Store({
         dispatch('getCurrentPerson')
     },
 
+
     async getCurrentPerson({commit, dispatch}){
       try {
         let response = await fetch(getCurrentPersonUrl,{
             credentials:'include'
           })
           
-        let person = await response.json()
-        
-          commit('setCurrentPersonFirstName', person.FirstName)
-          commit('setCurrentLastName', person.LastName)
-          commit('setCurrentEmail', person.Email)
-          commit('setCurrentPersonAliasId',person.PrimaryAliasId)
+          let person = await response.json()
+          commit('setCurrentPerson', person)
       }
      catch(err){
      // Do nothing as the current person is null and that does not error the application. 
