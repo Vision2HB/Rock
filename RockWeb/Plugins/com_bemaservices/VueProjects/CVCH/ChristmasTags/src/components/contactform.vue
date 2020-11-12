@@ -234,7 +234,9 @@ export default {
             this.iframeSource = null;
             this.closeModal()
         },
-        submit(){        
+        async submit(){        
+            // check if current person is blank
+
             if(this.fulfillment == 'donation' || this.financialTransactionCheck) {
                 let args = '?AccountIds='
                 this.calculatedAccountValues.forEach(a => {
@@ -304,7 +306,7 @@ export default {
                 this.$store.commit('setCurrentPersonEmail', value)
             }
        },
-
+        
         pulledTags() {
             return this.$store.state.pulledTags;
         },
