@@ -179,7 +179,7 @@ export default {
 
     selectedAgeRanges: {
       get(){
-        return this.$store.state.selectedGenders;
+        return this.$store.state.selectedAgeRanges;
       },
       set(value){
         this.$store.commit('updateSelectedAgeRanges',value);
@@ -223,7 +223,9 @@ export default {
      this.$store.dispatch('initializeStore')
  },
  mounted(){
-    let observer = new IntersectionObserver(this.dispatchGetTags)
+    let observer = new IntersectionObserver(this.dispatchGetTags,{
+      threshold:0.5,
+    })
 
      observer.observe(this.$refs.bottomElement);
  }
