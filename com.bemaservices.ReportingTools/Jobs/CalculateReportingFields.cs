@@ -32,10 +32,32 @@ using Rock.Web.UI.Controls;
 
 namespace com.bemaservices.ReportingTools.Jobs
 {
-    [IntegerField( "Command Timeout", "Maximum amount of time (in seconds) to wait for the sql operations to complete. Leave blank to use the default for this job (3600). Note, some operations could take several minutes, so you might want to set it at 3600 (60 minutes) or higher", false, 60 * 60, "General", 1, "CommandTimeout" )]
+    [CustomDropdownListField( "Full Name with Nicknames and No Titles Format", "", "0^Ted & Cindy Decker,1^Cindy and Ted Decker", true, "0", "Formatting", 0, BemaAttributeKey.FullNameNickNameNoTitle )]
+    [CustomDropdownListField( "First Name Format", "", "0^Theodore & Cynthia,1^Cynthia and Theodore", true, "0", "Formatting", 1, BemaAttributeKey.FirstName )]
+    [CustomDropdownListField( "Full Name with Nick Names Format", "", "0^Mr. Ted & Mrs. Cindy Decker,1^Mr. and Mrs. Ted Decker Sr.", true, "0", "Formatting", 2, BemaAttributeKey.FullNameNickName )]
+    [CustomDropdownListField( "Last Name Format", "", "0^Lowie & Lowe,1^Lowie and Lowe", true, "0", "Formatting", 3, BemaAttributeKey.LastName )]
+    [CustomDropdownListField( "Nick Names Format", "", "0^Ted & Cindy,1^Cindy and Ted", true, "0", "Formatting", 4, BemaAttributeKey.NickName )]
+    [CustomDropdownListField( "Titles Format", "", "0^Mr. & Mrs.,1^Mr. and Mrs.", true, "0", "Formatting", 5, BemaAttributeKey.Title )]
+    [CustomDropdownListField( "Full Name with First Names Format", "", "0^Mr. Theodore & Mrs. Cynthia Decker,1^Mr. and Mrs. Theodore Decker Sr.", true, "0", "Formatting", 6, BemaAttributeKey.FullNameFirstName )]
+    [IntegerField( "Command Timeout", "Maximum amount of time (in seconds) to wait for the sql operations to complete. Leave blank to use the default for this job (3600). Note, some operations could take several minutes, so you might want to set it at 3600 (60 minutes) or higher", false, 60 * 60, "General", 7, "CommandTimeout" )]
     [DisallowConcurrentExecution]
     public class CalculateReportingFields : IJob
     {
+        /* BEMA.Start */
+        #region Attribute Keys
+        private static class BemaAttributeKey
+        {
+            public const string FullNameNickNameNoTitle = "FullNameNicknameNoTitle";
+            public const string FirstName = "FirstName";
+            public const string FullNameNickName = "FullNameNickName";
+            public const string LastName = "LastName";
+            public const string NickName = "NickName";
+            public const string Title = "Title";
+            public const string FullNameFirstName = "FullNameFirstName";
+        }
+
+        #endregion
+        /* BEMA.End */
         private const string SOURCE_OF_CHANGE = "Calculate Reporting Fields Job";
 
         /// <summary> 
@@ -82,13 +104,28 @@ namespace com.bemaservices.ReportingTools.Jobs
             var givingUnitFullNameFirstNamesAttribute = AttributeCache.Get( com.bemaservices.ReportingTools.SystemGuid.Attribute.GIVINGUNIT_FULL_NAME_FIRST_NAMES_ATTRIBUTE.AsGuid() );
 
             JobDataMap dataMap = context.JobDetail.JobDataMap;
-
             int commandTimeout = dataMap.GetString( "CommandTimeout" ).AsIntegerOrNull() ?? 3600;
+            int firstNameNickNameNoTitleFormatValue = dataMap.GetString( BemaAttributeKey.FullNameNickNameNoTitle ).AsInteger();
+            int firstNameFormatValue = dataMap.GetString( BemaAttributeKey.FirstName ).AsInteger();
+            int fullNameNickNameFormatValue = dataMap.GetString( BemaAttributeKey.FullNameNickName ).AsInteger();
+            int lastNameFormatValue = dataMap.GetString( BemaAttributeKey.LastName ).AsInteger();
+            int nickNameFormatValue = dataMap.GetString( BemaAttributeKey.NickName ).AsInteger();
+            int titleFormatValue = dataMap.GetString( BemaAttributeKey.Title ).AsInteger();
+            int fullNameFirstNameFormatValue = dataMap.GetString( BemaAttributeKey.FullNameNickName ).AsInteger();
+
             int batchNumber = 1;
             var resultContext = new RockContext();
             resultContext.Database.CommandTimeout = commandTimeout;
             context.UpdateLastStatusMessage( $"Getting Reporting Fields Dataset for Batch #{batchNumber}..." );
-            var results = resultContext.Database.SqlQuery<FamilyNameResult>( "BEMA_ReportingTools_sp_ReportingFieldsDataset" ).ToList();
+            var results = resultContext.Database.SqlQuery<FamilyNameResult>( "dbo.BEMA_ReportingTools_sp_ReportingFieldsDataset @firstNameNickNameNoTitleFormatValue, @firstNameFormatValue, @fullNameNickNameFormatValue, @lastNameFormatValue, @nickNameFormatValue, @titleFormatValue, @fullNameFirstNameFormatValue",
+                new System.Data.SqlClient.SqlParameter( "firstNameNickNameNoTitleFormatValue", firstNameNickNameNoTitleFormatValue ),
+                new System.Data.SqlClient.SqlParameter( "firstNameFormatValue", firstNameFormatValue ),
+                new System.Data.SqlClient.SqlParameter( "fullNameNickNameFormatValue", fullNameNickNameFormatValue ),
+                new System.Data.SqlClient.SqlParameter( "lastNameFormatValue", lastNameFormatValue ),
+                new System.Data.SqlClient.SqlParameter( "nickNameFormatValue", nickNameFormatValue ),
+                new System.Data.SqlClient.SqlParameter( "titleFormatValue", titleFormatValue ),
+                new System.Data.SqlClient.SqlParameter( "fullNameFirstNameFormatValue", fullNameFirstNameFormatValue )
+                ).ToList();
 
             while ( results.Count > 0 )
             {
@@ -129,7 +166,15 @@ namespace com.bemaservices.ReportingTools.Jobs
 
                 batchNumber++;
                 context.UpdateLastStatusMessage( $"Getting Reporting Fields Dataset for Batch #{batchNumber}..." );
-                results = resultContext.Database.SqlQuery<FamilyNameResult>( "BEMA_ReportingTools_sp_ReportingFieldsDataset" ).ToList();
+                results = resultContext.Database.SqlQuery<FamilyNameResult>( "dbo.BEMA_ReportingTools_sp_ReportingFieldsDataset @firstNameNickNameNoTitleFormatValue, @firstNameFormatValue, @fullNameNickNameFormatValue, @lastNameFormatValue, @nickNameFormatValue, @titleFormatValue, @fullNameFirstNameFormatValue",
+                    new System.Data.SqlClient.SqlParameter( "firstNameNickNameNoTitleFormatValue", firstNameNickNameNoTitleFormatValue ),
+                    new System.Data.SqlClient.SqlParameter( "firstNameFormatValue", firstNameFormatValue ),
+                    new System.Data.SqlClient.SqlParameter( "fullNameNickNameFormatValue", fullNameNickNameFormatValue ),
+                    new System.Data.SqlClient.SqlParameter( "lastNameFormatValue", lastNameFormatValue ),
+                    new System.Data.SqlClient.SqlParameter( "nickNameFormatValue", nickNameFormatValue ),
+                    new System.Data.SqlClient.SqlParameter( "titleFormatValue", titleFormatValue ),
+                    new System.Data.SqlClient.SqlParameter( "fullNameFirstNameFormatValue", fullNameFirstNameFormatValue )
+                ).ToList();
             }
 
             context.UpdateLastStatusMessage( "" );
