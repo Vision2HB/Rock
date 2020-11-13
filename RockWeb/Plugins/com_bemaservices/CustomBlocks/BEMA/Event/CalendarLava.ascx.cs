@@ -43,6 +43,7 @@ using DDay.iCal;
  * - FE1) Added Ability to limit to events with registrations
  * - FE2) Added Ability to limit to the next recurrence of an event item
  * - FE3) Added Ability to replace core filters with custom defined value pickers
+ * - FE4) Added Ability to select Audiences Filters by Default
  */
 
 namespace RockWeb.Plugins.com_bemaservices.Event
@@ -134,6 +135,12 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         Category = "BEMA Additional Features" )]
 
     /* BEMA.FE3.End */
+
+    /* BEMA.FE4.Start */
+
+    [DefinedValueField( Rock.SystemGuid.DefinedType.MARKETING_CAMPAIGN_AUDIENCE_TYPE, "Default Selected Filter Audiences", "Determines which audiences should be selected by default in the filter.", false, true, key: BemaAttributeKey.DefaultSelectedFilterAudiences, order: 7, Category = "BEMA Additional Features" )]
+
+    /* Bema.FE4.End */
     public partial class CalendarLava : Rock.Web.UI.RockBlock
     {
         /* BEMA.Start */
@@ -146,6 +153,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
             public const string DisplayCampusBooleanAttribute = "DisplayCampusBooleanAttribute";
             public const string DefinedTypeTopicFilterAttribute = "DefinedTypeTopicFilterAttribute";
             public const string DefinedTypeAudienceFilterAttribute = "DefinedTypeAudienceFilterAttribute";
+            public const string DefaultSelectedFilterAudiences = "DefaultSelectedFilterAudiences";
         }
 
         #endregion
@@ -714,6 +722,17 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 }
             }
 
+            /* BEMA.FE4.START */
+
+            var defaultSelectedCategoryGuids = GetAttributeValue( BemaAttributeKey.DefaultSelectedFilterAudiences ).SplitDelimitedValues( true ).AsGuidList();
+            var defaultSelectedCategoryIds = DefinedValueCache.All().Where( x => defaultSelectedCategoryGuids.Contains( x.Guid ) ).Select( x => x.Id ).ToList();
+            if ( defaultSelectedCategoryGuids.Any() )
+            {
+                cblCategory.SetValues( defaultSelectedCategoryIds );
+            }
+
+            /* BEMA.FE4.END */
+
             // Date Range Filter
             drpDateRange.Visible = GetAttributeValue( "ShowDateRangeFilter" ).AsBoolean();
             lbDateRangeRefresh.Visible = drpDateRange.Visible;
@@ -864,6 +883,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     }
                 }
             }
+
             if ( PageParameter( "AudienceId" ).IsNotNullOrWhiteSpace() )
             {
                 ddlCatPicker.SelectedDefinedValueId = PageParameter( "AudienceId" ).AsIntegerOrNull();
