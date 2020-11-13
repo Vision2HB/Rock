@@ -93,6 +93,7 @@
     <Compile Include="Workflow\Action\Utility\AddMetricValue.cs" />
     <Compile Include="Workflow\Action\Utility\SetEntityProperties.cs" />
     <Compile Include="Workflow\Action\Workflow Attributes\AddItemToMatrix.cs" />
+    <Compile Include="Workflow\Action\Workflow Attributes\LavaToCSV.cs" />
     <Compile Include="Workflow\Action\Workflow Attributes\SetAttributeValues.cs" />
   </ItemGroup>
   <ItemGroup>
