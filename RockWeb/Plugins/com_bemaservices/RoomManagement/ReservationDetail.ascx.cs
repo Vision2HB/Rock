@@ -1020,10 +1020,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             var schedule = new Schedule { iCalendarContent = sbSchedule.iCalendarContent };
             lScheduleText.Text = Reservation.GetFriendlyReservationScheduleText( schedule, nbSetupTime.Text.AsIntegerOrNull(), nbCleanupTime.Text.AsIntegerOrNull(), null, null );
 
-            if ( EventItemOccurrence != null && EventItemOccurrence.Id == 0 )
-            {
-                EventItemOccurrence.Schedule.iCalendarContent = sbSchedule.iCalendarContent;
-            }
             LoadPickers();
         }
 

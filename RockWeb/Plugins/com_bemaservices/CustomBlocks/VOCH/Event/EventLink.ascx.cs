@@ -1411,7 +1411,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.VOCH.Event
                 var changes = new History.HistoryChangeList();
 
                 reservation = new Reservation { Id = 0 };
-                reservation.ApprovalState = ReservationApprovalState.Unapproved;
+                reservation.ApprovalState = ReservationApprovalState.PendingInitialApproval;
                 reservation.RequesterAliasId = ppPrimaryContact.PersonAliasId;
                 changes.Add( new History.HistoryChange( History.HistoryVerb.Add, History.HistoryChangeType.Record, "Reservation" ) );
 
@@ -1496,7 +1496,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.VOCH.Event
                     return;
                 }
 
-                reservation = reservationService.UpdateApproval( reservation, ReservationApprovalState.Unapproved );
+                reservation = reservationService.UpdateApproval( reservation, ReservationApprovalState.PendingInitialApproval );
                 reservation = reservationService.SetFirstLastOccurrenceDateTimes( reservation );
 
                 if ( reservation.Id.Equals( 0 ) )
