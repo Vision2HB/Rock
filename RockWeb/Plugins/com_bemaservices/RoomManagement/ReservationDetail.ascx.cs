@@ -1018,7 +1018,12 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             nbError.Visible = false;
 
             var schedule = new Schedule { iCalendarContent = sbSchedule.iCalendarContent };
-            lScheduleText.Text = schedule.FriendlyScheduleText;
+            lScheduleText.Text = Reservation.GetFriendlyReservationScheduleText( schedule, nbSetupTime.Text.AsIntegerOrNull(), nbCleanupTime.Text.AsIntegerOrNull(), null, null );
+
+            if ( EventItemOccurrence != null && EventItemOccurrence.Id == 0 )
+            {
+                EventItemOccurrence.Schedule.iCalendarContent = sbSchedule.iCalendarContent;
+            }
             LoadPickers();
         }
 
@@ -1402,6 +1407,27 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             var reservationResource = e.Row.DataItem as ReservationResource;
             if ( reservationResource != null )
             {
+                var hlApprovalStatus = e.Row.FindControl( "hlApprovalStatus" ) as HighlightLabel;
+                if ( hlApprovalStatus != null && reservationResource.ApprovalState != null )
+                {
+                    hlApprovalStatus.Text = reservationResource.ApprovalState.ConvertToString();
+                    switch ( reservationResource.ApprovalState )
+                    {
+                        case ReservationResourceApprovalState.Approved:
+                            hlApprovalStatus.LabelType = LabelType.Success;
+                            break;
+                        case ReservationResourceApprovalState.Denied:
+                            hlApprovalStatus.LabelType = LabelType.Danger;
+                            break;
+                        case ReservationResourceApprovalState.Unapproved:
+                            hlApprovalStatus.LabelType = LabelType.Warning;
+                            break;
+                        default:
+                            hlApprovalStatus.LabelType = LabelType.Default;
+                            break;
+                    }
+                }
+
                 var canApprove = false;
                 var canDeny = false;
 
@@ -1751,6 +1777,27 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             var reservationLocation = e.Row.DataItem as ReservationLocationSummary;
             if ( reservationLocation != null )
             {
+                var hlApprovalStatus = e.Row.FindControl( "hlApprovalStatus" ) as HighlightLabel;
+                if ( hlApprovalStatus != null && reservationLocation.ApprovalState != null )
+                {
+                    hlApprovalStatus.Text = reservationLocation.ApprovalState.ConvertToString();
+                    switch ( reservationLocation.ApprovalState )
+                    {
+                        case ReservationLocationApprovalState.Approved:
+                            hlApprovalStatus.LabelType = LabelType.Success;
+                            break;
+                        case ReservationLocationApprovalState.Denied:
+                            hlApprovalStatus.LabelType = LabelType.Danger;
+                            break;
+                        case ReservationLocationApprovalState.Unapproved:
+                            hlApprovalStatus.LabelType = LabelType.Warning;
+                            break;
+                        default:
+                            hlApprovalStatus.LabelType = LabelType.Default;
+                            break;
+                    }
+                }
+
                 var lLayoutPhoto = e.Row.FindControl( "lLayoutPhoto" ) as Literal;
                 if ( reservationLocation.LocationLayout != null && reservationLocation.LocationLayout.LayoutPhotoId.HasValue )
                 {
@@ -2197,7 +2244,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
                 if ( reservation.Schedule != null )
                 {
                     sbSchedule.iCalendarContent = reservation.Schedule.iCalendarContent;
-                    lScheduleText.Text = reservation.Schedule.FriendlyScheduleText;
+                    lScheduleText.Text = reservation.GetFriendlyReservationScheduleText();
                     srpResource.Enabled = true;
                     slpLocation.Enabled = true;
                 }
