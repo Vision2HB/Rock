@@ -44,6 +44,11 @@ module.exports = {
       content: 'docs/project_introduction.md',
       sections: [
         {
+          name: 'Pages',
+          description: 'An optional set of components to control application views. These are traditionally useed with Vue Router.',
+          components: 'src/pages/**/*.vue',
+        },
+        {
           name: 'Components',
           description: 'The components used in the project.',
           components: 'src/components/**/*.vue',

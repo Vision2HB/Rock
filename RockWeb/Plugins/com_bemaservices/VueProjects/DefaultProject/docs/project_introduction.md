@@ -16,3 +16,5 @@ Sample description of the project.
     - [ ] Subtask 1
     - [ ] Subtask 2
   - [ ] Task 3
+
+  <hr>
