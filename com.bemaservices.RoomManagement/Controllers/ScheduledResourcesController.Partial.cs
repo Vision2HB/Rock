@@ -176,20 +176,36 @@ namespace Rock.Rest.Controllers
                     {
                         if ( categorizedItem != null && categorizedItem.IsAuthorized( Authorization.VIEW, currentPerson ) )
                         {
-                            var availableQuantity = reservationService.GetAvailableResourceQuantity( categorizedItem, newReservation );
+                            var availableQuantityReserved = reservationService.GetAvailableResourceQuantity( categorizedItem, newReservation, false );
+                            var availableQuantityConflicted = reservationService.GetAvailableResourceQuantity( categorizedItem, newReservation, true );
 
-                            var scheduledCategoryItem = new ScheduledCategoryItem();
-                            scheduledCategoryItem.Id = categorizedItem.Id.ToString();
-                            if ( availableQuantity.HasValue )
+                            var color = "Green";
+                            if ( availableQuantityReserved.HasValue && availableQuantityReserved <= 0 )
                             {
-                                scheduledCategoryItem.Name = String.Format( "{0} ({1}) {2}", categorizedItem.Name, availableQuantity, categorizedItem.Campus != null ? string.Format( "[{0}]", categorizedItem.Campus.Name ) : "" );
-                                scheduledCategoryItem.IsActive = availableQuantity > 0;
+                                color = "Red";
                             }
                             else
                             {
-                                scheduledCategoryItem.Name = String.Format( "{0} {1}", categorizedItem.Name, categorizedItem.Campus != null ? string.Format( "[{0}]", categorizedItem.Campus.Name ) : "" );
-                                scheduledCategoryItem.IsActive = true;
+                                if ( availableQuantityConflicted.HasValue && availableQuantityConflicted <= 0 )
+                                {
+                                    color = "Orange";
+                                }
                             }
+
+                            var availableQuantity = string.Empty;
+                            if (availableQuantityReserved.HasValue )
+                            {
+                                availableQuantity = string.Format( " ({0})", availableQuantityReserved );
+                            }
+
+                            var scheduledCategoryItem = new ScheduledCategoryItem();
+                            scheduledCategoryItem.Id = categorizedItem.Id.ToString();
+                            scheduledCategoryItem.IsActive = true;
+                            scheduledCategoryItem.Name = String.Format( "<span style='color:{0};'>{1}{2} {3}</span>",
+                                color,
+                                categorizedItem.Name,
+                                availableQuantity,
+                                categorizedItem.Campus != null ? string.Format( "[{0}]", categorizedItem.Campus.Name ) : "" );
                             scheduledCategoryItem.IsCategory = false;
                             scheduledCategoryItem.IconCssClass = categorizedItem.GetPropertyValue( "IconCssClass" ) as string ?? defaultIconCssClass;
                             scheduledCategoryItem.IconSmallUrl = string.Empty;

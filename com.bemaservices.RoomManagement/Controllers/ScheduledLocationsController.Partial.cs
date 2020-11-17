@@ -103,6 +103,7 @@ namespace Rock.Rest.Controllers
 
             var reservationService = new ReservationService( rockContext );
             List<int> reservedLocationIds = reservationService.GetReservedLocationIds( newReservation, false, false, false );
+            List<int> conflictedLocationIds = reservationService.GetReservedLocationIds( newReservation, false, true, false );
 
             foreach ( var location in qry.OrderBy( l => l.Name ) )
             {
@@ -116,15 +117,39 @@ namespace Rock.Rest.Controllers
                         locationList.Add( location );
                         var treeViewItem = new TreeViewItem();
                         treeViewItem.Id = location.Id.ToString();
-                        treeViewItem.Name = string.Format( "{0}<small style='color:grey;'>{1}{2}</small>",
+
+                        var color = "Green";
+                        if ( location.LocationTypeValueId.HasValue && !reservationLocationTypeList.Contains( location.LocationTypeValueId.Value ) )
+                        {
+                            color = "Black";
+                        }
+                        else
+                        {
+                            if ( reservedLocationIds.Contains( location.Id ) )
+                            {
+                                color = "Red";
+                            }
+                            else
+                            {
+                                if ( conflictedLocationIds.Contains( location.Id ) )
+                                {
+                                    color = "Orange";
+                                }
+                                else
+                                {
+                                    if ( attendeeCount != null && location.FirmRoomThreshold != null && attendeeCount.Value > location.FirmRoomThreshold.Value )
+                                    {
+                                        color = "Orange";
+                                    }
+                                }
+                            }
+                        }
+
+                        treeViewItem.Name = string.Format( "<span style='color:{0};'>{1}</span><small style='color:grey;'>{2}</small>",
+                            color,
                             System.Web.HttpUtility.HtmlEncode( location.Name ),
-                            location.FirmRoomThreshold != null ? "\t(" + location.FirmRoomThreshold + ")" : "",
-                             !isValidLocationType ? "\t(Non-reservable)" : "" );
-                        treeViewItem.IsActive =
-                            // location isnt' reserved
-                            !( reservedLocationIds.Contains( location.Id ) )
-                            // and the attendee count is less than or equal to the room's capacity
-                            && ( attendeeCount == null || location.FirmRoomThreshold == null || attendeeCount.Value <= location.FirmRoomThreshold.Value );
+                            location.FirmRoomThreshold != null ? "\t(" + location.FirmRoomThreshold + ")" : "" );
+                        treeViewItem.IsActive = true;
                         locationNameList.Add( treeViewItem );
                     }
                 }
@@ -136,7 +161,7 @@ namespace Rock.Rest.Controllers
             var qryHasChildren = locationService.Queryable().AsNoTracking()
                 .Where( l =>
                     l.ParentLocationId.HasValue &&
-                    resultIds.Contains( l.ParentLocationId.Value ))
+                    resultIds.Contains( l.ParentLocationId.Value ) )
                 .Select( l => l.ParentLocationId.Value )
                 .Distinct()
                 .ToList();
