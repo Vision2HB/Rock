@@ -40,6 +40,17 @@ module.exports = {
   },
   sections: [
     {
+      name: 'Project Documentation',
+      content: 'docs/project_introduction.md',
+      sections: [
+        {
+          name: 'Components',
+          description: 'The components used in the project.',
+          components: 'src/components/**/*.vue',
+        },
+      ],
+    },
+    {
       name: 'System Setup',
       description: 'Useful tips and scripts for setting up your system for Vue Development',
       content: 'docs/System_Setup/Documentation/system_setup.md',
@@ -49,17 +60,11 @@ module.exports = {
           description: 'A list of Useful VS Code Extensions',
           content: 'docs/System_Setup/Documentation/vscodextensions.md',
         },
-      ]
-      ,
-    },
-    {
-      name: 'Project Documentation',
-      content: 'docs/project_introduction.md',
-      sections: [
       ],
     },
+
   ],
-  // components: 'src/components/**/*.vue',
+  // 
   defaultExample: true,
   // sections: [
   //   {
