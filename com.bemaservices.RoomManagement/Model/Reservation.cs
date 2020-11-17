@@ -526,7 +526,8 @@ namespace com.bemaservices.RoomManagement.Model
                 return modifiedDateTime;
             }
             private set
-            {}}
+            { }
+        }
 
         public virtual DateTime? NextStartDateTime
         {
