@@ -54,7 +54,6 @@
                                         <Rock:RockRadioButtonList ID="rblAttendance" runat="server" RepeatDirection="Horizontal" />
                                     </div>
                                     <div class="pull-right" style="padding-right: 5px;">
-
                                         <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command"><i class="fa fa-file"></i></asp:LinkButton>
                                     </div>
                                 </div>

@@ -105,6 +105,14 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             GroupAdministrator = 5
         }
 
+        private static class AttendanceType
+        {
+            public const string Attended = "Attended";
+            public const string InPerson = "In-person";
+            public const string Virtual = "Virtual";
+            public const string DidNotAttend = "Did not Attend";
+        }
+
         #endregion
 
         #region Private Variables
@@ -214,16 +222,27 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                         foreach ( var item in lvMembers.Items )
                         {
                             var hfMember = item.FindControl( "hfMember" ) as HiddenField;
-                            var cbMember = item.FindControl( "cbMember" ) as CheckBox;
+                            var rblAttendance = item.FindControl( "rblAttendance" ) as RockRadioButtonList;
 
-                            if ( hfMember != null && cbMember != null )
+                            if ( hfMember != null && rblAttendance != null )
                             {
                                 int personId = hfMember.ValueAsInt();
 
                                 var attendance = _attendees.Where( a => a.PersonId == personId ).FirstOrDefault();
                                 if ( attendance != null )
                                 {
-                                    attendance.Attended = cbMember.Checked;
+                                    attendance.Attended = rblAttendance.SelectedValue.IsNotNullOrWhiteSpace() && rblAttendance.SelectedValue != AttendanceType.DidNotAttend;
+                                    if ( _attendanceType == AttendanceType.InPerson && _attendanceType == AttendanceType.Virtual )
+                                    {
+                                        attendance.AttendanceType = _attendanceType;
+                                    }
+                                    else
+                                    {
+                                        if ( rblAttendance.SelectedValue == AttendanceType.InPerson || rblAttendance.SelectedValue == AttendanceType.Virtual )
+                                        {
+                                            attendance.AttendanceType = rblAttendance.SelectedValue;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -430,23 +449,32 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             switch ( _attendanceType )
             {
                 case "In-person":
-                    rblAttendance.Items.Add( "Attended" );
+                    rblAttendance.Items.Add( AttendanceType.Attended );
                     if ( data.Attended )
                     {
-                        rblAttendance.SelectedValue = "Attended";
+                        rblAttendance.SelectedValue = AttendanceType.Attended;
                     }
                     break;
                 case "Virtual":
-                    rblAttendance.Items.Add( "Attended" );
+                    rblAttendance.Items.Add( AttendanceType.Attended );
                     if ( data.Attended )
                     {
-                        rblAttendance.SelectedValue = "Attended";
+                        rblAttendance.SelectedValue = AttendanceType.Attended;
                     }
                     break;
                 default:
-                    rblAttendance.Items.Add( "In-person" );
-                    rblAttendance.Items.Add( "Virtual" );
-                    rblAttendance.Items.Add( "Did not Attend" );
+                    rblAttendance.Items.Add( AttendanceType.InPerson );
+                    rblAttendance.Items.Add( AttendanceType.Virtual );
+                    rblAttendance.Items.Add( AttendanceType.DidNotAttend );
+
+                    if ( !data.Attended )
+                    {
+                        rblAttendance.SelectedValue = AttendanceType.DidNotAttend;
+                    }
+                    else
+                    {
+                        rblAttendance.SelectedValue = data.AttendanceType;
+                    }
                     break;
             }
 
@@ -540,7 +568,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             }
 
             // Set occurrence values from query string
-            var occurrenceDate = PageParameter( "Date" ).AsDateTime() ?? PageParameter( "Occurrence" ).AsDateTime();
+            DateTime? occurrenceDate = ( PageParameter( "Date" ).AsDateTime() ?? PageParameter( "Occurrence" ).AsDateTime() ) ?? RockDateTime.Today;
             var locationId = PageParameter( "LocationId" ).AsIntegerOrNull();
             var scheduleId = PageParameter( "ScheduleId" ).AsIntegerOrNull();
 
@@ -858,6 +886,13 @@ cbDidNotMeet.ClientID );
                                     attendance.StartDateTime = _occurrence.Schedule != null && _occurrence.Schedule.HasSchedule() ? _occurrence.OccurrenceDate.Date.Add( _occurrence.Schedule.StartTimeOfDay ) : _occurrence.OccurrenceDate;
                                     attendance.DidAttend = attendee.Attended;
 
+                                    if ( attendee.AttendanceType.IsNotNullOrWhiteSpace() )
+                                    {
+                                        attendance.LoadAttributes();
+                                        attendance.SetAttributeValue( "AttendanceType", attendee.AttendanceType );
+                                    }
+
+
                                     // Check that the attendance record is valid
                                     cvAttendance.IsValid = attendance.IsValid;
                                     if ( !cvAttendance.IsValid )
@@ -867,6 +902,9 @@ cbDidNotMeet.ClientID );
                                     }
 
                                     occurrence.Attendees.Add( attendance );
+
+                                    rockContext.SaveChanges();
+                                    attendance.SaveAttributeValues();
                                 }
                             }
                             else
@@ -878,7 +916,6 @@ cbDidNotMeet.ClientID );
                     }
                 }
 
-                rockContext.SaveChanges();
 
                 if ( occurrence.LocationId.HasValue )
                 {
