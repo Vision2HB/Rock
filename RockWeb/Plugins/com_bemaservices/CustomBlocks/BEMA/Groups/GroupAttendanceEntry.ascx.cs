@@ -40,6 +40,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
     [Category( "BEMA Services > Groups" )]
     [Description( "Lists the group members for a specific occurrence datetime and allows selecting if they attended or not." )]
 
+    [GroupTypesField( "Allowed Group Types", "", false, "", "", 0, BemaAttributeKey.AllowedGroupTypes )]
     [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 0 )]
     [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 1 )]
     [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 2 )]
@@ -58,7 +59,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         #region Attribute Keys
         private static class BemaAttributeKey
         {
-            public const string HideCancelButton = "HideCancelButton";
+            public const string AllowedGroupTypes = "AllowedGroupTypes";
             public const string HidePrintRosterButton = "HidePrintRosterButton";
             public const string AllowAnonymousAttendanceCounts = "AllowAnonymousAttendanceCounts";
             public const string AnonymousAttendanceGroupTypes = "AnonymousAttendanceGroupTypes";
@@ -123,6 +124,13 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             {
                 lGroupHeading.Text = _group.Name;
                 _canManageMembers = true;
+            }
+
+
+            var groupTypeGuids = GetAttributeValue( BemaAttributeKey.AllowedGroupTypes ).SplitDelimitedValues().AsGuidList();
+            if ( groupTypeGuids.Any() && _group != null && !groupTypeGuids.Contains( _group.GroupType.Guid ) )
+            {
+                _canManageMembers = false;
             }
 
             var globalAttributesCache = GlobalAttributesCache.Get();
@@ -394,7 +402,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
 
         protected void tbSearch_TextChanged( object sender, EventArgs e )
         {
-           
+
         }
 
         protected void lbMemberNote_Command( object sender, CommandEventArgs e )
