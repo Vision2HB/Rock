@@ -41,6 +41,8 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
     [Description( "Lists the group members for a specific occurrence datetime and allows selecting if they attended or not." )]
 
     [GroupTypesField( "Allowed Group Types", "", false, "", "", 0, BemaAttributeKey.AllowedGroupTypes )]
+    [NoteTypeField( "Note Types", "The Note Types that can be added to a person's profile", true, "Rock.Model.Person", "", "", false, "", "", 1, BemaAttributeKey.NoteTypes )]
+
     [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 0 )]
     [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 1 )]
     [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 2 )]
@@ -60,10 +62,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         private static class BemaAttributeKey
         {
             public const string AllowedGroupTypes = "AllowedGroupTypes";
-            public const string HidePrintRosterButton = "HidePrintRosterButton";
-            public const string AllowAnonymousAttendanceCounts = "AllowAnonymousAttendanceCounts";
-            public const string AnonymousAttendanceGroupTypes = "AnonymousAttendanceGroupTypes";
-            public const string AnonymousAttendanceMetric = "AnonymousAttendanceMetric";
+            public const string NoteTypes = "NoteTypes";
         }
 
         #endregion
