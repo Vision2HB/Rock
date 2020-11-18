@@ -45,13 +45,9 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
     [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 2 )]
     [LinkedPage( "Group Member Add Page", "Page to use for adding a new group member. If no page is provided the built in group member edit panel will be used. This panel allows the individual to search the database.", false, "", "", 3 )]
     [WorkflowTypeField( "Workflow", "An optional workflow type to launch whenever attendance is saved. The Group will be used as the workflow 'Entity' when processing is started. Additionally if a 'StartDateTime' and/or 'Schedule' attribute exist, their values will be set with the corresponding saved attendance values.", false, false, "", "", 5 )]
-    [MergeTemplateField( "Attendance Roster Template", "", false, "", "", 6 )]
-    [CodeEditorField( "Lava Template", "An optional lava template to appear next to each person in the list.", CodeEditorMode.Lava, CodeEditorTheme.Rock, 400, false, "", "", 7 )]
     [BooleanField( "Restrict Future Occurrence Date", "Should user be prevented from selecting a future Occurrence date?", false, "", 8 )]
     [BooleanField( "Show Notes", "Should the notes field be displayed?", true, "", 9 )]
     [TextField( "Attendance Note Label", "The text to use to describe the notes", true, "Notes", "", 10 )]
-    [EnumsField( "Send Summary Email To", "", typeof( SendSummaryEmailType ), false, "", "", 11 )]
-    [SystemCommunicationField( "Attendance Email", "The System Email to use to send the attendance", false, Rock.SystemGuid.SystemCommunication.ATTENDANCE_NOTIFICATION, "", 12, "AttendanceEmailTemplate" )]
     [BooleanField( "Allow Sorting", "Should the block allow sorting the Member's list by First Name or Last Name?", true, "", 13 )]
 
     public partial class GroupAttendanceEntry : RockBlock
@@ -73,37 +69,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         /* BEMA.End */
 
         #region Fields
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private enum SendSummaryEmailType
-        {
-            /// <summary>
-            /// Group Leaders
-            /// </summary>
-            GroupLeaders = 1,
-
-            /// <summary>
-            /// All Group Members (note: all active group members)
-            /// </summary>
-            AllGroupMembers = 2,
-
-            /// <summary>
-            /// Parent Group Leaders
-            /// </summary>
-            ParentGroupLeaders = 3,
-
-            /// <summary>
-            /// Individual Entering Attendance
-            /// </summary>
-            IndividualEnteringAttendance = 4,
-
-            /// <summary>
-            /// Group Administrator
-            /// </summary>
-            GroupAdministrator = 5
-        }
 
         private static class AttendanceType
         {
@@ -429,7 +394,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
 
         protected void tbSearch_TextChanged( object sender, EventArgs e )
         {
-
+           
         }
 
         protected void lbMemberNote_Command( object sender, CommandEventArgs e )
