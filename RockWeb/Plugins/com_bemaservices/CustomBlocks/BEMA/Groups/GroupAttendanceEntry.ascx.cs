@@ -485,7 +485,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             if ( data != null )
             {
                 StringBuilder sbNameHtml = new StringBuilder();
-                sbNameHtml.AppendFormat( _photoFormat, data.PersonId, data.PhotoUrl, ResolveUrl( "~/Assets/Images/person-no-photo-unknown.svg" ) );
+                sbNameHtml.AppendFormat( _photoFormat, data.PersonId, data.PhotoUrl, data.PhotoUrl );
 
                 if ( tglSort.Visible && tglSort.Checked )
                 {
