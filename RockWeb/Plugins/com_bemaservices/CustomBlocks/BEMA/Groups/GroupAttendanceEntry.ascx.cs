@@ -47,7 +47,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
     [CustomRadioListField( "Default Attendance Type", "An optional default attendance type to use if one is not passed through the page parameters.", "In-person, Virtual, Mixed", false, "", "", 4, BemaAttributeKey.DefaultAttendanceType )]
     [BooleanField( "Show Inactive Members", "", false, "", 5, BemaAttributeKey.ShowInactiveMembers )]
     [BooleanField( "Show Pending Members", "", false, "", 6, BemaAttributeKey.ShowPendingMembers )]
-
+    [TextField( "Success Text", "The text to display after an attendance has been saved.", true, "Attendance Saved", "", 7, BemaAttributeKey.SuccessText )]
     [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 4 )]
     [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 5 )]
     [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 6 )]
@@ -69,6 +69,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             public const string DefaultAttendanceType = "DefaultAttendanceType";
             public const string ShowInactiveMembers = "ShowInactiveMembers";
             public const string ShowPendingMembers = "ShowPendingMembers";
+            public const string SuccessText = "SuccessText";
         }
 
         #endregion
@@ -115,8 +116,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         protected override void OnInit( EventArgs e )
         {
             base.OnInit( e );
-
-            RegisterScript();
 
             _rockContext = new RockContext();
 
@@ -531,8 +530,24 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         {
             mdOccurrenceAttendanceType.Hide();
             _attendanceType = rblOccurrenceAttendanceType.SelectedValue;
-            pnlDetails.Visible = true;
-            ShowDetails();
+            if ( _attendanceType == "DidNotMeet" )
+            {
+                SaveAttendance( false );
+                var qryParams = new Dictionary<string, string> { { "GroupId", _group.Id.ToString() } };
+
+                var groupTypeIds = PageParameter( "GroupTypeIds" );
+                if ( !string.IsNullOrWhiteSpace( groupTypeIds ) )
+                {
+                    qryParams.Add( "GroupTypeIds", groupTypeIds );
+                }
+
+                NavigateToParentPage( qryParams );
+            }
+            else
+            {
+                pnlDetails.Visible = true;
+                ShowDetails();
+            }
         }
 
         protected void mdMemberNote_SaveClick( object sender, EventArgs e )
@@ -596,6 +611,12 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             }
 
         }
+
+        protected void lbAddPerson_Click( object sender, EventArgs e )
+        {
+
+        }
+
         #endregion
 
         #region Internal Methods
@@ -739,8 +760,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                 {
                     dtNotes.Text = _occurrence.Notes;
 
-                    cbDidNotMeet.Checked = _occurrence.DidNotOccur ?? false;
-
                     var attendanceList = new AttendanceService( _rockContext )
                         .Queryable().AsNoTracking()
                         .Where( a =>
@@ -847,48 +866,10 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             ppAddPerson.PersonName = string.Format( "Add New {0}", GetAttributeValue( "AddPersonAs" ) );
         }
 
-        protected void RegisterScript()
-        {
-            string script = string.Format(
-                @"
-
-    Sys.Application.add_load(function () {{
-
-        if ($('#{0}').is(':checked')) {{
-            $('div.js-roster').hide();
-        }}
-
-        $('#{0}').click(function () {{
-            if ($(this).is(':checked')) {{
-                $('div.js-roster').hide('fast');
-            }} else {{
-                $('div.js-roster').show('fast');
-            }}
-        }});
-
-        $('.js-add-member').click(function ( e ) {{
-            e.preventDefault();
-            var $a = $(this);
-            var memberName = $(this).parent().find('span').html();
-            Rock.dialogs.confirm('Add ' + memberName + ' to your group?', function (result) {{
-                if (result) {{
-                    window.location = $a.prop('href');                    
-                }}
-            }});
-        }});
-
-    }});
-
-",
-cbDidNotMeet.ClientID );
-
-            ScriptManager.RegisterStartupScript( cbDidNotMeet, cbDidNotMeet.GetType(), "group-attendance-detail", script, true );
-        }
-
         /// <summary>
         /// Method to save attendance for use in two separate areas.
         /// </summary>
-        protected bool SaveAttendance()
+        protected bool SaveAttendance( bool didMeet = true )
         {
             using ( var rockContext = new RockContext() )
             {
@@ -928,13 +909,13 @@ cbDidNotMeet.ClientID );
                 }
 
                 occurrence.Notes = GetAttributeValue( "ShowNotes" ).AsBoolean() ? dtNotes.Text : string.Empty;
-                occurrence.DidNotOccur = cbDidNotMeet.Checked;
+                occurrence.DidNotOccur = !didMeet;
 
                 var existingAttendees = occurrence.Attendees.ToList();
 
                 // If did not meet was selected and this was a manually entered occurrence (not based on a schedule/location)
                 // then just delete all the attendance records instead of tracking a 'did not meet' value
-                if ( cbDidNotMeet.Checked && !_occurrence.ScheduleId.HasValue )
+                if ( !didMeet && !_occurrence.ScheduleId.HasValue )
                 {
                     foreach ( var attendance in existingAttendees )
                     {
@@ -945,7 +926,7 @@ cbDidNotMeet.ClientID );
                 {
                     int? campusId = locationService.GetCampusIdForLocation( _occurrence.LocationId ) ?? _group.CampusId;
 
-                    if ( cbDidNotMeet.Checked )
+                    if ( !didMeet )
                     {
                         // If the occurrence is based on a schedule, set the did not meet flags
                         foreach ( var attendance in existingAttendees )

@@ -28,7 +28,6 @@
                     <div class="row">
                         <div class="col-xs-6">
                             <rock:rocktextbox id="tbSearch" runat="server" autopostback="true" ontextchanged="tbSearch_TextChanged" />
-                            <rock:rockcheckbox id="cbDidNotMeet" runat="server" text="We Did Not Meet" />
                         </div>
 
                         <div class="col-xs-6 pull-right">
@@ -72,8 +71,8 @@
                     </div>
 
                     <div class="actions" style="position: fixed;">
-                        <asp:LinkButton ID="lbClearSearch" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Clear Search" CssClass="btn btn-primary" OnClick="lbSave_Click" CausesValidation="false" />
-                        <asp:LinkButton ID="lbAddPerson" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Add Person" CssClass="btn btn-primary" OnClick="lbSave_Click" CausesValidation="false" />
+                        <asp:LinkButton ID="lbClearSearch" runat="server" Text="Clear Search" CssClass="btn btn-primary" CausesValidation="false" />
+                        <asp:LinkButton ID="lbAddPerson" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Add Person" CssClass="btn btn-primary" OnClick="lbAddPerson_Click" CausesValidation="false" />
                         <asp:LinkButton ID="lbSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-primary" OnClick="lbSave_Click" CausesValidation="false" />
                     </div>
 
@@ -143,6 +142,14 @@
                             container.hide();
                         }
 
+                    });
+                });
+
+                $("[id$='lbClearSearch']").on('click', function (e) {
+                    $("[id$='tbSearch']").val("")
+                    $("[id$='hfMemberName']").each(function (index) {
+                        var container = $(this).parent();
+                        container.show();
                     });
                 });
             });
