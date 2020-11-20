@@ -48,6 +48,26 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
     [BooleanField( "Show Inactive Members", "", false, "", 5, BemaAttributeKey.ShowInactiveMembers )]
     [BooleanField( "Show Pending Members", "", false, "", 6, BemaAttributeKey.ShowPendingMembers )]
     [TextField( "Success Text", "The text to display after an attendance has been saved.", true, "Attendance Saved", "", 7, BemaAttributeKey.SuccessText )]
+    [DefinedValueField(
+        "Connection Status",
+        Key = BemaAttributeKey.ConnectionStatus,
+        Description = "The connection status to use for new individuals (default = 'Web Prospect'.)",
+        DefinedTypeGuid = "2E6540EA-63F0-40FE-BE50-F2A84735E600",
+        IsRequired = true,
+        AllowMultiple = false,
+        DefaultValue = "368DD475-242C-49C4-A42C-7278BE690CC2",
+        Order = 11 )]
+
+    [DefinedValueField(
+        "Record Status",
+        Key = BemaAttributeKey.RecordStatus,
+        Description = "The record status to use for new individuals (default = 'Pending'.)",
+        DefinedTypeGuid = "8522BADD-2871-45A5-81DD-C76DA07E2E7E",
+        IsRequired = true,
+        AllowMultiple = false,
+        DefaultValue = "283999EC-7346-42E3-B807-BCE9B2BABB49",
+        Order = 12 )]
+
     [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 4 )]
     [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 5 )]
     [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 6 )]
@@ -70,6 +90,8 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             public const string ShowInactiveMembers = "ShowInactiveMembers";
             public const string ShowPendingMembers = "ShowPendingMembers";
             public const string SuccessText = "SuccessText";
+            public const string ConnectionStatus = "ConnectionStatus";
+            public const string RecordStatus = "RecordStatus";
         }
 
         #endregion
@@ -612,9 +634,102 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
 
         }
 
+        protected void mdAddPerson_SaveClick( object sender, EventArgs e )
+        {
+            using ( var rockContext = new RockContext() )
+            {
+                string firstName = tbFirstName.Text;
+                string lastName = tbLastName.Text;
+                string email = tbEmail.Text;
+
+                Person person = null;
+                PersonAlias personAlias = null;
+                var personService = new PersonService( rockContext );
+
+                var personQuery = new PersonService.PersonMatchQuery( firstName, lastName, email, "" );
+                person = personService.FindPerson( personQuery, true );
+
+                if ( person.IsNotNull() )
+                {
+                    personAlias = person.PrimaryAlias;
+                }
+                else
+                {
+                    // Add New Person
+                    person = new Person();
+                    person.FirstName = firstName.FixCase();
+                    person.LastName = lastName.FixCase();
+                    person.IsEmailActive = true;
+                    person.Email = email;
+                    person.EmailPreference = EmailPreference.EmailAllowed;
+                    person.RecordTypeValueId = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_TYPE_PERSON.AsGuid() ).Id;
+
+                    var defaultConnectionStatus = DefinedValueCache.Get( GetAttributeValue( BemaAttributeKey.ConnectionStatus ).AsGuid() );
+                    if ( defaultConnectionStatus != null )
+                    {
+                        person.ConnectionStatusValueId = defaultConnectionStatus.Id;
+                    }
+
+                    var defaultRecordStatus = DefinedValueCache.Get( GetAttributeValue( BemaAttributeKey.RecordStatus ).AsGuid() );
+                    if ( defaultRecordStatus != null )
+                    {
+                        person.RecordStatusValueId = defaultRecordStatus.Id;
+                    }
+
+                    var familyGroup = PersonService.SaveNewPerson( person, rockContext );
+                    if ( familyGroup != null && familyGroup.Members.Any() )
+                    {
+                        person = familyGroup.Members.Select( m => m.Person ).First();
+                        personAlias = person.PrimaryAlias;
+                    }
+                }
+
+                if ( person != null && personAlias != null )
+                {
+                    int? groupRoleId = null;
+
+                    if ( !groupRoleId.HasValue && _group != null )
+                    {
+                        // use the group's grouptype's default group role if a group role wasn't specified
+                        groupRoleId = _group.GroupType.DefaultGroupRoleId;
+                    }
+
+                    var status = GroupMemberStatus.Active;
+
+                    var groupMemberService = new GroupMemberService( rockContext );
+                    var groupMember = groupMemberService.GetByGroupIdAndPersonIdAndPreferredGroupRoleId( _group.Id, person.Id, groupRoleId.Value );
+                    bool isNew = false;
+                    if ( groupMember == null )
+                    {
+                        groupMember = new GroupMember();
+                        groupMember.PersonId = person.Id;
+                        groupMember.GroupId = _group.Id;
+                        groupMember.GroupRoleId = groupRoleId.Value;
+                        groupMember.GroupMemberStatus = status;
+                        isNew = true;
+                    }
+
+                    if ( groupMember.IsValidGroupMember( rockContext ) )
+                    {
+                        if ( isNew )
+                        {
+                            groupMemberService.Add( groupMember );
+                        }
+                        rockContext.SaveChanges();
+                    }
+                }
+            }
+
+            ShowDetails();
+            mdAddPerson.Hide();
+        }
+
         protected void lbAddPerson_Click( object sender, EventArgs e )
         {
-
+            tbFirstName.Text = string.Empty;
+            tbLastName.Text = string.Empty;
+            tbEmail.Text = string.Empty;
+            mdAddPerson.Show();
         }
 
         #endregion
