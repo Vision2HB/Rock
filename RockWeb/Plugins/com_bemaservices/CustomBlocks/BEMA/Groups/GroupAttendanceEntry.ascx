@@ -44,9 +44,9 @@
                         </div>
                         <asp:ListView ID="lvMembers" runat="server" OnItemDataBound="lvMembers_ItemDataBound">
                             <ItemTemplate>
-                                <asp:HiddenField ID="hfMember" runat="server" />
-
                                 <div class="row">
+                                    <asp:HiddenField ID="hfMember" runat="server" />
+                                    <asp:HiddenField ID="hfMemberName" runat="server" />
                                     <div class="col-xs-6">
                                         <asp:Literal ID="lMember" runat="server" />
                                     </div>
@@ -129,6 +129,21 @@
                         container.addClass('all-checked');
                     }
 
+                });
+
+                $("[id$='tbSearch']").on('keyup', function (e) {
+                    var searchTerm = $(this).val().toLowerCase();
+                    $("[id$='hfMemberName']").each(function (index) {
+                        var container = $(this).parent();
+                        var fullName = $(this).val().toLowerCase();
+                        var matchExists = fullName.includes(searchTerm);
+                        if (matchExists || searchTerm.length <= 0) {
+                            container.show();
+                        } else {
+                            container.hide();
+                        }
+
+                    });
                 });
             });
         </script>

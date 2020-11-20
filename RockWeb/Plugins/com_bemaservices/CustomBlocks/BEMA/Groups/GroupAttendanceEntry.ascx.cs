@@ -454,6 +454,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             var data = e.Item.DataItem as GroupAttendanceAttendee;
             CampusPicker fromCampus = e.Item.FindControl( "cpFromCampus" ) as CampusPicker;
             var hfMember = e.Item.FindControl( "hfMember" ) as HiddenField;
+            var hfMemberName = e.Item.FindControl( "hfMemberName" ) as HiddenField;
             var lMember = e.Item.FindControl( "lMember" ) as Literal;
             var rblAttendance = e.Item.FindControl( "rblAttendance" ) as RockRadioButtonList;
 
@@ -493,6 +494,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             string displayName = string.Empty;
 
             hfMember.SetValue( data.PersonId );
+            hfMemberName.Value = data.FullName;
 
             if ( data != null )
             {
@@ -508,7 +510,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                     sbNameHtml.Append( data.NickName + " " + data.LastName );
                 }
 
-                if(!_group.Members.Where(m=> m.PersonId == data.PersonId && m.GroupMemberStatus == GroupMemberStatus.Active ).Any() )
+                if ( !_group.Members.Where( m => m.PersonId == data.PersonId && m.GroupMemberStatus == GroupMemberStatus.Active ).Any() )
                 {
                     if ( _group.Members.Where( m => m.PersonId == data.PersonId && m.GroupMemberStatus == GroupMemberStatus.Pending ).Any() )
                     {
