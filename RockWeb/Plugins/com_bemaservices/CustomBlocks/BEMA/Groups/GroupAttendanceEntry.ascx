@@ -8,8 +8,8 @@
                     <asp:Literal ID="lChurchHeading" runat="server" Text="Church Name" />
                 </div>
                 <div class="pull-right">
-                    <Rock:RockLiteral ID="lOccurrenceDate" runat="server" />
-                    <Rock:DatePicker ID="dpOccurrenceDate" runat="server" AllowFutureDateSelection="false" Required="true" />
+                    <rock:rockliteral id="lOccurrenceDate" runat="server" />
+                    <rock:datepicker id="dpOccurrenceDate" runat="server" allowfuturedateselection="false" required="true" />
                 </div>
                 <div class="pull-right" style="padding-right: 5px;">
                     <asp:Literal ID="lGroupHeading" runat="server" Text="Group Attendance" />
@@ -20,19 +20,19 @@
         <div class="panel panel-block">
             <div class="panel-body">
 
-                <Rock:NotificationBox ID="nbNotice" runat="server" />
+                <rock:notificationbox id="nbNotice" runat="server" />
                 <asp:ValidationSummary ID="ValidationSummary1" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" />
                 <asp:CustomValidator ID="cvAttendance" runat="server" Display="None" />
 
                 <asp:Panel ID="pnlDetails" runat="server">
                     <div class="row">
                         <div class="col-xs-6">
-                            <Rock:RockTextBox ID="tbSearch" runat="server" AutoPostBack="true" OnTextChanged="tbSearch_TextChanged" />
-                            <Rock:RockCheckBox ID="cbDidNotMeet" runat="server" Text="We Did Not Meet" />
+                            <rock:rocktextbox id="tbSearch" runat="server" autopostback="true" ontextchanged="tbSearch_TextChanged" />
+                            <rock:rockcheckbox id="cbDidNotMeet" runat="server" text="We Did Not Meet" />
                         </div>
 
                         <div class="col-xs-6 pull-right">
-                            <Rock:Toggle ID="tglSort" runat="server" OnText="Last Name" OnCssClass="btn-primary" OffCssClass="btn-outline-primary" ActiveButtonCssClass="btn-primary" ButtonSizeCssClass="btn-xs" OffText="First Name" AutoPostBack="true" OnCheckedChanged="tglSort_CheckedChanged" Checked="true" Label="Sort by" />
+                            <rock:toggle id="tglSort" runat="server" ontext="Last Name" oncssclass="btn-primary" offcssclass="btn-outline-primary" activebuttoncssclass="btn-primary" buttonsizecssclass="btn-xs" offtext="First Name" autopostback="true" oncheckedchanged="tglSort_CheckedChanged" checked="true" label="Sort by" />
                         </div>
 
                     </div>
@@ -51,28 +51,25 @@
                                         <asp:Literal ID="lMember" runat="server" />
                                     </div>
                                     <div class="pull-right">
-                                        <Rock:RockRadioButtonList ID="rblAttendance" runat="server" RepeatDirection="Horizontal" />
+                                        <rock:rockradiobuttonlist id="rblAttendance" runat="server" repeatdirection="Horizontal" />
                                     </div>
                                     <div class="pull-right" style="padding-right: 5px;">
-                                        <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command"><i class="fa fa-file"></i></asp:LinkButton>
+                                        <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command" CommandArgument='<%# Eval("PersonId") %>'><i class="fa fa-file"></i></asp:LinkButton>
                                     </div>
                                 </div>
 
                             </ItemTemplate>
                         </asp:ListView>
                         <div class="pull-left margin-b-md margin-r-md">
-                            <Rock:PersonPicker ID="ppAddPerson" runat="server" OnSelectPerson="ppAddPerson_SelectPerson" />
+                            <rock:personpicker id="ppAddPerson" runat="server" onselectperson="ppAddPerson_SelectPerson" />
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-12">
-                            <Rock:DataTextBox ID="dtNotes" runat="server" TextMode="MultiLine" Rows="3" ValidateRequestMode="Disabled" SourceTypeName="Rock.Model.AttendanceOccurrence, Rock" PropertyName="Notes"></Rock:DataTextBox>
+                            <rock:datatextbox id="dtNotes" runat="server" textmode="MultiLine" rows="3" validaterequestmode="Disabled" sourcetypename="Rock.Model.AttendanceOccurrence, Rock" propertyname="Notes"></rock:datatextbox>
                         </div>
                     </div>
-
-
-                    <Rock:NotificationBox ID="nbPrintRosterWarning" runat="server" NotificationBoxType="Warning" />
 
                     <div class="actions" style="position: fixed;">
                         <asp:LinkButton ID="lbClearSearch" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Clear Search" CssClass="btn btn-primary" OnClick="lbSave_Click" CausesValidation="false" />
@@ -86,7 +83,7 @@
 
         </div>
 
-        <Rock:ModalDialog ID="mdOccurrenceAttendanceType" runat="server" ValidationGroup="Value" CancelLinkVisible="false" CloseLinkVisible="false" OnSaveClick="mdOccurrenceAttendanceType_SaveClick" SaveButtonCssClass="btn btn-primary" SaveButtonText="Start">
+        <rock:modaldialog id="mdOccurrenceAttendanceType" runat="server" validationgroup="Value" cancellinkvisible="false" closelinkvisible="false" onsaveclick="mdOccurrenceAttendanceType_SaveClick" savebuttoncssclass="btn btn-primary" savebuttontext="Start">
             <Content>
                 <asp:ValidationSummary ID="valSummaryValue" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" ValidationGroup="Value" />
                 <fieldset>
@@ -98,7 +95,20 @@
                     </asp:RadioButtonList>
                 </fieldset>
             </Content>
-        </Rock:ModalDialog>
+        </rock:modaldialog>
+
+        <rock:modaldialog id="mdMemberNote" runat="server" validationgroup="Value" onsaveclick="mdMemberNote_SaveClick">
+            <Content>
+                <asp:ValidationSummary ID="ValNote" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" ValidationGroup="NoteValue" />
+                <fieldset>
+                    <asp:HiddenField ID="hfPersonId" runat="server" />
+                    <div style="text-align: center;">
+                        <Rock:RockRadioButtonList ID="rblNoteType" runat="server" RepeatDirection="Horizontal" Required="true" ValidationGroup="NoteValue"  />
+                    </div>
+                    <Rock:RockTextBox ID="tbNote" runat="server" TextMode="MultiLine" Rows="3" Placeholder="Start Typing Here" Required="true" ValidationGroup="NoteValue"  />
+                </fieldset>
+            </Content>
+        </rock:modaldialog>
 
         <script>
             Sys.Application.add_load(function () {

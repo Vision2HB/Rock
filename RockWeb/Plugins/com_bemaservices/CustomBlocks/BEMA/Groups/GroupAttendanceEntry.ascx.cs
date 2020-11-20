@@ -41,16 +41,16 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
     [Description( "Lists the group members for a specific occurrence datetime and allows selecting if they attended or not." )]
 
     [GroupTypesField( "Allowed Group Types", "", false, "", "", 0, BemaAttributeKey.AllowedGroupTypes )]
-    [NoteTypeField( "Note Types", "The Note Types that can be added to a person's profile", true, "Rock.Model.Person", "", "", false, "", "", 1, BemaAttributeKey.NoteTypes )]
+    [WorkflowTypeField( "Workflow", "An optional workflow type to launch whenever attendance is saved. The Group will be used as the workflow 'Entity' when processing is started. Additionally if a 'StartDateTime' attribute exista, its value will be set with the corresponding saved attendance value.", false, false, "", "", 1, BemaAttributeKey.Workflow )]
 
-    [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 0 )]
-    [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 1 )]
-    [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 2 )]
-    [LinkedPage( "Group Member Add Page", "Page to use for adding a new group member. If no page is provided the built in group member edit panel will be used. This panel allows the individual to search the database.", false, "", "", 3 )]
-    [WorkflowTypeField( "Workflow", "An optional workflow type to launch whenever attendance is saved. The Group will be used as the workflow 'Entity' when processing is started. Additionally if a 'StartDateTime' and/or 'Schedule' attribute exist, their values will be set with the corresponding saved attendance values.", false, false, "", "", 5 )]
+    [NoteTypeField( "Note Types", "The Note Types that can be added to a person's profile", true, "Rock.Model.Person", "", "", false, "", "", 2, BemaAttributeKey.NoteTypes )]
+    [WorkflowTypeField( "Note Workflow", "An optional workflow type to launch whenever a note is saved. The Note will be used as the workflow 'Entity' when processing is started. ", false, false, "", "", 3, BemaAttributeKey.NoteWorkflow )]
+
+    [CustomRadioListField( "Default Attendance Type", "An optional default attendance type to use if one is not passed through the page parameters.", "In-person, Virtual, Mixed", false, "", "", 4, BemaAttributeKey.DefaultAttendanceType )]
+    [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 4 )]
+    [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 5 )]
+    [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 6 )]
     [BooleanField( "Restrict Future Occurrence Date", "Should user be prevented from selecting a future Occurrence date?", false, "", 8 )]
-    [BooleanField( "Show Notes", "Should the notes field be displayed?", true, "", 9 )]
-    [TextField( "Attendance Note Label", "The text to use to describe the notes", true, "Notes", "", 10 )]
     [BooleanField( "Allow Sorting", "Should the block allow sorting the Member's list by First Name or Last Name?", true, "", 13 )]
 
     public partial class GroupAttendanceEntry : RockBlock
@@ -63,6 +63,9 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         {
             public const string AllowedGroupTypes = "AllowedGroupTypes";
             public const string NoteTypes = "NoteTypes";
+            public const string Workflow = "Workflow";
+            public const string NoteWorkflow = "NoteWorkflow";
+            public const string DefaultAttendanceType = "DefaultAttendanceType";
         }
 
         #endregion
@@ -182,7 +185,15 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                     }
                     else
                     {
-                        ShowTypeModal();
+                        var defaultAttendanceType = GetAttributeValue( BemaAttributeKey.DefaultAttendanceType );
+                        if ( defaultAttendanceType.IsNotNullOrWhiteSpace() )
+                        {
+                            _attendanceType = defaultAttendanceType;
+                        }
+                        else
+                        {
+                            ShowTypeModal();
+                        }
                     }
 
                     ShowDetails();
@@ -406,7 +417,33 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
 
         protected void lbMemberNote_Command( object sender, CommandEventArgs e )
         {
+            int? personId = e.CommandArgument.ToString().AsIntegerOrNull();
 
+            if ( personId == null )
+            {
+                return;
+            }
+
+            var person = new PersonService( new RockContext() ).Get( personId.Value );
+            if ( person == null )
+            {
+                return;
+            }
+
+            hfPersonId.Value = personId.ToString();
+            rblNoteType.Items.Clear();
+            var noteTypeGuids = GetAttributeValue( BemaAttributeKey.NoteTypes ).SplitDelimitedValues().AsGuidList();
+            foreach ( var noteTypeGuid in noteTypeGuids )
+            {
+                var noteTypeCache = NoteTypeCache.Get( noteTypeGuid );
+                if ( noteTypeCache != null )
+                {
+                    rblNoteType.Items.Add( new ListItem( noteTypeCache.Name, noteTypeCache.Id.ToString() ) );
+                }
+            }
+            mdMemberNote.Title = String.Format( "Note For {0}", person.FullName );
+            tbNote.Text = string.Empty;
+            mdMemberNote.Show();
         }
 
         protected void lvMembers_ItemDataBound( object sender, ListViewItemEventArgs e )
@@ -894,7 +931,7 @@ cbDidNotMeet.ClientID );
                     Rock.CheckIn.KioskLocationAttendance.Remove( occurrence.LocationId.Value );
                 }
 
-                Guid? workflowTypeGuid = GetAttributeValue( "Workflow" ).AsGuidOrNull();
+                Guid? workflowTypeGuid = GetAttributeValue( BemaAttributeKey.Workflow ).AsGuidOrNull();
                 if ( workflowTypeGuid.HasValue )
                 {
                     var workflowType = WorkflowTypeCache.Get( workflowTypeGuid.Value );
@@ -955,5 +992,67 @@ cbDidNotMeet.ClientID );
         #endregion
 
 
+
+        protected void mdMemberNote_SaveClick( object sender, EventArgs e )
+        {
+            using ( var rockContext = new RockContext() )
+            {
+                var personService = new PersonService( rockContext );
+                var noteService = new NoteService( rockContext );
+                var personId = hfPersonId.Value.AsIntegerOrNull();
+                var noteTypeId = rblNoteType.SelectedValueAsId();
+                if ( personId != null && noteTypeId != null )
+                {
+                    var person = personService.Get( personId.Value );
+                    if ( person != null )
+                    {
+                        Note note = new Note();
+                        note.EntityId = person.Id;
+                        note.IsPrivateNote = false;
+                        note.Text = tbNote.Text;
+
+                        var noteType = NoteTypeCache.Get( noteTypeId.Value );
+                        if ( noteType != null )
+                        {
+                            note.NoteTypeId = noteType.Id;
+                        }
+
+                        // get author
+                        var author = CurrentPerson;
+                        if ( author != null )
+                        {
+                            note.CreatedByPersonAliasId = author.PrimaryAlias.Id;
+                        }
+
+                        noteService.Add( note );
+                        rockContext.SaveChanges();
+
+                        Guid? workflowTypeGuid = GetAttributeValue( BemaAttributeKey.NoteWorkflow ).AsGuidOrNull();
+                        if ( workflowTypeGuid.HasValue )
+                        {
+                            var workflowType = WorkflowTypeCache.Get( workflowTypeGuid.Value );
+                            if ( workflowType != null && ( workflowType.IsActive ?? true ) )
+                            {
+                                try
+                                {
+                                    var workflow = Workflow.Activate( workflowType, person.FullName );
+
+                                    List<string> workflowErrors;
+                                    new WorkflowService( rockContext ).Process( workflow, note, out workflowErrors );
+                                }
+                                catch ( Exception ex )
+                                {
+                                    ExceptionLogService.LogException( ex, this.Context );
+                                }
+                            }
+                        }
+
+                        mdMemberNote.Hide();
+                    }
+                }
+
+            }
+
+        }
     }
 }
