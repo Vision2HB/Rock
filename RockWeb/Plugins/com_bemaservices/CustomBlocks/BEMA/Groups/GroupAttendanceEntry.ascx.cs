@@ -42,11 +42,12 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
 
     [GroupTypesField( "Allowed Group Types", "", false, "", "", 0, BemaAttributeKey.AllowedGroupTypes )]
     [WorkflowTypeField( "Workflow", "An optional workflow type to launch whenever attendance is saved. The Group will be used as the workflow 'Entity' when processing is started. Additionally if a 'StartDateTime' attribute exista, its value will be set with the corresponding saved attendance value.", false, false, "", "", 1, BemaAttributeKey.Workflow )]
-
     [NoteTypeField( "Note Types", "The Note Types that can be added to a person's profile", true, "Rock.Model.Person", "", "", false, "", "", 2, BemaAttributeKey.NoteTypes )]
     [WorkflowTypeField( "Note Workflow", "An optional workflow type to launch whenever a note is saved. The Note will be used as the workflow 'Entity' when processing is started. ", false, false, "", "", 3, BemaAttributeKey.NoteWorkflow )]
-
     [CustomRadioListField( "Default Attendance Type", "An optional default attendance type to use if one is not passed through the page parameters.", "In-person, Virtual, Mixed", false, "", "", 4, BemaAttributeKey.DefaultAttendanceType )]
+    [BooleanField( "Show Inactive Members", "", false, "", 5, BemaAttributeKey.ShowInactiveMembers )]
+    [BooleanField( "Show Pending Members", "", false, "", 6, BemaAttributeKey.ShowPendingMembers )]
+
     [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 4 )]
     [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 5 )]
     [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 6 )]
@@ -66,6 +67,8 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             public const string Workflow = "Workflow";
             public const string NoteWorkflow = "NoteWorkflow";
             public const string DefaultAttendanceType = "DefaultAttendanceType";
+            public const string ShowInactiveMembers = "ShowInactiveMembers";
+            public const string ShowPendingMembers = "ShowPendingMembers";
         }
 
         #endregion
@@ -505,6 +508,19 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                     sbNameHtml.Append( data.NickName + " " + data.LastName );
                 }
 
+                if(!_group.Members.Where(m=> m.PersonId == data.PersonId && m.GroupMemberStatus == GroupMemberStatus.Active ).Any() )
+                {
+                    if ( _group.Members.Where( m => m.PersonId == data.PersonId && m.GroupMemberStatus == GroupMemberStatus.Pending ).Any() )
+                    {
+                        sbNameHtml.Append( " <small>(Pending)</small>" );
+                    }
+
+                    if ( _group.Members.Where( m => m.PersonId == data.PersonId && m.GroupMemberStatus == GroupMemberStatus.Inactive ).Any() )
+                    {
+                        sbNameHtml.Append( " <small>(Inactive)</small>" );
+                    }
+                }
+
                 lMember.Text = string.Format( "{0} {1}", data.MergedTemplate, sbNameHtml.ToString() );
             }
         }
@@ -704,13 +720,20 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                 // Get the group members
                 var groupMemberService = new GroupMemberService( _rockContext );
 
-                // Add any existing active members not on that list
+                // Add any existing members not on that list
+                var showInactiveMembers = GetAttributeValue( BemaAttributeKey.ShowInactiveMembers ).AsBoolean();
+                var showPendingMembers = GetAttributeValue( BemaAttributeKey.ShowPendingMembers ).AsBoolean();
+
                 var unattendedIds = groupMemberService
                     .Queryable().AsNoTracking()
                     .Where( m =>
                         m.GroupId == _group.Id &&
-                        m.GroupMemberStatus == GroupMemberStatus.Active &&
-                        !attendedIds.Contains( m.PersonId ) )
+                        !attendedIds.Contains( m.PersonId ) &&
+                        (
+                            m.GroupMemberStatus == GroupMemberStatus.Active ||
+                            ( m.GroupMemberStatus == GroupMemberStatus.Inactive && showInactiveMembers ) ||
+                            ( m.GroupMemberStatus == GroupMemberStatus.Pending && showPendingMembers )
+                        ) )
                     .Select( m => m.PersonId )
                     .ToList();
 
