@@ -3220,10 +3220,12 @@ TransactionAccountDetails: [
                 paymentInfo.Comment1 = GetAttributeValue( AttributeKey.PaymentComment );
             }
 
+            /* BEMA.FE4.Start */
             if ( cblPartnerOptions.SelectedValues.Any() )
             {
                 paymentInfo.Comment1 += String.Format( "\nPreferred Partners:{0}", cblPartnerOptions.SelectedValues.AsDelimited( ", " ) );
             }
+            /* BEMA.FE4.End */
 
             var transactionAlreadyExists = new FinancialTransactionService( rockContext ).Queryable().FirstOrDefault( a => a.Guid == transactionGuid );
             if ( transactionAlreadyExists != null )
@@ -3329,10 +3331,12 @@ TransactionAccountDetails: [
                 paymentInfo.Comment1 = paymentComment;
             }
 
+            /* BEMA.FE4.Start */
             if ( cblPartnerOptions.SelectedValues.Any() )
             {
                 paymentInfo.Comment1 += String.Format( "\nPreferred Partners:{0}", cblPartnerOptions.SelectedValues.AsDelimited( ", " ) );
             }
+            /* BEMA.FE4.End */
 
             errorMessage = string.Empty;
             return paymentInfo;
