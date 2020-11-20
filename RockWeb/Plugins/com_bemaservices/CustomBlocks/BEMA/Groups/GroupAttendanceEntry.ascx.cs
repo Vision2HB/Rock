@@ -533,6 +533,67 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             ShowDetails();
         }
 
+        protected void mdMemberNote_SaveClick( object sender, EventArgs e )
+        {
+            using ( var rockContext = new RockContext() )
+            {
+                var personService = new PersonService( rockContext );
+                var noteService = new NoteService( rockContext );
+                var personId = hfPersonId.Value.AsIntegerOrNull();
+                var noteTypeId = rblNoteType.SelectedValueAsId();
+                if ( personId != null && noteTypeId != null )
+                {
+                    var person = personService.Get( personId.Value );
+                    if ( person != null )
+                    {
+                        Note note = new Note();
+                        note.EntityId = person.Id;
+                        note.IsPrivateNote = false;
+                        note.Text = tbNote.Text;
+
+                        var noteType = NoteTypeCache.Get( noteTypeId.Value );
+                        if ( noteType != null )
+                        {
+                            note.NoteTypeId = noteType.Id;
+                        }
+
+                        // get author
+                        var author = CurrentPerson;
+                        if ( author != null )
+                        {
+                            note.CreatedByPersonAliasId = author.PrimaryAlias.Id;
+                        }
+
+                        noteService.Add( note );
+                        rockContext.SaveChanges();
+
+                        Guid? workflowTypeGuid = GetAttributeValue( BemaAttributeKey.NoteWorkflow ).AsGuidOrNull();
+                        if ( workflowTypeGuid.HasValue )
+                        {
+                            var workflowType = WorkflowTypeCache.Get( workflowTypeGuid.Value );
+                            if ( workflowType != null && ( workflowType.IsActive ?? true ) )
+                            {
+                                try
+                                {
+                                    var workflow = Workflow.Activate( workflowType, person.FullName );
+
+                                    List<string> workflowErrors;
+                                    new WorkflowService( rockContext ).Process( workflow, note, out workflowErrors );
+                                }
+                                catch ( Exception ex )
+                                {
+                                    ExceptionLogService.LogException( ex, this.Context );
+                                }
+                            }
+                        }
+
+                        mdMemberNote.Hide();
+                    }
+                }
+
+            }
+
+        }
         #endregion
 
         #region Internal Methods
@@ -1013,69 +1074,5 @@ cbDidNotMeet.ClientID );
         }
 
         #endregion
-
-
-
-        protected void mdMemberNote_SaveClick( object sender, EventArgs e )
-        {
-            using ( var rockContext = new RockContext() )
-            {
-                var personService = new PersonService( rockContext );
-                var noteService = new NoteService( rockContext );
-                var personId = hfPersonId.Value.AsIntegerOrNull();
-                var noteTypeId = rblNoteType.SelectedValueAsId();
-                if ( personId != null && noteTypeId != null )
-                {
-                    var person = personService.Get( personId.Value );
-                    if ( person != null )
-                    {
-                        Note note = new Note();
-                        note.EntityId = person.Id;
-                        note.IsPrivateNote = false;
-                        note.Text = tbNote.Text;
-
-                        var noteType = NoteTypeCache.Get( noteTypeId.Value );
-                        if ( noteType != null )
-                        {
-                            note.NoteTypeId = noteType.Id;
-                        }
-
-                        // get author
-                        var author = CurrentPerson;
-                        if ( author != null )
-                        {
-                            note.CreatedByPersonAliasId = author.PrimaryAlias.Id;
-                        }
-
-                        noteService.Add( note );
-                        rockContext.SaveChanges();
-
-                        Guid? workflowTypeGuid = GetAttributeValue( BemaAttributeKey.NoteWorkflow ).AsGuidOrNull();
-                        if ( workflowTypeGuid.HasValue )
-                        {
-                            var workflowType = WorkflowTypeCache.Get( workflowTypeGuid.Value );
-                            if ( workflowType != null && ( workflowType.IsActive ?? true ) )
-                            {
-                                try
-                                {
-                                    var workflow = Workflow.Activate( workflowType, person.FullName );
-
-                                    List<string> workflowErrors;
-                                    new WorkflowService( rockContext ).Process( workflow, note, out workflowErrors );
-                                }
-                                catch ( Exception ex )
-                                {
-                                    ExceptionLogService.LogException( ex, this.Context );
-                                }
-                            }
-                        }
-
-                        mdMemberNote.Hide();
-                    }
-                }
-
-            }
-
-        }
     }
 }
