@@ -1,4 +1,3 @@
-
 <%@ Control Language="C#" AutoEventWireup="true" CodeFile="GroupAttendanceEntry.ascx.cs" Inherits="RockWeb.Plugins.com_bemaservices.GroupTools.GroupAttendanceEntry" %>
 
 <asp:UpdatePanel ID="pnlContent" runat="server">
@@ -33,7 +32,7 @@
                     <asp:Panel ID="pnlDetails" runat="server">
                         <div class="d-flex flex-column flex-md-row panel-top">
                             <div class="f-col-12 f-col-md-6">
-                                <Rock:RockTextBox class="searchbar" ID="tbSearch" runat="server" placeholder="Search"/>
+                                <Rock:RockTextBox class="searchbar" ID="tbSearch" runat="server" Placeholder="Search" />
                             </div>
 
                             <div class="f-col-12 f-col-md-6 btn-sort-wrapper d-flex justify-content-center justify-content-md-end">
@@ -53,7 +52,8 @@
                                         <asp:HiddenField ID="hfMember" runat="server" />
                                         <asp:HiddenField ID="hfMemberName" runat="server" />
                                         <div class="f-col-12 f-col-md-6">
-                                            <h4><asp:Literal ID="lMember" runat="server" /></h4>
+                                            <h4>
+                                                <asp:Literal ID="lMember" runat="server" /></h4>
                                         </div>
                                         <div class="f-col-12 f-col-md-6 d-flex flex-row align-items-center">
                                             <div>
@@ -99,6 +99,7 @@
 
         <Rock:ModalDialog ID="mdMemberNote" runat="server" ValidationGroup="Value" OnSaveClick="mdMemberNote_SaveClick">
             <Content>
+                <Rock:NotificationBox ID="nbNote" runat="server" NotificationBoxType="Danger" />
                 <asp:ValidationSummary ID="ValNote" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" ValidationGroup="NoteValue" />
                 <fieldset>
                     <asp:HiddenField ID="hfPersonId" runat="server" />
@@ -112,6 +113,7 @@
 
         <Rock:ModalDialog ID="mdAddPerson" runat="server" ValidationGroup="Value" OnSaveClick="mdAddPerson_SaveClick">
             <Content>
+                <Rock:NotificationBox ID="nbPerson" runat="server" NotificationBoxType="Danger" />
                 <asp:ValidationSummary ID="ValidationSummary2" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" ValidationGroup="PersonValue" />
                 <fieldset>
                     <div class="row">
@@ -155,9 +157,9 @@
                         var fullName = $(this).val().toLowerCase();
                         var matchExists = fullName.includes(searchTerm);
                         if (matchExists || searchTerm.length <= 0) {
-                            container.show();
+                            container.attr("style", "display: flex !important");
                         } else {
-                            container.hide();
+                            container.attr("style", "display: none !important");
                         }
 
                     });
@@ -167,7 +169,7 @@
                     $("[id$='tbSearch']").val("")
                     $("[id$='hfMemberName']").each(function (index) {
                         var container = $(this).parent();
-                        container.show();
+                        container.attr("style", "display: flex !important");
                     });
                 });
             });

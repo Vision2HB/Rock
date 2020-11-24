@@ -334,6 +334,11 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             BindAttendees();
         }
 
+        /// <summary>
+        /// Handles the Command event of the lbMemberNote control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="CommandEventArgs"/> instance containing the event data.</param>
         protected void lbMemberNote_Command( object sender, CommandEventArgs e )
         {
             int? personId = e.CommandArgument.ToString().AsIntegerOrNull();
@@ -365,6 +370,11 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             mdMemberNote.Show();
         }
 
+        /// <summary>
+        /// Handles the ItemDataBound event of the lvMembers control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="ListViewItemEventArgs"/> instance containing the event data.</param>
         protected void lvMembers_ItemDataBound( object sender, ListViewItemEventArgs e )
         {
             var data = e.Item.DataItem as GroupAttendanceAttendee;
@@ -443,6 +453,11 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             }
         }
 
+        /// <summary>
+        /// Handles the SaveClick event of the mdOccurrenceAttendanceType control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void mdOccurrenceAttendanceType_SaveClick( object sender, EventArgs e )
         {
             mdOccurrenceAttendanceType.Hide();
@@ -467,6 +482,11 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             }
         }
 
+        /// <summary>
+        /// Handles the SaveClick event of the mdMemberNote control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void mdMemberNote_SaveClick( object sender, EventArgs e )
         {
             using ( var rockContext = new RockContext() )
@@ -527,6 +547,11 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             }
         }
 
+        /// <summary>
+        /// Handles the SaveClick event of the mdAddPerson control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void mdAddPerson_SaveClick( object sender, EventArgs e )
         {
             using ( var rockContext = new RockContext() )
@@ -617,6 +642,11 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             mdAddPerson.Hide();
         }
 
+        /// <summary>
+        /// Handles the Click event of the lbAddPerson control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void lbAddPerson_Click( object sender, EventArgs e )
         {
             tbFirstName.Text = string.Empty;
