@@ -67,7 +67,7 @@ namespace com.bemaservices.HrManagement.Workflow.Action
 
             if ( !ptoRequestAttributeGuid.IsEmpty() )
             {
-                ptoRequestGuid = action.GetWorklowAttributeValue( ptoRequestAttributeGuid ).AsGuidOrNull();
+                ptoRequestGuid = action.GetWorkflowAttributeValue( ptoRequestAttributeGuid ).AsGuidOrNull();
 
                 if ( ptoRequestGuid.HasValue )
                 {

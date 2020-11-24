@@ -35,7 +35,7 @@ using Rock.Web.UI.Controls;
 using Rock.Workflow;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -275,8 +275,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         }
         /* BEMA.End */
 		
-        #endregion
-
+        #endregion Keys
 
         #region Fields
 
@@ -360,7 +359,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
             this._batchPageRoute = LinkedPageRoute( "BatchPage" );
 
-            int currentBatchId = PageParameter( "batchId" ).AsInteger();
+            int currentBatchId = PageParameter( "BatchId" ).AsInteger();
 
             if ( _canEdit )
             {
@@ -495,10 +494,10 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             if ( _canEdit && _batch != null )
             {
                 string script = string.Format( @"
-    $('#{0}').change(function( e ){{
+    $('#{0}').on('change', function( e ){{
         var count = $(""#{1} input[id$='_cbSelect_0']:checked"").length;
         if (count == 0) {{
-            $('#{3}').val($ddl.val());                
+            $('#{3}').val($ddl.val());
             window.location = ""javascript:{2}"";
         }}
         else
@@ -507,7 +506,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             if ($ddl.val() != '') {{
                 Rock.dialogs.confirm('Are you sure you want to move the selected transactions to a new batch (the control amounts on each batch will be updated to reflect the moved transaction\'s amounts)?', function (result) {{
                     if (result) {{
-                        $('#{3}').val($ddl.val());    
+                        $('#{3}').val($ddl.val());
                         window.location = ""javascript:{2}"";
                     }}
                     $ddl.val('');
@@ -1068,7 +1067,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
                             var pageRef = new Rock.Web.PageReference( RockPage.PageId );
                             pageRef.Parameters = new Dictionary<string, string>();
-                            pageRef.Parameters.Add( "batchid", newBatch.Id.ToString() );
+                            pageRef.Parameters.Add( "BatchId", newBatch.Id.ToString() );
                             string newBatchLink = string.Format( "<a href='{0}'>{1}</a>",
                                 pageRef.BuildUrl(), newBatch.Name );
 
@@ -1151,24 +1150,6 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                             /* BEMA.FE1.Start */
                             var oldPerson = new PersonAliasService( rockContext ).Get( txn.AuthorizedPersonAliasId.Value );
                             var newPerson = new PersonAliasService( rockContext ).Get( personAliasId.Value );
-
-                            if ( oldPerson.Id != newPerson.Id )
-                            {
-                                string changes = string.Format( "Modified <span class='field-name'>Person</span>  value from <span class='field-name'>{0}</span> to <span class='field-name'>{1}</span> (Updated From Transaction List #{2}#)", oldPerson.Person.FullName, newPerson.Person.FullName, txn.Id );
-
-                                HistoryService.SaveChanges(
-                                    rockContext
-                                    , typeof( FinancialBatch )
-                                    , Rock.SystemGuid.Category.HISTORY_FINANCIAL_TRANSACTION.AsGuid()
-                                    , txn.BatchId.Value
-                                    , new List<string> { changes }
-                                    , string.Format( "Transaction Id:{0}", txn.Id )
-                                    , typeof( FinancialTransaction )
-                                    , txn.Id
-                                    , true
-                                    , CurrentPersonAliasId
-                                    );
-                            }
                             /* BEMA.FE1.End */
 
                             txn.AuthorizedPersonAliasId = personAliasId.Value;
@@ -1194,34 +1175,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
                                 if ( txn.Account.PublicName != account.PublicName )
                                 {
-                                    string changes = string.Format( "Deleted <span class='field-name'>{0}</span> value of <span class='field-name'>{1}</span>. (Updated From Transaction List #{2}#)", txn.Account.PublicName, txn.Transaction.TotalAmount, txn.Account.Id );
-                                    HistoryService.SaveChanges(
-                                        rockContext
-                                        , typeof( FinancialBatch )
-                                        , Rock.SystemGuid.Category.HISTORY_FINANCIAL_TRANSACTION.AsGuid()
-                                        , txn.Transaction.BatchId.Value
-                                        , new List<string> { changes }
-                                        , string.Format( "Transaction Id:{0}", txn.Transaction.Id )
-                                        , typeof( FinancialTransaction )
-                                        , txn.Transaction.Id
-                                        , true
-                                        , CurrentPersonAliasId
-                                        );
-
-                                    changes = string.Format( "Added <span class='field-name'>{0}</span> value of <span class='field-name'>{1}</span>. (Updated From Transaction List #{2}#)", account.PublicName, txn.Transaction.TotalAmount, account.Id );
-
-                                    HistoryService.SaveChanges(
-                                            rockContext
-                                            , typeof( FinancialBatch )
-                                            , Rock.SystemGuid.Category.HISTORY_FINANCIAL_TRANSACTION.AsGuid()
-                                            , txn.Transaction.BatchId.Value
-                                            , new List<string> { changes }
-                                            , string.Format( "Transaction Id:{0}", txn.Transaction.Id )
-                                            , typeof( FinancialTransaction )
-                                            , txn.Transaction.Id
-                                            , true
-                                            , CurrentPersonAliasId
-                                            );
+                                 
                                     idsToUpdate.Add( txn.Transaction.Id.ToString() );
                                 }
 
@@ -1438,7 +1392,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         /// </summary>
         private void BindAttributes()
         {
-            // Parse the attribute filters 
+            // Parse the attribute filters
             _availableAttributes = new List<AttributeCache>();
 
             int entityTypeId = new FinancialTransaction().TypeId;
@@ -1577,7 +1531,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             {
                 if ( contextEntity is FinancialBatch )
                 {
-                    var batchId = PageParameter( "batchId" );
+                    var batchId = PageParameter( "BatchId" );
                     var batch = new FinancialBatchService( new RockContext() ).Get( int.Parse( batchId ) );
                     _batch = batch;
                     BindGrid();
@@ -1645,7 +1599,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             if ( hfTransactionViewMode.Value == "Transaction Details" )
             {
                 gTransactions.RowItemText = "Transaction Detail";
-                var financialTransactionDetailService = new FinancialTransactionDetailService( rockContext );                
+                var financialTransactionDetailService = new FinancialTransactionDetailService( rockContext );
                 var financialTransactionDetailQry = financialTransactionDetailService.Queryable().AsNoTracking();
 
                 var includeFutureTransactions = GetAttributeValue( AttributeKey.ShowFutureTransactions ).AsBooleanOrNull() ?? false;
@@ -2144,7 +2098,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         private class AccountSummaryRow
         {
@@ -2214,20 +2168,20 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             if ( _batch != null )
             {
                 Dictionary<string, string> qryParams = new Dictionary<string, string>();
-                qryParams.Add( "batchId", _batch.Id.ToString() );
-                qryParams.Add( "transactionId", id.ToString() );
+                qryParams.Add( "BatchId", _batch.Id.ToString() );
+                qryParams.Add( "TransactionId", id.ToString() );
                 NavigateToLinkedPage( AttributeKey.DetailPage, qryParams );
             }
             else if ( _person != null )
             {
                 Dictionary<string, string> qryParams = new Dictionary<string, string>();
-                qryParams.Add( "personId", _person.Id.ToString() );
-                qryParams.Add( "transactionId", id.ToString() );
+                qryParams.Add( "PersonId", _person.Id.ToString() );
+                qryParams.Add( "TransactionId", id.ToString() );
                 NavigateToLinkedPage( AttributeKey.DetailPage, qryParams );
             }
             else
             {
-                NavigateToLinkedPage( AttributeKey.DetailPage, "transactionId", id );
+                NavigateToLinkedPage( AttributeKey.DetailPage, "TransactionId", id );
             }
         }
 

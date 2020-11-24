@@ -209,8 +209,6 @@ namespace com.bemaservices.MinistrySafe
             {
                 return "Unauthorized";
             }
-
-            return null;
         }
 
         /// <summary>

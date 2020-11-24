@@ -31,7 +31,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  *
  * Additional Features:
@@ -313,7 +313,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             RockPage.AddScriptLink( "~/Scripts/jquery.fluidbox.min.js" );
 
             string script = string.Format( @"
-    $('.transaction-image-thumbnail').click( function() {{
+    $('.transaction-image-thumbnail').on('click', function() {{
         var $primaryHyperlink = $('.transaction-image a');
         var $primaryImg = $('.transaction-image a img');
         var primarySrc = $primaryHyperlink.attr('href');
@@ -2121,7 +2121,8 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             var isChild = IsNewPersonRoleChild();
             var isMarried = IsNewPersonMarried();
 
-            divAddPersonSpouse.Visible = !isChild && ( isMarried || !dvpAddPersonMaritalStatus.SelectedDefinedValueId.HasValue );
+            // only prompt for Spouse if the selected marital status is married (and they aren't a child)
+            divAddPersonSpouse.Visible = !isChild && ( isMarried  );
             dvpAddPersonMaritalStatus.Visible = !isChild;
         }
 
@@ -2286,8 +2287,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
             ebAddPersonEmail.Text = null;
 
-            divAddPersonSpouse.Visible = true;
-            dvpAddPersonMaritalStatus.Visible = true;
+            SyncFamilyControlsOnRoleAndMaritalStatus();
             bgAddPersonRole.Visible = ShouldShowFamilyRoleControl();
             ebAddPersonEmail.Visible = ShouldShowEmailControl();
         }

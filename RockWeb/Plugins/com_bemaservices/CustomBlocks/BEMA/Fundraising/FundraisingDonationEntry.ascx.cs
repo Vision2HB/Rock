@@ -31,7 +31,7 @@ using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -211,7 +211,9 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Fundraising
             {
                 fundraisingOpportunity.LoadAttributes( rockContext );
                 var dateRange = DateRangePicker.CalculateDateRangeFromDelimitedValues( fundraisingOpportunity.GetAttributeValue( "OpportunityDateRange" ) );
-                if ( RockDateTime.Now <= ( dateRange.End ?? DateTime.MaxValue ) )
+                var allowDonationsUntil = fundraisingOpportunity.GetAttributeValue( "AllowDonationsUntil" ).AsDateTime();
+                var untilDate = allowDonationsUntil ?? dateRange.End ?? DateTime.MaxValue;
+                if ( RockDateTime.Now <= untilDate )
                 {
                     var listItem = new ListItem( fundraisingOpportunity.GetAttributeValue( "OpportunityTitle" ), fundraisingOpportunity.Id.ToString() );
                     if ( listItem.Text.IsNullOrWhiteSpace() )

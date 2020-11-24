@@ -444,7 +444,7 @@ namespace com.bemaservices.RoomManagement.Model
         {
             var filterSchedule = new Schedule();
             filterSchedule.iCalendarContent = filterICalContent;
-            var calEvent = ScheduleICalHelper.GetCalenderEvent( filterICalContent );
+            var calEvent = ScheduleICalHelper.GetCalendarEvent( filterICalContent );
             if ( calEvent != null )
             {
                 filterSchedule.EffectiveStartDate = calEvent.DTStart != null ? calEvent.DTStart.Value.Date : ( DateTime? ) null;

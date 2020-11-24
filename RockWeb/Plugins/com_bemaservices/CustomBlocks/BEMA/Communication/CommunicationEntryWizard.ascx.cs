@@ -37,9 +37,10 @@ using Rock.Web;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
+using Rock.Web.UI.Controls.Communication;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -57,6 +58,9 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
     [DisplayName( "Communication Entry Wizard" )]
     [Category( "BEMA Services > Communication" )]
     [Description( "Used for creating and sending a new communications such as email, SMS, etc. to recipients." )]
+
+    #region Block Attributes
+
     [SecurityAction( Authorization.APPROVE, "The roles and/or users that have access to approve new communications." )]
 
     [BinaryFileTypeField( "Image Binary File Type",
@@ -89,7 +93,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
     [CustomCheckboxListField( "Communication Types",
         Key = AttributeKey.CommunicationTypes,
         Description = "The communication types that should be available to use for the communication (If none are selected, all will be available).",
-        ListSource = "Recipient Preference,Email,SMS",
+        ListSource = "Recipient Preference,Email,SMS,Push",
         IsRequired = false,
         Order = 5 )]
 
@@ -151,6 +155,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
 	[BooleanField( "Is the Generic Template Hidden?", "", false, "", 16, BemaAttributeKey.IsGenericTemplateHidden )]
 	/* BEMA.FE4.End */
 	
+	#endregion Block Attributes
     public partial class CommunicationEntryWizard : RockBlock, IDetailBlock
     {
         /* BEMA.Start */
@@ -203,6 +208,9 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
 
         private const string CATEGORY_COMMUNICATION_TEMPLATE = "CategoryCommunicationTemplate";
 
+        private bool _smsTransportEnabled = MediumContainer.HasActiveSmsTransport();
+        private bool _emailTransportEnabled = MediumContainer.HasActiveEmailTransport();
+        private bool _pushTransportEnabled = MediumContainer.HasActivePushTransport();
         #endregion
 
         #region Properties
@@ -267,6 +275,14 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
 
             btnUseSimpleEditor.Visible = !string.IsNullOrEmpty( this.GetAttributeValue( AttributeKey.SimpleCommunicationPage ) );
             pnlHeadingLabels.Visible = btnUseSimpleEditor.Visible;
+
+            var mediumControl = MediumControl.GetMediumControl( CommunicationType.PushNotification );
+
+            mediumControl.ID = "mediumControl";
+            mediumControl.IsTemplate = false;
+            mediumControl.ValidationGroup = vsPushEditor.ValidationGroup;
+
+            phPushControl.Controls.Add( mediumControl );
         }
 
         /// <summary>
@@ -358,6 +374,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
         {
             Rock.Model.Communication communication = null;
             var rockContext = new RockContext();
+            var pushCommunication = new CommunicationDetails();
 
             if ( communicationId != 0 )
             {
@@ -384,15 +401,25 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
                 {
                     if ( !communication.CommunicationTemplateId.HasValue || !communication.CommunicationTemplate.SupportsEmailWizard() )
                     {
-                        // If this communication was previously created, but doesn't have a CommunicationTemplateId or uses a template that doesn't support the EmailWizard, 
+                        // If this communication was previously created, but doesn't have a CommunicationTemplateId or uses a template that doesn't support the EmailWizard,
                         // it is a communication (or a copy of a communication) that was created using the 'Simple Editor' or the editor prior to v7.
-                        // So, if they use the wizard, the main Html Content will be reset when they get to the Select Template step
+                        // So, if they use the wizard, the main HTML Content will be reset when they get to the Select Template step
                         // since the wizard requires that the communication uses a Template that supports the Email Wizard.
                         // So, if this is the case, warn them and explain that they can continue with the wizard but start over on the content,
                         // or to use the 'Use Simple Editor' to keep the content, but not use the wizard
                         nbCommunicationNotWizardCompatible.Visible = true;
                     }
                 }
+
+                pushCommunication = new CommunicationDetails
+                {
+                    PushData = communication.PushData,
+                    PushImageBinaryFileId = communication.PushImageBinaryFileId,
+                    PushMessage = communication.PushMessage,
+                    PushTitle = communication.PushTitle,
+                    PushOpenMessage = communication.PushOpenMessage,
+                    PushOpenAction = communication.PushOpenAction
+                };
             }
 
             var allowedCommunicationTypes = GetAllowedCommunicationTypes();
@@ -471,7 +498,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             {
                 var template = new CommunicationTemplateService( rockContext ).Get( templateGuid.Value );
 
-                // NOTE: Only set the selected template if the user has auth for this template 
+                // NOTE: Only set the selected template if the user has auth for this template
                 // and the template supports the Email Wizard
                 if ( template != null && template.IsAuthorized( Rock.Security.Authorization.VIEW, this.CurrentPerson ) && template.SupportsEmailWizard() )
                 {
@@ -528,7 +555,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
 
             tbEmailSubject.Text = communication.Subject;
 
-            //// NOTE: tbEmailPreview will be populated by parsing the Html of the Email/Template
+            //// NOTE: tbEmailPreview will be populated by parsing the HTML of the Email/Template
 
             hfEmailAttachedBinaryFileIds.Value = communication.GetAttachmentBinaryFileIds( CommunicationType.Email ).AsDelimited( "," );
             UpdateEmailAttachedFiles( false );
@@ -560,6 +587,13 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             if ( communication.AdditionalMergeFields.Any() )
             {
                 htmlEditor.MergeFields.AddRange( communication.AdditionalMergeFields );
+            }
+
+            var pushNotificationControl = phPushControl.Controls[0] as PushNotification;
+            if ( pushNotificationControl != null )
+            {
+                pushNotificationControl.SetFromCommunication( pushCommunication );
+                pushNotificationControl.AdditionalMergeFields = communication.AdditionalMergeFields;
             }
         }
 
@@ -641,12 +675,18 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
                 {
                     result.Add( CommunicationType.SMS );
                 }
+
+                if ( communicationTypes.Contains( "Push" ) )
+                {
+                    result.Add( CommunicationType.PushNotification );
+                }
             }
             else
             {
                 result.Add( CommunicationType.RecipientPreference );
                 result.Add( CommunicationType.Email );
                 result.Add( CommunicationType.SMS );
+                result.Add( CommunicationType.PushNotification );
             }
 
             return result;
@@ -1140,17 +1180,14 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             pnlCommunicationDelivery.Visible = true;
             SetNavigationHistory( pnlCommunicationDelivery );
 
-            // Render warnings for any inactive transports (Javascript will hide and show based on Medium Selection)
-            bool smsTransportEnabled = MediumContainer.HasActiveSmsTransport();
-            bool emailTransportEnabled = MediumContainer.HasActiveEmailTransport();
-
             // See what is allowed by the block settings
             var allowedCommunicationTypes = GetAllowedCommunicationTypes();
-            emailTransportEnabled = emailTransportEnabled && allowedCommunicationTypes.Contains( Rock.Model.CommunicationType.Email );
-            smsTransportEnabled = smsTransportEnabled && allowedCommunicationTypes.Contains( Rock.Model.CommunicationType.SMS );
+            bool emailTransportEnabled = _emailTransportEnabled && allowedCommunicationTypes.Contains( Rock.Model.CommunicationType.Email );
+            bool smsTransportEnabled = _smsTransportEnabled && allowedCommunicationTypes.Contains( Rock.Model.CommunicationType.SMS );
+            bool pushTransportEnabled = _pushTransportEnabled && allowedCommunicationTypes.Contains( Rock.Model.CommunicationType.PushNotification );
 
             // only prompt for Medium Type if more than one will be visible
-            rcwMediumType.Visible = ( smsTransportEnabled || emailTransportEnabled ) && allowedCommunicationTypes.Count() > 1;
+            rcwMediumType.Visible = ( smsTransportEnabled || emailTransportEnabled || pushTransportEnabled ) && allowedCommunicationTypes.Count() > 1;
 
             if ( !rcwMediumType.Visible )
             {
@@ -1163,18 +1200,24 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
                 {
                     hfMediumType.Value = CommunicationType.SMS.ConvertToInt().ToString();
                 }
+                else if ( pushTransportEnabled )
+                {
+                    hfMediumType.Value = CommunicationType.PushNotification.ConvertToInt().ToString();
+                }
+
             }
             else
             {
                 btnMediumRecipientPreference.Visible = allowedCommunicationTypes.Contains( Rock.Model.CommunicationType.RecipientPreference );
-                btnMediumEmail.Visible = emailTransportEnabled && emailTransportEnabled;
-                btnMediumSMS.Visible = smsTransportEnabled && smsTransportEnabled;
+                btnMediumEmail.Visible = emailTransportEnabled;
+                btnMediumSMS.Visible = smsTransportEnabled;
+                btnMediumPush.Visible = pushTransportEnabled;
             }
 
             // make sure that either EMAIL or SMS is enabled
-            if ( !( emailTransportEnabled || smsTransportEnabled ) )
+            if ( !( emailTransportEnabled || smsTransportEnabled || pushTransportEnabled ) )
             {
-                nbNoCommunicationTransport.Text = "There are no active Email or SMS communication transports configured.";
+                nbNoCommunicationTransport.Text = "There are no active Email, SMS, or Push communication transports configured.";
                 nbNoCommunicationTransport.Visible = true;
                 btnCommunicationDeliveryNext.Enabled = false;
             }
@@ -1430,7 +1473,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             //  set the subject from the template even if it is null so we don't accidentally keep a subject doesn't make sense for the newly selected template
             tbEmailSubject.Text = communicationTemplate.Subject;
 
-            // if this communication already has an Email Content specified, since they picked (or re-picked) a template, 
+            // if this communication already has an Email Content specified, since they picked (or re-picked) a template,
             // we'll have to start over on the EmailEditorHtml since the content is dependent on the template
             hfEmailEditorHtml.Value = communicationTemplate.Message.ResolveMergeFields( Rock.Lava.LavaHelper.GetCommonMergeFields( null ) );
 
@@ -1453,6 +1496,22 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             if ( communicationTemplate.SMSMessage.IsNotNullOrWhiteSpace() )
             {
                 tbSMSTextMessage.Text = communicationTemplate.SMSMessage;
+            }
+
+            var pushCommunication = new CommunicationDetails
+            {
+                PushData = communicationTemplate.PushData,
+                PushImageBinaryFileId = communicationTemplate.PushImageBinaryFileId,
+                PushMessage = communicationTemplate.PushMessage,
+                PushTitle = communicationTemplate.PushTitle,
+                PushOpenMessage = communicationTemplate.PushOpenMessage,
+                PushOpenAction = communicationTemplate.PushOpenAction
+            };
+
+            var pushNotificationControl = phPushControl.Controls[0] as PushNotification;
+            if ( pushNotificationControl != null )
+            {
+                pushNotificationControl.SetFromCommunication( pushCommunication );
             }
         }
 
@@ -1496,14 +1555,48 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             pnlTemplateSelection.Visible = false;
 
             // The next page should be ShowEmailSummary since this is the Select Email Template Page, but just in case...
-            if ( communicationType == CommunicationType.Email || communicationType == CommunicationType.RecipientPreference )
+            if ( ShouldShowEmail() )
             {
                 ShowEmailSummary();
             }
-            else if ( communicationType == CommunicationType.SMS )
+            else if ( ShouldShowSms() )
             {
                 ShowMobileTextEditor();
             }
+            else if ( ShouldShowPush() )
+            {
+                ShowPushEditor();
+            }
+            else
+            {
+                ShowConfirmation();
+            }
+        }
+
+        private bool CommunicationOptionCanBeShown(CommunicationType communicationType )
+        {
+            var allowedCommunicationTypes = GetAllowedCommunicationTypes();
+            var communicationTypeIsAllowed = !allowedCommunicationTypes.Any() || allowedCommunicationTypes.Contains( communicationType );
+
+            var selecedCommunicationType = ( Rock.Model.CommunicationType ) hfMediumType.Value.AsInteger();
+            var communicationTypeIsSelected = ( selecedCommunicationType == communicationType || selecedCommunicationType == CommunicationType.RecipientPreference );
+
+            return communicationTypeIsAllowed && communicationTypeIsSelected;
+        }
+
+        private bool ShouldShowEmail()
+        {
+            return _emailTransportEnabled && CommunicationOptionCanBeShown(CommunicationType.Email);
+        }
+
+        private bool ShouldShowSms()
+        {
+            return _smsTransportEnabled && CommunicationOptionCanBeShown( CommunicationType.SMS );
+        }
+
+        private bool ShouldShowPush()
+        {
+            return _pushTransportEnabled && CommunicationOptionCanBeShown( CommunicationType.PushNotification );
         }
 
         /// <summary>
@@ -1556,9 +1649,13 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             pnlEmailEditor.Visible = false;
 
             Rock.Model.CommunicationType communicationType = ( Rock.Model.CommunicationType ) hfMediumType.Value.AsInteger();
-            if ( communicationType == CommunicationType.SMS || communicationType == CommunicationType.RecipientPreference )
+            if ( ShouldShowSms() )
             {
                 ShowMobileTextEditor();
+            }
+            else if ( ShouldShowPush() )
+            {
+                ShowPushEditor();
             }
             else
             {
@@ -1575,7 +1672,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
         {
             SendTestCommunication( EntityTypeCache.Get( Rock.SystemGuid.EntityType.COMMUNICATION_MEDIUM_EMAIL.AsGuid() ).Id, nbEmailTestResult );
 
-            // make sure the email designer keeps the html source that was there
+            // make sure the email designer keeps the HTML source that was there
             ifEmailDesigner.Attributes["srcdoc"] = hfEmailEditorHtml.Value;
 
             // upnlContent has UpdateMode = Conditional, so we have to update manually
@@ -1730,7 +1827,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
                     {
                         try
                         {
-                            // make sure we delete the test communication record we created to send the test 
+                            // make sure we delete the test communication record we created to send the test
                             if ( communicationService != null && testCommunication != null )
                             {
                                 var testCommunicationId = testCommunication.Id;
@@ -1860,7 +1957,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
 
                 string publicAppRoot = GlobalAttributesCache.Get().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash();
 
-                // Add Html view
+                // Add HTML view
                 // Get the unsubscribe content and add a merge field for it
                 if ( communication.IsBulkCommunication && mediumAttributes.ContainsKey( "UnsubscribeHTML" ) )
                 {
@@ -2204,7 +2301,7 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
             pnlMobileTextEditor.Visible = false;
 
             Rock.Model.CommunicationType communicationType = ( Rock.Model.CommunicationType ) hfMediumType.Value.AsInteger();
-            if ( communicationType == CommunicationType.Email || communicationType == CommunicationType.RecipientPreference )
+            if ( ShouldShowEmail() )
             {
                 ShowEmailEditor();
             }
@@ -2222,7 +2319,25 @@ namespace RockWeb.Plugins.com_bemaservices.Communication
         protected void btnMobileTextEditorNext_Click( object sender, EventArgs e )
         {
             pnlMobileTextEditor.Visible = false;
-            ShowConfirmation();
+            var communicationType = ( Rock.Model.CommunicationType ) hfMediumType.Value.AsInteger();
+            if ( ShouldShowPush() )
+            {
+                ShowPushEditor();
+            }
+            else
+            {
+                ShowConfirmation();
+            }
+        }
+
+        private void ShowPushEditor()
+        {
+            var rockContext = new RockContext();
+            Rock.Model.Communication communication = UpdateCommunication( rockContext );
+
+
+            pnlPushEditor.Visible = true;
+            SetNavigationHistory( pnlPushEditor );
         }
 
         /// <summary>
@@ -2341,13 +2456,21 @@ sendCountTerm.PluralizeIf( sendCount != 1 ) );
             pnlConfirmation.Visible = false;
 
             Rock.Model.CommunicationType communicationType = ( Rock.Model.CommunicationType ) hfMediumType.Value.AsInteger();
-            if ( communicationType == CommunicationType.SMS || communicationType == CommunicationType.RecipientPreference )
+            if ( ShouldShowPush() )
+            {
+                ShowPushEditor();
+            }
+            else if ( ShouldShowSms() )
             {
                 ShowMobileTextEditor();
             }
-            else if ( communicationType == CommunicationType.Email )
+            else if ( ShouldShowEmail() )
             {
                 ShowEmailEditor();
+            }
+            else
+            {
+                ShowTemplateSelection();
             }
         }
 
@@ -2659,6 +2782,8 @@ sendCountTerm.PluralizeIf( sendCount != 1 ) );
 
             var emailMediumEntityType = EntityTypeCache.Get( Rock.SystemGuid.EntityType.COMMUNICATION_MEDIUM_EMAIL.AsGuid() );
             var smsMediumEntityType = EntityTypeCache.Get( Rock.SystemGuid.EntityType.COMMUNICATION_MEDIUM_SMS.AsGuid() );
+            var pushMediumEntityType = EntityTypeCache.Get( Rock.SystemGuid.EntityType.COMMUNICATION_MEDIUM_PUSH_NOTIFICATION.AsGuid() );
+
             var communicationListGroupMemberCommunicationTypeLookup = new Dictionary<int, CommunicationType>();
 
             if ( communication.CommunicationType == CommunicationType.RecipientPreference )
@@ -2679,13 +2804,14 @@ sendCountTerm.PluralizeIf( sendCount != 1 ) );
                 // GetValueOrNull will default to CommunicationType.RecipientPreference if not found in the dictionary.
                 var groupMemberPreference = communicationListGroupMemberCommunicationTypeLookup.GetValueOrNull( recipient.PersonAlias.PersonId );
 
-                var recipientPreference = recipientPersonsLookup.ContainsKey(recipient.PersonAlias.PersonId) ?
+                var recipientPreference = recipientPersonsLookup.ContainsKey( recipient.PersonAlias.PersonId ) ?
                     recipientPersonsLookup[recipient.PersonAlias.PersonId].CommunicationPreference :
                     groupMemberPreference;
 
                 recipient.MediumEntityTypeId = Rock.Model.Communication.DetermineMediumEntityTypeId(
                     emailMediumEntityType.Id,
                     smsMediumEntityType.Id,
+                    pushMediumEntityType.Id,
                     communication.CommunicationType,
                     groupMemberPreference,
                     recipientPreference );
@@ -2752,6 +2878,20 @@ sendCountTerm.PluralizeIf( sendCount != 1 ) );
                 communication.FutureSendDateTime = dtpSendDateTimeConfirmation.SelectedDateTime;
             }
 
+            var pushCommunication = new CommunicationDetails();
+            var pushNotificationControl = phPushControl.Controls[0] as PushNotification;
+            if ( pushNotificationControl != null )
+            {
+                pushNotificationControl.UpdateCommunication( pushCommunication );
+            }
+
+            communication.PushData = pushCommunication.PushData;
+            communication.PushImageBinaryFileId = pushCommunication.PushImageBinaryFileId;
+            communication.PushMessage = pushCommunication.PushMessage;
+            communication.PushOpenAction = pushCommunication.PushOpenAction;
+            communication.PushOpenMessage = pushCommunication.PushOpenMessage;
+            communication.PushTitle = pushCommunication.PushTitle;
+
             return communication;
         }
 
@@ -2767,5 +2907,30 @@ sendCountTerm.PluralizeIf( sendCount != 1 ) );
         }
 
         #endregion
+
+        protected void btnPushEditorPrevious_Click( object sender, EventArgs e )
+        {
+            pnlPushEditor.Visible = false;
+
+            var communicationType = ( Rock.Model.CommunicationType ) hfMediumType.Value.AsInteger();
+            if ( ShouldShowSms() )
+            {
+                ShowMobileTextEditor();
+            }
+            else if ( ShouldShowEmail() )
+            {
+                ShowEmailEditor();
+            }
+            else
+            {
+                ShowTemplateSelection();
+            }
+        }
+
+        protected void btnPushEditorNext_Click( object sender, EventArgs e )
+        {
+            pnlPushEditor.Visible = false;
+            ShowConfirmation();
+        }
     }
 }

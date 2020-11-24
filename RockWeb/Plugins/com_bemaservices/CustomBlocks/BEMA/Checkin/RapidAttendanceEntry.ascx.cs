@@ -33,7 +33,7 @@ using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -484,11 +484,9 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             rblRole.Visible = true;
             rblRole.Required = true;
 
-            string clearAttendanceScript = string.Format( "$('#{0}').val('false');", hfAttendanceDirty.ClientID );
-            lbSaveAttendance.OnClientClick = clearAttendanceScript;
 
-            string clearPersonScript = string.Format( "$('#{0}').val('false');", hfPersonDirty.ClientID );
-            bbtnSaveContactItems.OnClientClick = clearPersonScript;
+            string clearPersonScript = string.Format( "$('#{0}').val('false'); $('#{1}').val('false');", hfPersonDirty.ClientID, hfAttendanceDirty.ClientID );
+            bbtnSave.OnClientClick = clearPersonScript;
 
             IsAttendanceEnabled = GetAttributeValue( AttributeKey.EnableAttendance ).AsBoolean();
 
@@ -578,7 +576,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 _attendanceSettingState = new AttendanceSetting();
                 _attendanceSettingState.GroupId = groupId.Value;
                 _attendanceSettingState.ScheduleId = scheduleId.Value;
-                _attendanceSettingState.LocationId = locationId.Value;
+                _attendanceSettingState.GroupLocationId = locationId.Value;
                 _attendanceSettingState.AttendanceDate = attedanceDate.Value;
                 CreateRapidAttendanceCookie( _attendanceSettingState );
                 ShowMainPanel( SelectedPersonId );
@@ -685,11 +683,11 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
         }
 
         /// <summary>
-        /// Handles the Click event of the lbSaveAttendance control.
+        /// Handles the Click event of the bbtnSave control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void lbSaveAttendance_Click( object sender, EventArgs e )
+        protected void bbtnSave_Click( object sender, EventArgs e )
         {
             if ( _attendanceSettingState == null )
             {
@@ -697,21 +695,22 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             }
 
             hfAttendanceDirty.Value = "false";
+            hfPersonDirty.Value = "false";
+
             var rockContext = new RockContext();
             var attendanceService = new AttendanceService( rockContext );
-
             var group = new GroupService( rockContext ).Get( _attendanceSettingState.GroupId );
-            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
             var personService = new PersonService( rockContext );
 
             for ( int i = 0; i < rcbAttendance.Items.Count; i++ )
             {
                 var personId = rcbAttendance.Items[i].Value.AsInteger();
-                var person = personService.Get( personId );
+                var attendancePerson = personService.Get( personId );
 
                 if ( rcbAttendance.Items[i].Selected )
                 {
-                    var attendance = attendanceService.AddOrUpdate( person.PrimaryAliasId.Value, _attendanceSettingState.AttendanceDate, group.Id, groupLocation.LocationId, _attendanceSettingState.ScheduleId, group.CampusId );
+                    var attendance = attendanceService.AddOrUpdate( attendancePerson.PrimaryAliasId.Value, _attendanceSettingState.AttendanceDate, group.Id, groupLocation.LocationId, _attendanceSettingState.ScheduleId, group.CampusId );
 
                     /* BEMA.FE1.Start */
                     if ( GetAttributeValue( BemaAttributeKey.ShouldAttendeeBeSavedToGroup ).AsBoolean() )
@@ -720,11 +719,11 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                         if ( group.GroupType.AttendanceRule == AttendanceRule.AddOnCheckIn )
                         {
                             var groupRoleId = group.GroupType.DefaultGroupRoleId;
-                            var groupMember = groupMemberService.GetByGroupIdAndPersonIdAndPreferredGroupRoleId( group.Id, person.Id, groupRoleId.Value );
+                            var groupMember = groupMemberService.GetByGroupIdAndPersonIdAndPreferredGroupRoleId( group.Id, attendancePerson.Id, groupRoleId.Value );
                             if ( groupMember == null )
                             {
                                 groupMember = new GroupMember();
-                                groupMember.PersonId = person.Id;
+                                groupMember.PersonId = attendancePerson.Id;
                                 groupMember.GroupId = group.Id;
                                 groupMember.GroupRoleId = groupRoleId.Value;
                                 groupMember.GroupMemberStatus = GroupMemberStatus.Active;
@@ -741,7 +740,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 }
                 else
                 {
-                    var attendance = attendanceService.Get( _attendanceSettingState.AttendanceDate, groupLocation.LocationId, _attendanceSettingState.ScheduleId, group.Id, person.Id );
+                    var attendance = attendanceService.Get( _attendanceSettingState.AttendanceDate, groupLocation.LocationId, _attendanceSettingState.ScheduleId, group.Id, attendancePerson.Id );
                     if ( attendance != null )
                     {
                         attendanceService.Delete( attendance );
@@ -751,26 +750,8 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
 
             rockContext.SaveChanges();
 
-            //
-            // Flush the attendance cache.
-            //
-            Rock.CheckIn.KioskLocationAttendance.Remove( groupLocation.LocationId );
 
-            ShowMainPanel( SelectedPersonId );
-        }
-
-        /// <summary>
-        /// Handles the Click event of the bbtnSaveContactItems control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void bbtnSaveContactItems_Click( object sender, EventArgs e )
-        {
-            hfPersonDirty.Value = "false";
-
-            var rockContext = new RockContext();
-            var person = new PersonService( rockContext ).Get( hfPersonGuid.Value.AsGuid() );
-
+            var person = personService.Get( hfPersonGuid.Value.AsGuid() );
             if ( GetAttributeValue( AttributeKey.EnablePrayerRequestEntry ).AsBoolean() && tbPrayerRequest.Text.IsNotNullOrWhiteSpace() )
             {
                 PrayerRequest prayerRequest = new PrayerRequest { Id = 0, IsActive = true, IsApproved = true, AllowComments = GetAttributeValue( AttributeKey.DefaultAllowComments ).AsBoolean() };
@@ -806,13 +787,9 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 prayerRequest.RequestedByPersonAliasId = person.PrimaryAliasId;
 
                 int? campusId = null;
-                if ( _attendanceSettingState != null )
+                if ( group != null && group.CampusId.HasValue )
                 {
-                    var group = new GroupService( rockContext ).Get( _attendanceSettingState.GroupId );
-                    if ( group != null && group.CampusId.HasValue )
-                    {
-                        campusId = group.CampusId;
-                    }
+                    campusId = group.CampusId;
                 }
                 if ( !campusId.HasValue )
                 {
@@ -849,7 +826,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 rockContext.SaveChanges();
             }
 
-            if ( rcwNotes.Visible )
+            if ( rcwNotes.Visible && tbNote.Text.IsNotNullOrWhiteSpace() )
             {
                 NoteService noteService = new NoteService( rockContext );
 
@@ -872,15 +849,13 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             if ( rcbWorkFlowTypes.Visible && rcbWorkFlowTypes.SelectedValues.Any() )
             {
                 var workflowService = new WorkflowService( rockContext );
-                Group group = null;
-                Schedule schedule = null;
+                var schedule = new ScheduleService( rockContext ).Get( _attendanceSettingState.ScheduleId );
                 Location location = null;
-                if ( _attendanceSettingState != null )
+                if ( groupLocation != null )
                 {
-                    group = new GroupService( rockContext ).Get( _attendanceSettingState.GroupId );
-                    schedule = new ScheduleService( rockContext ).Get( _attendanceSettingState.ScheduleId );
-                    location = new LocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+                    location = groupLocation.Location;
                 }
+
                 var personWorkflows = rcbWorkFlowTypes.SelectedValues.AsGuidList();
                 foreach ( var workflowType in personWorkflows )
                 {
@@ -894,6 +869,13 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                     }
                 }
             }
+
+            //
+            // Flush the attendance cache.
+            //
+            Rock.CheckIn.KioskLocationAttendance.Remove( groupLocation.LocationId );
+
+            ShowMainPanel( SelectedPersonId );
         }
 
 
@@ -1274,6 +1256,17 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                     person.LastName = tbLastName.Text;
                     person.SuffixValueId = dvpSuffix.SelectedValueAsInt();
                     person.Gender = rblGender.SelectedValue.ConvertToEnum<Gender>();
+
+                    if ( pnlEmail.Visible )
+                    {
+                        person.Email = tbEmail.Text.Trim();
+                        person.IsEmailActive = cbIsEmailActive.Checked;
+                        if ( rblCommunicationPreference.Visible )
+                        {
+                            person.CommunicationPreference = rblCommunicationPreference.SelectedValueAsEnum<CommunicationType>();
+                        }
+                    }
+
                     var birthMonth = person.BirthMonth;
                     var birthDay = person.BirthDay;
                     var birthYear = person.BirthYear;
@@ -1398,9 +1391,11 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                         phoneNumberService.Delete( phoneNumber );
                     }
 
+                    rockContext.SaveChanges();
+
                     person.LoadAttributes();
                     avcPersonAttributes.GetEditValues( person );
-                    rockContext.SaveChanges();
+                    person.SaveAttributeValues();
                 }
             } );
 
@@ -1422,7 +1417,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             HttpCookie httpcookie = new HttpCookie( ROCK_RAPIDATTENDANCEENTRY );
             httpcookie.Expires = RockDateTime.Now.AddMinutes( 480 );
             httpcookie.Values.Add( GROUP_ID, attendanceSetting.GroupId.ToString() );
-            httpcookie.Values.Add( LOCATION_ID, attendanceSetting.LocationId.ToString() );
+            httpcookie.Values.Add( LOCATION_ID, attendanceSetting.GroupLocationId.ToString() );
             httpcookie.Values.Add( SCHEDULE_ID, attendanceSetting.ScheduleId.ToString() );
             httpcookie.Values.Add( ATTENDANCE_DATE, attendanceSetting.AttendanceDate.ToString() );
             Response.Cookies.Add( httpcookie );
@@ -1438,7 +1433,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             {
                 AttendanceSetting attendanceSetting = new AttendanceSetting();
                 attendanceSetting.GroupId = rapidAttendanceEntryCookie.Values[GROUP_ID].AsInteger();
-                attendanceSetting.LocationId = rapidAttendanceEntryCookie.Values[LOCATION_ID].AsInteger();
+                attendanceSetting.GroupLocationId = rapidAttendanceEntryCookie.Values[LOCATION_ID].AsInteger();
                 attendanceSetting.ScheduleId = rapidAttendanceEntryCookie.Values[SCHEDULE_ID].AsInteger();
                 attendanceSetting.AttendanceDate = rapidAttendanceEntryCookie.Values[ATTENDANCE_DATE].AsDateTime() ?? RockDateTime.Now;
                 return attendanceSetting;
@@ -1525,7 +1520,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
 
                 var group = new GroupService( rockContext ).Get( groupId.Value );
                 var groupLocation = new GroupLocationService( rockContext ).Get( ddlLocation.SelectedValue.AsInteger() );
-                var schedules = groupLocation.Schedules.ToList();
+                var schedules = groupLocation.Schedules.Where( a => a.IsActive ).ToList();
 
                 // TODO: Should keep?
                 if ( group.Schedule != null )
@@ -1579,8 +1574,39 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             }
             else
             {
-                ShowMainPanel( PageParameter( PageParameterKey.PersonId ).AsIntegerOrNull() );
+                if ( IsAttendanceSettingValid() )
+                {
+                    ShowMainPanel( PageParameter( PageParameterKey.PersonId ).AsIntegerOrNull() );
+                }
+                else
+                {
+                    _attendanceSettingState = null;
+                    SelectedPersonId = PageParameter( PageParameterKey.PersonId ).AsIntegerOrNull();
+                    ShowAttendanceSetting();
+                }
             }
+        }
+
+        /// <summary>
+        /// Determines whether the attendance setting is valid.
+        /// </summary>
+        /// <returns></returns>
+        private bool IsAttendanceSettingValid()
+        {
+            var rockContext = new RockContext();
+            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
+            if ( groupLocation == null )
+            {
+                return false;
+            }
+
+            var schedule = new ScheduleService( rockContext ).Get( _attendanceSettingState.ScheduleId );
+            if ( schedule == null || !schedule.IsActive )
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -1678,7 +1704,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                     }
                 }
 
-                UpdateLocations( attendanceSetting.LocationId );
+                UpdateLocations( attendanceSetting.GroupLocationId );
                 UpdateSchedules( attendanceSetting.ScheduleId );
             }
             else if ( isDefaultSelected )
@@ -1703,7 +1729,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 var attendanceService = new AttendanceService( rockContext );
                 IEnumerable<Attendance> attendance = new List<Attendance>();
 
-                var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+                var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
                 var schedule = new ScheduleService( rockContext ).Get( _attendanceSettingState.ScheduleId );
 
                 attendance = attendanceService.Queryable()
@@ -1719,7 +1745,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                 {
                     var qryParams = new Dictionary<string, string>();
                     qryParams.Add( "GroupId", _attendanceSettingState.GroupId.ToString() );
-                    qryParams.Add( "LocationId", _attendanceSettingState.LocationId.ToString() );
+                    qryParams.Add( "LocationId", _attendanceSettingState.GroupLocationId.ToString() );
                     qryParams.Add( "ScheduleId", _attendanceSettingState.ScheduleId.ToString() );
                     qryParams.Add( "AttendanceDate", _attendanceSettingState.AttendanceDate.ToShortDateString() );
                     string url = LinkedPageUrl( AttributeKey.AttendanceListPage, qryParams );
@@ -1840,7 +1866,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
         private List<int> GetAttendedPersonIds( RockContext rockContext = null, List<int> personIds = null )
         {
             rockContext = rockContext ?? new RockContext();
-            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.LocationId );
+            var groupLocation = new GroupLocationService( rockContext ).Get( _attendanceSettingState.GroupLocationId );
             var attendanceService = new AttendanceService( rockContext );
             var attendanceQry = attendanceService.Queryable()
                             .Where( a =>
@@ -2049,8 +2075,6 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
                     }
                 }
             }
-
-            bbtnSaveContactItems.Visible = pnlPrayerRequest.Visible || rcbWorkFlowTypes.Visible || rcwNotes.Visible;
         }
 
         /// <summary>
@@ -2285,7 +2309,7 @@ namespace RockWeb.Plugins.com_bemaservices.CheckIn
             /// <value>
             /// The location identifier.
             /// </value>
-            public int LocationId { get; set; }
+            public int GroupLocationId { get; set; }
 
             /// <summary>
             /// Gets or sets the schedule identifier.

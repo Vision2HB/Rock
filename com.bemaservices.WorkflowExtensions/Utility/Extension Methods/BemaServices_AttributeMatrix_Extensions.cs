@@ -51,7 +51,7 @@ namespace com.bemaservices.WorkflowExtensions
                     var attribute = AttributeCache.Get( attributeGuid.Value );
                     if ( attribute != null )
                     {
-                        value = action.GetWorklowAttributeValue( attributeGuid.Value );
+                        value = action.GetWorkflowAttributeValue( attributeGuid.Value );
                         if ( !string.IsNullOrWhiteSpace( value ) )
                         {
                             if ( attribute.FieldTypeId == FieldTypeCache.Get( Rock.SystemGuid.FieldType.ENCRYPTED_TEXT.AsGuid() ).Id )

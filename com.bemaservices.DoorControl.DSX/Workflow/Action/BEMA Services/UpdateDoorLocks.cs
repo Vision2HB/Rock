@@ -94,7 +94,7 @@ namespace com.bemaservices.DoorControl.DSX.Workflow.Action.BEMA_Services
 
                 if ( !string.IsNullOrEmpty( workflowAttributeGuid ) )
                 {
-                    var date = action.GetWorklowAttributeValue( Guid.Parse( workflowAttributeGuid ) );
+                    var date = action.GetWorkflowAttributeValue( Guid.Parse( workflowAttributeGuid ) );
                     config.DateToSync = DateTime.Parse( date );
 
                 }

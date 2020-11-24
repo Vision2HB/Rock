@@ -33,7 +33,7 @@ using Rock.Web.UI.Controls;
 
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -77,7 +77,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         DefaultBooleanValue = false,
         Category = "BEMA Additional Features",
         Order = 0 )]
-		
+
     [AttributeField(
         "Reason For Cancelation Attribute",
         Key = BemaAttributeKey.CancelationReasonAttribute,
@@ -115,7 +115,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
         }
 
         #endregion BEMA Attribute Keys
-		
+
         #region Attribute Keys
 
         /// <summary>
@@ -232,9 +232,27 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             gAccountsEdit.RowDataBound += gAccountsEdit_RowDataBound;
 
             base.OnInit( e );
+            string script = @"
+    $('a.js-cancel-txn').on('click', function( e ){
+        e.preventDefault();
+        Rock.dialogs.confirm('Are you sure you want to cancel this scheduled transaction?', function (result) {
+            if (result) {
+                window.location = e.target.href ? e.target.href : e.target.parentElement.href;
+            }
+        });
+    });
+
+    $('a.js-reactivate-txn').on('click', function( e ){
+        e.preventDefault();
+        Rock.dialogs.confirm('Are you sure you want to reactivate this scheduled transaction?', function (result) {
+            if (result) {
+                window.location = e.target.href ? e.target.href : e.target.parentElement.href;
+            }
+        });
+    });
+";
 
             /* BEMA.FE1.Start */
-            string script = string.Empty;
             if ( GetAttributeValue( BemaAttributeKey.DisplayCancelationReasonEnabled ).AsBoolean() )
             {
                 script = string.Format( @"
@@ -244,30 +262,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                     tbCancelReason.ClientID
                 );
             }
-            else
-            {
-                script = @"
-                    $('a.js-cancel-txn').click(function( e ){
-                        e.preventDefault();
-                        Rock.dialogs.confirm('Are you sure you want to cancel this scheduled transaction?', function (result) {
-                            if (result) {
-                                window.location = e.target.href ? e.target.href : e.target.parentElement.href;
-                            }
-                        });
-                    });
-
-                    $('a.js-reactivate-txn').click(function( e ){
-                        e.preventDefault();
-                        Rock.dialogs.confirm('Are you sure you want to reactivate this scheduled transaction?', function (result) {
-                            if (result) {
-                                window.location = e.target.href ? e.target.href : e.target.parentElement.href;
-                            }
-                        });
-                    });
-                ";
-            }
             /* BEMA.FE1.End */
-
 
             ScriptManager.RegisterStartupScript( btnCancelSchedule, btnCancelSchedule.GetType(), "update-txn-status", script, true );
         }
@@ -308,7 +303,8 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                 queryParams.Add( PageParameterKey.ScheduledTransactionId, financialScheduledTransaction.Id.ToString() );
                 queryParams.Add( PageParameterKey.Person, financialScheduledTransaction.AuthorizedPersonAlias.Person.UrlEncodedKey );
 
-                if ( financialScheduledTransaction.FinancialGateway.GetGatewayComponent() is IHostedGatewayComponent )
+                var hostedGatewayComponent = financialScheduledTransaction.FinancialGateway.GetGatewayComponent() as IHostedGatewayComponent;
+                if ( hostedGatewayComponent != null && hostedGatewayComponent.GetSupportedHostedGatewayModes( financialScheduledTransaction.FinancialGateway ).Contains( HostedGatewayMode.Hosted ) )
                 {
                     NavigateToLinkedPage( AttributeKey.UpdatePageHosted, queryParams );
                 }
@@ -346,7 +342,16 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                         }
                         else
                         {
-                            ShowErrorMessage( errorMessage );
+                            if ( financialScheduledTransaction.IsActive == false )
+                            {
+                                // if GetStatus failed, but the scheduled transaction is inactive, just show Schedule is Inactive
+                                // This takes care of dealing with gateways that delete the scheduled payment vs inactivating them on the gateway side
+                                ShowErrorMessage( "Schedule is inactive" );
+                            }
+                            else
+                            {
+                                ShowErrorMessage( errorMessage );
+                            }
                         }
 
                         ShowView( financialScheduledTransaction );
@@ -413,9 +418,9 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
                         }
                     }
                 }
-			/* BEMA.FE1.Start */	
+                /* BEMA.FE1.Start */
             }
-			/* BEMA.FE1.End */
+            /* BEMA.FE1.End */
         }
 
         /// <summary>

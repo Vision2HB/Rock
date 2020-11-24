@@ -454,7 +454,7 @@ namespace com.bemaservices.RoomManagement.Model
             {
                 var result = new List<ReservationDateTime>();
 
-                DDay.iCal.Event calEvent = Schedule.GetCalenderEvent();
+                DDay.iCal.Event calEvent = Schedule.GetCalendarEvent();
                 if ( calEvent != null && calEvent.DTStart != null )
                 {
                     var occurrences = ScheduleICalHelper.GetOccurrences( calEvent, beginDateTime, endDateTime );

@@ -62,7 +62,7 @@ namespace com.bemaservices.WorkflowExtensions.Workflow.Action
                 var targetMatrixAttribute = AttributeCache.Get( targetMatrixAttributeGuid.Value );
                 if ( targetMatrixAttribute != null )
                 {
-                    var targetMatrixGuid = action.GetWorklowAttributeValue( targetMatrixAttributeGuid.Value ).AsGuidOrNull();
+                    var targetMatrixGuid = action.GetWorkflowAttributeValue( targetMatrixAttributeGuid.Value ).AsGuidOrNull();
                     if ( !targetMatrixGuid.HasValue )
                     {
                         var templateQualifier = targetMatrixAttribute.QualifierValues.Where( aq => aq.Key == "attributematrixtemplate" ).FirstOrDefault();

@@ -93,7 +93,7 @@ namespace com.bemaservices.HrManagement.Workflow.Action
 
             if ( !ptoAllocationAttributeGuid.IsEmpty() )
             {
-                ptoAllocationGuid = action.GetWorklowAttributeValue( ptoAllocationAttributeGuid ).AsGuidOrNull();
+                ptoAllocationGuid = action.GetWorkflowAttributeValue( ptoAllocationAttributeGuid ).AsGuidOrNull();
 
                 if ( ptoAllocationGuid.HasValue )
                 {
@@ -111,7 +111,7 @@ namespace com.bemaservices.HrManagement.Workflow.Action
                 var attribute = AttributeCache.Get( guid, rockContext );
                 if ( attribute != null )
                 {
-                    string value = action.GetWorklowAttributeValue( guid );
+                    string value = action.GetWorkflowAttributeValue( guid );
                     personAliasGuid = value.AsGuid();
                 }
 
@@ -139,7 +139,7 @@ namespace com.bemaservices.HrManagement.Workflow.Action
                 var attribute = AttributeCache.Get( ptoTypeAttributeGuid, rockContext );
                 if ( attribute != null )
                 {
-                    string value = action.GetWorklowAttributeValue( ptoTypeAttributeGuid );
+                    string value = action.GetWorkflowAttributeValue( ptoTypeAttributeGuid );
                     ptoTypeGuid = value.AsGuid();
                 }
 

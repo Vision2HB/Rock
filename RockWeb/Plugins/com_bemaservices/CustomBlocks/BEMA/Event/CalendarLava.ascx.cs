@@ -36,13 +36,14 @@ using Rock.Security;
 using DDay.iCal;
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  *
  * Additional Features:
  * - FE1) Added Ability to limit to events with registrations
  * - FE2) Added Ability to limit to the next recurrence of an event item
  * - FE3) Added Ability to replace core filters with custom defined value pickers
+ * - FE4) Added Ability to select Audiences Filters by Default
  */
 
 namespace RockWeb.Plugins.com_bemaservices.Event
@@ -80,9 +81,9 @@ namespace RockWeb.Plugins.com_bemaservices.Event
 
     [BooleanField( "Set Page Title", "Determines if the block should set the page title with the calendar name.", false, order: 18 )]
 
-    [TextField( "Campus Parameter Name", "The page parameter name that contains the id of the campus entity.", false, "campusId", order: 19 )]
-    [TextField( "Category Parameter Name", "The page parameter name that contains the id of the category entity.", false, "categoryId", order: 20 )]
-    [TextField( "Date Parameter Name", "The page parameter name that contains the selected date.", false, "date", order: 21 )]
+    [TextField( "Campus Parameter Name", "The page parameter name that contains the id of the campus entity.", false, "CampusId", order: 19 )]
+    [TextField( "Category Parameter Name", "The page parameter name that contains the id of the category entity.", false, "CategoryId", order: 20 )]
+    [TextField( "Date Parameter Name", "The page parameter name that contains the selected date.", false, "Date", order: 21 )]
 
     /* BEMA.FE1.Start */
     [BooleanField(
@@ -134,6 +135,12 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         Category = "BEMA Additional Features" )]
 
     /* BEMA.FE3.End */
+
+    /* BEMA.FE4.Start */
+
+    [DefinedValueField( Rock.SystemGuid.DefinedType.MARKETING_CAMPAIGN_AUDIENCE_TYPE, "Default Selected Filter Audiences", "Determines which audiences should be selected by default in the filter.", false, true, key: BemaAttributeKey.DefaultSelectedFilterAudiences, order: 7, Category = "BEMA Additional Features" )]
+
+    /* Bema.FE4.End */
     public partial class CalendarLava : Rock.Web.UI.RockBlock
     {
         /* BEMA.Start */
@@ -146,6 +153,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
             public const string DisplayCampusBooleanAttribute = "DisplayCampusBooleanAttribute";
             public const string DefinedTypeTopicFilterAttribute = "DefinedTypeTopicFilterAttribute";
             public const string DefinedTypeAudienceFilterAttribute = "DefinedTypeAudienceFilterAttribute";
+            public const string DefaultSelectedFilterAudiences = "DefaultSelectedFilterAudiences";
         }
 
         #endregion
@@ -541,6 +549,8 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                             DateTime = datetime,
                             Date = datetime.ToShortDateString(),
                             Time = datetime.ToShortTimeString(),
+                            EndDate = occurrenceEndTime != null ? occurrenceEndTime.Value.ToShortDateString() : null,
+                            EndTime = occurrenceEndTime != null ? occurrenceEndTime.Value.ToShortTimeString() : null,
                             Campus = eventItemOccurrence.Campus != null ? eventItemOccurrence.Campus.Name : "All Campuses",
                             Location = eventItemOccurrence.Campus != null ? eventItemOccurrence.Campus.Name : "All Campuses",
                             LocationDescription = eventItemOccurrence.Location,
@@ -712,6 +722,17 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                 }
             }
 
+            /* BEMA.FE4.START */
+
+            var defaultSelectedCategoryGuids = GetAttributeValue( BemaAttributeKey.DefaultSelectedFilterAudiences ).SplitDelimitedValues( true ).AsGuidList();
+            var defaultSelectedCategoryIds = DefinedValueCache.All().Where( x => defaultSelectedCategoryGuids.Contains( x.Guid ) ).Select( x => x.Id ).ToList();
+            if ( defaultSelectedCategoryGuids.Any() )
+            {
+                cblCategory.SetValues( defaultSelectedCategoryIds );
+            }
+
+            /* BEMA.FE4.END */
+
             // Date Range Filter
             drpDateRange.Visible = GetAttributeValue( "ShowDateRangeFilter" ).AsBoolean();
             lbDateRangeRefresh.Visible = drpDateRange.Visible;
@@ -862,6 +883,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
                     }
                 }
             }
+
             if ( PageParameter( "AudienceId" ).IsNotNullOrWhiteSpace() )
             {
                 ddlCatPicker.SelectedDefinedValueId = PageParameter( "AudienceId" ).AsIntegerOrNull();
@@ -1009,7 +1031,7 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         /// <summary>
         /// A class to store event item occurrence data for liquid
         /// </summary>
-        [DotLiquid.LiquidType( "EventItemOccurrence", "DateTime", "Name", "Date", "Time", "Campus", "Location", "LocationDescription", "Description", "Summary", "OccurrenceNote", "DetailPage" )]
+        [DotLiquid.LiquidType( "EventItemOccurrence", "DateTime", "Name", "Date", "Time", "EndDate", "EndTime", "Campus", "Location", "LocationDescription", "Description", "Summary", "OccurrenceNote", "DetailPage" )]
         public class EventOccurrenceSummary
         {
             public EventItemOccurrence EventItemOccurrence { get; set; }
@@ -1021,6 +1043,10 @@ namespace RockWeb.Plugins.com_bemaservices.Event
             public string Date { get; set; }
 
             public string Time { get; set; }
+
+            public string EndDate { get; set; }
+
+            public string EndTime { get; set; }
 
             public string Campus { get; set; }
 
@@ -1048,6 +1074,5 @@ namespace RockWeb.Plugins.com_bemaservices.Event
         }
 
         #endregion
-
     }
 }

@@ -34,7 +34,7 @@ using Rock.Web.UI.Controls;
 
 
 /*
- * BEMA Modified Core Block ( v10.3.1)
+ * BEMA Modified Core Block ( v11.2.1)
  * Version Number based off of RockVersion.RockHotFixVersion.BemaFeatureVersion
  * 
  * Additional Features:
@@ -104,7 +104,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
 
             if ( !Page.IsPostBack )
             {
-                ShowDetail( PageParameter( "businessId" ).AsInteger() );
+                ShowDetail( PageParameter( "BusinessId" ).AsInteger() );
             }
 
             if ( !string.IsNullOrWhiteSpace( hfModalOpen.Value ) )
@@ -290,7 +290,7 @@ namespace RockWeb.Plugins.com_bemaservices.Finance
             } );
 
             var queryParams = new Dictionary<string, string>();
-            queryParams.Add( "businessId", hfBusinessId.Value );
+            queryParams.Add( "BusinessId", hfBusinessId.Value );
             NavigateToCurrentPage( queryParams );
         }
 
