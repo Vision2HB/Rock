@@ -1,86 +1,98 @@
-﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="GroupAttendanceEntry.ascx.cs" Inherits="RockWeb.Plugins.com_bemaservices.Groups.GroupAttendanceEntry" %>
+
+<%@ Control Language="C#" AutoEventWireup="true" CodeFile="GroupAttendanceEntry.ascx.cs" Inherits="RockWeb.Plugins.com_bemaservices.Groups.GroupAttendanceEntry" %>
 
 <asp:UpdatePanel ID="pnlContent" runat="server">
     <ContentTemplate>
-        <div class="row" style="padding-bottom: 15px;">
-            <h2>
-                <div class="col-xs-6">
-                    <asp:Literal ID="lChurchHeading" runat="server" Text="Church Name" />
+        <div class="container attendance-header">
+            <div class="d-flex flex-column flex-md-row justify-content-between margin-h-none padding-all-lg">
+                <div class="f-col-12 f-col-md-6 d-flex justify-content-center justify-content-md-start">
+                    <h2 class="header-left text-white margin-b-md">
+                        <asp:Literal ID="lChurchHeading" runat="server" Text="Church Name" />
+                    </h2>
                 </div>
-                <div class="pull-right">
-                    <Rock:RockLiteral ID="lOccurrenceDate" runat="server" />
-                    <Rock:DatePicker ID="dpOccurrenceDate" runat="server" AllowFutureDateSelection="false" Required="true" />
+                <div class="f-col-12 f-col-md-6 header-right d-flex align-items-center justify-content-center justify-content-md-end">
+                    <h2 class="margin-all-none text-white">
+                        <asp:Literal ID="lGroupHeading" runat="server" Text="Group Attendance" />
+                    </h2>
+                    <div class="margin-l-md">
+                        <Rock:RockLiteral ID="lOccurrenceDate" runat="server" />
+                        <Rock:DatePicker class="date-picker" ID="dpOccurrenceDate" runat="server" AllowFutureDateSelection="false" Required="true" />
+                    </div>
                 </div>
-                <div class="pull-right" style="padding-right: 5px;">
-                    <asp:Literal ID="lGroupHeading" runat="server" Text="Group Attendance" />
-                </div>
-            </h2>
+            </div>
         </div>
 
-        <div class="panel panel-block">
-            <div class="panel-body">
+        <div class="container attendance-body">
+            <div class="panel panel-block">
+                <div class="panel-body padding-all-lg">
 
-                <Rock:NotificationBox ID="nbNotice" runat="server" />
-                <asp:ValidationSummary ID="ValidationSummary1" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" />
-                <asp:CustomValidator ID="cvAttendance" runat="server" Display="None" />
+                    <Rock:NotificationBox ID="nbNotice" runat="server" />
+                    <asp:ValidationSummary ID="ValidationSummary1" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" />
+                    <asp:CustomValidator ID="cvAttendance" runat="server" Display="None" />
 
-                <asp:Panel ID="pnlDetails" runat="server">
-                    <div class="row">
-                        <div class="col-xs-6">
-                            <Rock:RockTextBox ID="tbSearch" runat="server" AutoPostBack="true" OnTextChanged="tbSearch_TextChanged" />
+                    <asp:Panel ID="pnlDetails" runat="server">
+                        <div class="d-flex flex-column flex-md-row panel-top">
+                            <div class="f-col-12 f-col-md-6">
+                                <Rock:RockTextBox class="searchbar" ID="tbSearch" runat="server" placeholder="Search" AutoPostBack="true" OnTextChanged="tbSearch_TextChanged" />
+                            </div>
+
+                            <div class="f-col-12 f-col-md-6 btn-sort-wrapper d-flex justify-content-center justify-content-md-end">
+                                <Rock:Toggle ID="tglSort" runat="server" OnText="Last Name" OnCssClass="btn-on" OffCssClass="btn-off" ActiveButtonCssClass="btn-active" ButtonSizeCssClass="btn-xs" OffText="First Name" autopostback="true" OnCheckedChanged="tglSort_CheckedChanged" Checked="true" Label="Sort by" />
+                            </div>
+
                         </div>
-
-                        <div class="col-xs-6 pull-right">
-                            <Rock:Toggle ID="tglSort" runat="server" OnText="Last Name" OnCssClass="btn-primary" OffCssClass="btn-outline-primary" ActiveButtonCssClass="btn-primary" ButtonSizeCssClass="btn-xs" OffText="First Name" autopostback="true" OnCheckedChanged="tglSort_CheckedChanged" Checked="true" Label="Sort by" />
-                        </div>
-
-                    </div>
-                    <div class="js-roster">
-                        <div class="panel-labels clearfix">
-                            <h4 class="js-members-label">
-                                <asp:Literal ID="lMembers" runat="server" />
-                            </h4>
-                        </div>
-                        <asp:ListView ID="lvMembers" runat="server" OnItemDataBound="lvMembers_ItemDataBound">
-                            <ItemTemplate>
-                                <div class="row">
-                                    <asp:HiddenField ID="hfMember" runat="server" />
-                                    <asp:HiddenField ID="hfMemberName" runat="server" />
-                                    <div class="col-xs-6">
-                                        <asp:Literal ID="lMember" runat="server" />
+                        <div class="js-roster">
+                            <div class="panel-labels clearfix">
+                                <h4 class="d-none js-members-label">
+                                    <asp:Literal ID="lMembers" runat="server" />
+                                </h4>
+                            </div>
+                            <asp:ListView ID="lvMembers" runat="server" OnItemDataBound="lvMembers_ItemDataBound">
+                                <ItemTemplate>
+                                    <div class="d-flex flex-column flex-md-row member-row padding-v-lg">
+                                        <asp:HiddenField ID="hfMember" runat="server" />
+                                        <asp:HiddenField ID="hfMemberName" runat="server" />
+                                        <div class="f-col-12 f-col-md-6">
+                                            <h4><asp:Literal ID="lMember" runat="server" /></h4>
+                                        </div>
+                                        <div class="f-col-12 f-col-md-6 d-flex flex-row align-items-center">
+                                            <div>
+                                                <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command" CommandArgument='<%# Eval("PersonId") %>'><i class="fas fa-file-medical icon-gray padding-all-md item-border icon-wrap"></i></asp:LinkButton>
+                                            </div>
+                                            <div class="padding-all-md item-border border-small margin-h-lg">
+                                                <Rock:RockRadioButtonList ID="rblAttendance" runat="server" RepeatDirection="Horizontal" CssClass="radio-btn-list" />
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="pull-right">
-                                        <Rock:RockRadioButtonList ID="rblAttendance" runat="server" RepeatDirection="Horizontal" />
-                                    </div>
-                                    <div class="pull-right" style="padding-right: 5px;">
-                                        <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command" CommandArgument='<%# Eval("PersonId") %>'><i class="fa fa-file"></i></asp:LinkButton>
-                                    </div>
-                                </div>
 
-                            </ItemTemplate>
-                        </asp:ListView>
-                        <div class="pull-left margin-b-md margin-r-md">
-                            <Rock:PersonPicker ID="ppAddPerson" runat="server" OnSelectPerson="ppAddPerson_SelectPerson" />
+                                </ItemTemplate>
+                            </asp:ListView>
+                            <div class="pull-left margin-b-md margin-r-md">
+                                <Rock:PersonPicker ID="ppAddPerson" runat="server" OnSelectPerson="ppAddPerson_SelectPerson" />
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <Rock:DataTextBox ID="dtNotes" runat="server" TextMode="MultiLine" Rows="3" ValidateRequestMode="Disabled" SourceTypeName="Rock.Model.AttendanceOccurrence, Rock" PropertyName="Notes"></Rock:DataTextBox>
-                        </div>
-                    </div>
+                        <!--<div class="row">
+                            <div class="col-md-12">
+                                <Rock:DataTextBox ID="dtNotes" runat="server" TextMode="MultiLine" Rows="3" ValidateRequestMode="Disabled" SourceTypeName="Rock.Model.AttendanceOccurrence, Rock" PropertyName="Notes"></Rock:DataTextBox>
+                            </div>
+                        </div>-->
 
-                    <div class="actions" style="position: fixed;">
-                        <asp:LinkButton ID="lbClearSearch" runat="server" Text="Clear Search" CssClass="btn btn-primary" CausesValidation="false" />
-                        <asp:LinkButton ID="lbAddPerson" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Add Person" CssClass="btn btn-primary" OnClick="lbAddPerson_Click" CausesValidation="false" />
-                        <asp:LinkButton ID="lbSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-primary" OnClick="lbSave_Click" CausesValidation="false" />
-                    </div>
+                    </asp:Panel>
 
-                </asp:Panel>
+                </div>
 
             </div>
-
         </div>
+        <footer class="container-fluid padding-all-md btn-wrapper" style="position: sticky;">
+            <div class="col-md-12 text-center">
+                <div class="actions">
+                    <asp:LinkButton ID="lbClearSearch" runat="server" Text="Clear Search" CssClass="btn btn-clear margin-all-sm" CausesValidation="false" />
+                    <asp:LinkButton ID="lbAddPerson" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Add Person" CssClass="btn btn-action margin-all-sm btn-add-person" OnClick="lbAddPerson_Click" CausesValidation="false" />
+                    <asp:LinkButton ID="lbSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-action margin-all-sm" OnClick="lbSave_Click" CausesValidation="false" />
+                </div>
+            </div>
+        </footer>
 
         <Rock:ModalDialog ID="mdOccurrenceAttendanceType" runat="server" ValidationGroup="Value" CancelLinkVisible="false" CloseLinkVisible="false" OnSaveClick="mdOccurrenceAttendanceType_SaveClick" SaveButtonCssClass="btn btn-primary" SaveButtonText="Start">
             <Content>
@@ -170,6 +182,7 @@
                     });
                 });
             });
+
         </script>
 
     </ContentTemplate>
