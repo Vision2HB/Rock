@@ -56,7 +56,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         IsRequired = true,
         AllowMultiple = false,
         DefaultValue = "368DD475-242C-49C4-A42C-7278BE690CC2",
-        Order = 11 )]
+        Order = 8 )]
 
     [DefinedValueField(
         "Record Status",
@@ -66,13 +66,10 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         IsRequired = true,
         AllowMultiple = false,
         DefaultValue = "283999EC-7346-42E3-B807-BCE9B2BABB49",
-        Order = 12 )]
+        Order = 9 )]
 
-    [BooleanField( "Allow Add", "Should block support adding new attendance dates outside of the group's configured schedule and group type's exclusion dates?", true, "", 4 )]
-    [BooleanField( "Allow Adding Person", "Should block support adding new people as attendees?", false, "", 5 )]
-    [CustomDropdownListField( "Add Person As", "'Attendee' will only add the person to attendance. 'Group Member' will add them to the group with the default group role.", "Attendee,Group Member", true, "Attendee", "", 6 )]
-    [BooleanField( "Restrict Future Occurrence Date", "Should user be prevented from selecting a future Occurrence date?", false, "", 8 )]
-    [BooleanField( "Allow Sorting", "Should the block allow sorting the Member's list by First Name or Last Name?", true, "", 13 )]
+    [BooleanField( "Restrict Future Occurrence Date", "Should user be prevented from selecting a future Occurrence date?", false, "", 10, BemaAttributeKey.RestrictFutureOccurrenceDate )]
+    [BooleanField( "Allow Sorting", "Should the block allow sorting the Member's list by First Name or Last Name?", true, "", 11, BemaAttributeKey.AllowSorting )]
 
     public partial class GroupAttendanceEntry : RockBlock
     {
@@ -92,6 +89,8 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             public const string SuccessText = "SuccessText";
             public const string ConnectionStatus = "ConnectionStatus";
             public const string RecordStatus = "RecordStatus";
+            public const string RestrictFutureOccurrenceDate = "RestrictFutureOccurrenceDate";
+            public const string AllowSorting = "AllowSorting";
         }
 
         #endregion
@@ -114,7 +113,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         private RockContext _rockContext = null;
         private Group _group = null;
         private bool _canManageMembers = false;
-        private bool _allowAdd = false;
         private AttendanceOccurrence _occurrence = null;
         private List<GroupAttendanceAttendee> _attendees;
         private string _attendanceType;
@@ -169,12 +167,9 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             mergeFields.Add( "CurrentPage", this.PageCache );
             lChurchHeading.Text = churchHeading.ResolveMergeFields( mergeFields );
 
-            dpOccurrenceDate.AllowFutureDateSelection = !GetAttributeValue( "RestrictFutureOccurrenceDate" ).AsBoolean();
-            _allowAdd = GetAttributeValue( "AllowAdd" ).AsBoolean();
+            dpOccurrenceDate.AllowFutureDateSelection = !GetAttributeValue( BemaAttributeKey.RestrictFutureOccurrenceDate ).AsBoolean();
 
-            dtNotes.Label = GetAttributeValue( "AttendanceNoteLabel" );
-            dtNotes.Visible = GetAttributeValue( "ShowNotes" ).AsBooleanOrNull() ?? true;
-            tglSort.Visible = GetAttributeValue( "AllowSorting" ).AsBooleanOrNull() ?? true;
+            tglSort.Visible = GetAttributeValue( BemaAttributeKey.AllowSorting ).AsBooleanOrNull() ?? true;
         }
 
         /// <summary>
@@ -329,101 +324,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         }
 
         /// <summary>
-        /// Handles the SelectPerson event of the ppAddPerson control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void ppAddPerson_SelectPerson( object sender, EventArgs e )
-        {
-            string template = GetAttributeValue( "LavaTemplate" );
-
-            if ( ppAddPerson.PersonId.HasValue )
-            {
-                if ( !_attendees.Any( a => a.PersonId == ppAddPerson.PersonId.Value ) )
-                {
-                    var rockContext = new RockContext();
-                    var person = new PersonService( rockContext ).Get( ppAddPerson.PersonId.Value );
-                    if ( person != null )
-                    {
-                        string addPersonAs = GetAttributeValue( "AddPersonAs" );
-                        if ( !addPersonAs.IsNullOrWhiteSpace() && addPersonAs == "Group Member" )
-                        {
-                            AddPersonAsGroupMember( person, rockContext );
-                        }
-
-                        var attendee = new GroupAttendanceAttendee();
-                        attendee.PersonId = person.Id;
-                        attendee.NickName = person.NickName;
-                        attendee.LastName = person.LastName;
-                        attendee.Attended = true;
-                        attendee.CampusIds = person.GetCampusIds();
-
-                        var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( null );
-                        mergeFields.Add( "Person", person );
-                        mergeFields.Add( "Attended", true );
-                        attendee.MergedTemplate = template.ResolveMergeFields( mergeFields );
-                        _attendees.Add( attendee );
-                        BindAttendees();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Handles the ItemCommand event of the lvPendingMembers control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="ListViewCommandEventArgs"/> instance containing the event data.</param>
-        protected void lvPendingMembers_ItemCommand( object sender, ListViewCommandEventArgs e )
-        {
-            if ( _group != null && e.CommandName == "Add" )
-            {
-                int personId = e.CommandArgument.ToString().AsInteger();
-
-                var rockContext = new RockContext();
-
-                foreach ( var groupMember in new GroupMemberService( rockContext )
-                    .GetByGroupIdAndPersonId( _group.Id, personId ) )
-                {
-                    if ( groupMember.GroupMemberStatus == GroupMemberStatus.Pending )
-                    {
-                        groupMember.GroupMemberStatus = GroupMemberStatus.Active;
-                    }
-                }
-
-                rockContext.SaveChanges();
-
-                ShowDetails();
-            }
-        }
-
-        /// <summary>
-        /// Handles the Click event of the lbAddMember control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void lbAddMember_Click( object sender, EventArgs e )
-        {
-            var personAddPage = GetAttributeValue( "GroupMemberAddPage" );
-
-            if ( !personAddPage.IsNullOrWhiteSpace() )
-            {
-                // Redirect to the add page provided
-                if ( _group != null && _occurrence != null )
-                {
-                    if ( SaveAttendance() )
-                    {
-                        var queryParams = new Dictionary<string, string>();
-                        queryParams.Add( "GroupId", _group.Id.ToString() );
-                        queryParams.Add( "GroupName", _group.Name );
-                        queryParams.Add( "ReturnUrl", Request.QueryString["returnUrl"] ?? Server.UrlEncode( Request.RawUrl ) );
-                        NavigateToLinkedPage( "GroupMemberAddPage", queryParams );
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Handles the CheckedChanged event of the tglSort UI control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
@@ -432,11 +332,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         {
             SetUserPreference( TOGGLE_SETTING, tglSort.Checked.ToString() );
             BindAttendees();
-        }
-
-        protected void tbSearch_TextChanged( object sender, EventArgs e )
-        {
-
         }
 
         protected void lbMemberNote_Command( object sender, CommandEventArgs e )
@@ -544,7 +439,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                     }
                 }
 
-                lMember.Text = string.Format( "{0} {1}", data.MergedTemplate, sbNameHtml.ToString() );
+                lMember.Text = sbNameHtml.ToString();
             }
         }
 
@@ -629,9 +524,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                         mdMemberNote.Hide();
                     }
                 }
-
             }
-
         }
 
         protected void mdAddPerson_SaveClick( object sender, EventArgs e )
@@ -737,39 +630,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
         #region Internal Methods
 
         /// <summary>
-        /// Adds the person as group member.
-        /// </summary>
-        /// <param name="person">The person.</param>
-        /// <param name="rockContext">The rock context.</param>
-        private void AddPersonAsGroupMember( Person person, RockContext rockContext )
-        {
-            GroupMemberService groupMemberService = new GroupMemberService( rockContext );
-            GroupTypeRole role = new GroupTypeRoleService( rockContext ).Get( _group.GroupType.DefaultGroupRoleId ?? 0 );
-
-            var groupMember = new GroupMember { Id = 0 };
-            groupMember.GroupId = _group.Id;
-
-            // Check to see if the person is already a member of the group/role
-            var existingGroupMember = groupMemberService.GetByGroupIdAndPersonIdAndGroupRoleId( _group.Id, person.Id, _group.GroupType.DefaultGroupRoleId ?? 0 );
-
-            if ( existingGroupMember != null )
-            {
-                return;
-            }
-
-            groupMember.PersonId = person.Id;
-            groupMember.GroupRoleId = role.Id;
-            groupMember.GroupMemberStatus = GroupMemberStatus.Active;
-
-            if ( groupMember.Id.Equals( 0 ) )
-            {
-                groupMemberService.Add( groupMember );
-            }
-
-            rockContext.SaveChanges();
-        }
-
-        /// <summary>
         /// Gets the occurrence items.
         /// </summary>
         private AttendanceOccurrence GetOccurrence()
@@ -803,7 +663,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             }
 
             // If this is a postback, check to see if date/location/schedule were updated
-            if ( Page.IsPostBack && _allowAdd )
+            if ( Page.IsPostBack )
             {
                 if ( dpOccurrenceDate.Visible && dpOccurrenceDate.SelectedDate.HasValue )
                 {
@@ -819,7 +679,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
 
             // If an occurrence date was included, but no occurrence was found with that date, and new 
             // occurrences can be added, create a new one
-            if ( occurrence == null && _allowAdd )
+            if ( occurrence == null )
             {
                 // Create a new occurrence record and return it
                 return new AttendanceOccurrence
@@ -873,8 +733,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                 // Load the attendance for the selected occurrence
                 if ( _occurrence.Id > 0 )
                 {
-                    dtNotes.Text = _occurrence.Notes;
-
                     var attendanceList = new AttendanceService( _rockContext )
                         .Queryable().AsNoTracking()
                         .Where( a =>
@@ -901,19 +759,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                         .ToList();
                 }
 
-
-                var allowAddPerson = GetAttributeValue( "AllowAddingPerson" ).AsBoolean();
-                var addPersonAs = GetAttributeValue( "AddPersonAs" );
-                ppAddPerson.PersonName = string.Format( "Add New {0}", addPersonAs );
-                if ( !GetAttributeValue( "GroupMemberAddPage" ).IsNullOrWhiteSpace() )
-                {
-                    ppAddPerson.Visible = allowAddPerson && addPersonAs == "Attendee";
-                }
-                else
-                {
-                    ppAddPerson.Visible = allowAddPerson;
-                }
-
                 // Get the group members
                 var groupMemberService = new GroupMemberService( _rockContext );
 
@@ -934,7 +779,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                     .Select( m => m.PersonId )
                     .ToList();
 
-                string template = GetAttributeValue( "LavaTemplate" );
                 var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( null );
 
                 // Bind the attendance roster
@@ -950,8 +794,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                         LastName = p.LastName,
                         Attended = attendedIds.Contains( p.Id ),
                         AttendanceType = attendedIdTypes.ContainsKey( p.Id ) ? attendedIdTypes[p.Id] : "",
-                        CampusIds = p.GetCampusIds(),
-                        MergedTemplate = template.ResolveMergeFields( mergeFields.Union( new Dictionary<string, object>() { { "Person", p } } ).ToDictionary( x => x.Key, x => x.Value ) )
+                        CampusIds = p.GetCampusIds()
                     } )
                     .ToList();
 
@@ -976,9 +819,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             }
 
             lvMembers.DataBind();
-
-            ppAddPerson.PersonId = Rock.Constants.None.Id;
-            ppAddPerson.PersonName = string.Format( "Add New {0}", GetAttributeValue( "AddPersonAs" ) );
         }
 
         /// <summary>
@@ -1023,7 +863,7 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                     }
                 }
 
-                occurrence.Notes = GetAttributeValue( "ShowNotes" ).AsBoolean() ? dtNotes.Text : string.Empty;
+                occurrence.Notes = string.Empty;
                 occurrence.DidNotOccur = !didMeet;
 
                 var existingAttendees = occurrence.Attendees.ToList();
@@ -1107,7 +947,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
                     }
                 }
 
-
                 if ( occurrence.LocationId.HasValue )
                 {
                     Rock.CheckIn.KioskLocationAttendance.Remove( occurrence.LocationId.Value );
@@ -1167,8 +1006,6 @@ namespace RockWeb.Plugins.com_bemaservices.Groups
             public string AttendanceType { get; set; }
 
             public List<int> CampusIds { get; set; }
-
-            public string MergedTemplate { get; set; }
         }
 
         #endregion

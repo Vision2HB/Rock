@@ -33,7 +33,7 @@
                     <asp:Panel ID="pnlDetails" runat="server">
                         <div class="d-flex flex-column flex-md-row panel-top">
                             <div class="f-col-12 f-col-md-6">
-                                <Rock:RockTextBox class="searchbar" ID="tbSearch" runat="server" placeholder="Search" AutoPostBack="true" OnTextChanged="tbSearch_TextChanged" />
+                                <Rock:RockTextBox class="searchbar" ID="tbSearch" runat="server" placeholder="Search"/>
                             </div>
 
                             <div class="f-col-12 f-col-md-6 btn-sort-wrapper d-flex justify-content-center justify-content-md-end">
@@ -67,23 +67,12 @@
 
                                 </ItemTemplate>
                             </asp:ListView>
-                            <div class="pull-left margin-b-md margin-r-md">
-                                <Rock:PersonPicker ID="ppAddPerson" runat="server" OnSelectPerson="ppAddPerson_SelectPerson" />
-                            </div>
                         </div>
-
-                        <!--<div class="row">
-                            <div class="col-md-12">
-                                <Rock:DataTextBox ID="dtNotes" runat="server" TextMode="MultiLine" Rows="3" ValidateRequestMode="Disabled" SourceTypeName="Rock.Model.AttendanceOccurrence, Rock" PropertyName="Notes"></Rock:DataTextBox>
-                            </div>
-                        </div>-->
-
                     </asp:Panel>
-
                 </div>
-
             </div>
         </div>
+
         <footer class="container-fluid padding-all-md btn-wrapper" style="position: sticky;">
             <div class="col-md-12 text-center">
                 <div class="actions">
