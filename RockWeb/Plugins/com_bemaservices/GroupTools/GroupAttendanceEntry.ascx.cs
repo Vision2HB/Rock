@@ -34,10 +34,10 @@ using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
-namespace RockWeb.Plugins.com_bemaservices.Groups
+namespace RockWeb.Plugins.com_bemaservices.GroupTools
 {
     [DisplayName( "Group Attendance Entry" )]
-    [Category( "BEMA Services > Groups" )]
+    [Category( "BEMA Services > Group Tools" )]
     [Description( "Lists the group members for a specific occurrence datetime and allows selecting if they attended or not." )]
 
     [GroupTypesField( "Allowed Group Types", "", false, "", "", 0, BemaAttributeKey.AllowedGroupTypes )]

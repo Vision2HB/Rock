@@ -1,5 +1,5 @@
 
-<%@ Control Language="C#" AutoEventWireup="true" CodeFile="GroupAttendanceEntry.ascx.cs" Inherits="RockWeb.Plugins.com_bemaservices.Groups.GroupAttendanceEntry" %>
+<%@ Control Language="C#" AutoEventWireup="true" CodeFile="GroupAttendanceEntry.ascx.cs" Inherits="RockWeb.Plugins.com_bemaservices.GroupTools.GroupAttendanceEntry" %>
 
 <asp:UpdatePanel ID="pnlContent" runat="server">
     <ContentTemplate>

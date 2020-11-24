@@ -1,4 +1,4 @@
-{% stylesheet compile:'less' import:'~\Plugins\com_bemaservices\CustomBlocks\BEMA\Groups\_bema-additions.less, ~\Plugins\com_bemaservices\CustomBlocks\BEMA\Groups\bootstrap.less ' %}
+{% stylesheet compile:'less' import:'~\Plugins\com_bemaservices\GroupTools\Assets\Styles\_bema-additions.less, ~\Plugins\com_bemaservices\GroupTools\Assets\Styles\bootstrap.less ' %}
 
 .attendance-header {
     text-align: center;
