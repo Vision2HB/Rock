@@ -12,12 +12,6 @@ namespace com.bemaservices.GroupTools
         {
             RockMigrationHelper.DeleteWorkflowType( "75A7DCFB-AF3C-492A-81EB-F48BAF606BBB" );
 
-            #region FieldTypes
-
-            RockMigrationHelper.UpdateFieldType( "Pto Allocation", "", "com.bemaservices.HrManagement", "com.bemaservices.HrManagement.Field.Types.PtoAllocationFieldType", "AD020DAF-8E5E-4AC3-BE4A-FFA5EDA8FBAA" );
-
-            #endregion
-
             #region EntityTypes
 
             RockMigrationHelper.UpdateEntityType( "Rock.Model.Workflow", "3540E9A7-FE30-43A9-8B0A-A372B63DFC93", true, true );
