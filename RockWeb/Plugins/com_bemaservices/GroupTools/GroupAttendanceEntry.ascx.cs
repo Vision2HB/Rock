@@ -977,12 +977,6 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
                                     attendance.StartDateTime = _occurrence.Schedule != null && _occurrence.Schedule.HasSchedule() ? _occurrence.OccurrenceDate.Date.Add( _occurrence.Schedule.StartTimeOfDay ) : _occurrence.OccurrenceDate;
                                     attendance.DidAttend = attendee.Attended;
 
-                                    if ( attendee.AttendanceType.IsNotNullOrWhiteSpace() )
-                                    {
-                                        attendance.LoadAttributes();
-                                        attendance.SetAttributeValue( "AttendanceType", attendee.AttendanceType );
-                                    }
-
 
                                     // Check that the attendance record is valid
                                     cvAttendance.IsValid = attendance.IsValid;
@@ -995,13 +989,20 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
                                     occurrence.Attendees.Add( attendance );
 
                                     rockContext.SaveChanges();
-                                    attendance.SaveAttributeValues();
                                 }
                             }
                             else
                             {
                                 // Otherwise, only record that they attended -- don't change their attendance startDateTime 
                                 attendance.DidAttend = attendee.Attended;
+                                rockContext.SaveChanges();
+                            }
+
+                            if ( attendee.AttendanceType.IsNotNullOrWhiteSpace() )
+                            {
+                                attendance.LoadAttributes();
+                                attendance.SetAttributeValue( "AttendanceType", attendee.AttendanceType );
+                                attendance.SaveAttributeValues();
                             }
                         }
                     }
