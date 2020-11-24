@@ -15,7 +15,7 @@
                     </h2>
                     <div class="margin-l-md">
                         <Rock:RockLiteral ID="lOccurrenceDate" runat="server" />
-                        <Rock:DatePicker class="date-picker" ID="dpOccurrenceDate" runat="server" AllowFutureDateSelection="false" Required="true" />
+                        <Rock:DatePicker class="date-picker" ID="dpOccurrenceDate" runat="server" AllowFutureDateSelection="false" Required="true" OnSelectDate="dpOccurrenceDate_SelectDate" />
                     </div>
                 </div>
             </div>
@@ -61,6 +61,7 @@
                                             </div>
                                             <div class="padding-all-md item-border border-small margin-h-lg">
                                                 <Rock:RockRadioButtonList ID="rblAttendance" runat="server" RepeatDirection="Horizontal" CssClass="radio-btn-list" />
+                                                <Rock:RockCheckBox ID="cbAttendance" runat="server" Text="Attended" CssClass="radio-btn-list" Visible="false" />
                                             </div>
                                         </div>
                                     </div>
@@ -99,7 +100,7 @@
 
         <Rock:ModalDialog ID="mdMemberNote" runat="server" ValidationGroup="Value" OnSaveClick="mdMemberNote_SaveClick">
             <Content>
-                <Rock:NotificationBox ID="nbNote" runat="server" NotificationBoxType="Danger" />
+                <Rock:NotificationBox ID="nbNote" runat="server" NotificationBoxType="Danger" Text="A Note Type and text are required to create a note." />
                 <asp:ValidationSummary ID="ValNote" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" ValidationGroup="NoteValue" />
                 <fieldset>
                     <asp:HiddenField ID="hfPersonId" runat="server" />
@@ -113,7 +114,7 @@
 
         <Rock:ModalDialog ID="mdAddPerson" runat="server" ValidationGroup="Value" OnSaveClick="mdAddPerson_SaveClick">
             <Content>
-                <Rock:NotificationBox ID="nbPerson" runat="server" NotificationBoxType="Danger" />
+                <Rock:NotificationBox ID="nbPerson" runat="server" NotificationBoxType="Danger" Text="First Name, Last Name, and Email are required to add a new person." />
                 <asp:ValidationSummary ID="ValidationSummary2" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" ValidationGroup="PersonValue" />
                 <fieldset>
                     <div class="row">

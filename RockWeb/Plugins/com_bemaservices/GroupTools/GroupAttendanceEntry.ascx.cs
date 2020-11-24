@@ -225,6 +225,7 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
                         {
                             var hfMember = item.FindControl( "hfMember" ) as HiddenField;
                             var rblAttendance = item.FindControl( "rblAttendance" ) as RockRadioButtonList;
+                            var cbAttendance = item.FindControl( "cbAttendance" ) as RockCheckBox;
 
                             if ( hfMember != null && rblAttendance != null )
                             {
@@ -233,8 +234,17 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
                                 var attendance = _attendees.Where( a => a.PersonId == personId ).FirstOrDefault();
                                 if ( attendance != null )
                                 {
-                                    attendance.Attended = rblAttendance.SelectedValue.IsNotNullOrWhiteSpace() && rblAttendance.SelectedValue != AttendanceType.DidNotAttend;
-                                    if ( _attendanceType == AttendanceType.InPerson && _attendanceType == AttendanceType.Virtual )
+                                    if ( rblAttendance.SelectedValue.IsNullOrWhiteSpace() )
+                                    {
+                                        attendance.Attended = cbAttendance.Checked;
+                                    }
+                                    else
+                                    {
+                                        attendance.Attended = rblAttendance.SelectedValue != AttendanceType.DidNotAttend;
+
+                                    }
+
+                                    if ( _attendanceType == AttendanceType.InPerson || _attendanceType == AttendanceType.Virtual )
                                     {
                                         attendance.AttendanceType = _attendanceType;
                                     }
@@ -367,6 +377,7 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             }
             mdMemberNote.Title = String.Format( "Note For {0}", person.FullName );
             tbNote.Text = string.Empty;
+            nbNote.Visible = false;
             mdMemberNote.Show();
         }
 
@@ -383,23 +394,20 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             var hfMemberName = e.Item.FindControl( "hfMemberName" ) as HiddenField;
             var lMember = e.Item.FindControl( "lMember" ) as Literal;
             var rblAttendance = e.Item.FindControl( "rblAttendance" ) as RockRadioButtonList;
+            var cbAttendance = e.Item.FindControl( "cbAttendance" ) as RockCheckBox;
 
             rblAttendance.Items.Clear();
             switch ( _attendanceType )
             {
                 case "In-person":
-                    rblAttendance.Items.Add( AttendanceType.Attended );
-                    if ( data.Attended )
-                    {
-                        rblAttendance.SelectedValue = AttendanceType.Attended;
-                    }
+                    rblAttendance.Visible = false;
+                    cbAttendance.Visible = true;
+                    cbAttendance.Checked = data.Attended;
                     break;
                 case "Virtual":
-                    rblAttendance.Items.Add( AttendanceType.Attended );
-                    if ( data.Attended )
-                    {
-                        rblAttendance.SelectedValue = AttendanceType.Attended;
-                    }
+                    rblAttendance.Visible = false;
+                    cbAttendance.Visible = true;
+                    cbAttendance.Checked = data.Attended;
                     break;
                 default:
                     rblAttendance.Items.Add( AttendanceType.InPerson );
@@ -495,7 +503,7 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
                 var noteService = new NoteService( rockContext );
                 var personId = hfPersonId.Value.AsIntegerOrNull();
                 var noteTypeId = rblNoteType.SelectedValueAsId();
-                if ( personId != null && noteTypeId != null )
+                if ( personId != null && noteTypeId != null && tbNote.Text.IsNotNullOrWhiteSpace() )
                 {
                     var person = personService.Get( personId.Value );
                     if ( person != null )
@@ -544,6 +552,10 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
                         mdMemberNote.Hide();
                     }
                 }
+                else
+                {
+                    nbNote.Visible = true;
+                }
             }
         }
 
@@ -559,87 +571,93 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
                 string firstName = tbFirstName.Text;
                 string lastName = tbLastName.Text;
                 string email = tbEmail.Text;
-
-                Person person = null;
-                PersonAlias personAlias = null;
-                var personService = new PersonService( rockContext );
-
-                var personQuery = new PersonService.PersonMatchQuery( firstName, lastName, email, "" );
-                person = personService.FindPerson( personQuery, true );
-
-                if ( person.IsNotNull() )
+                if ( firstName.IsNotNullOrWhiteSpace() && lastName.IsNotNullOrWhiteSpace() && email.IsNotNullOrWhiteSpace() )
                 {
-                    personAlias = person.PrimaryAlias;
+                    Person person = null;
+                    PersonAlias personAlias = null;
+                    var personService = new PersonService( rockContext );
+
+                    var personQuery = new PersonService.PersonMatchQuery( firstName, lastName, email, "" );
+                    person = personService.FindPerson( personQuery, true );
+
+                    if ( person.IsNotNull() )
+                    {
+                        personAlias = person.PrimaryAlias;
+                    }
+                    else
+                    {
+                        // Add New Person
+                        person = new Person();
+                        person.FirstName = firstName.FixCase();
+                        person.LastName = lastName.FixCase();
+                        person.IsEmailActive = true;
+                        person.Email = email;
+                        person.EmailPreference = EmailPreference.EmailAllowed;
+                        person.RecordTypeValueId = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_TYPE_PERSON.AsGuid() ).Id;
+
+                        var defaultConnectionStatus = DefinedValueCache.Get( GetAttributeValue( BemaAttributeKey.ConnectionStatus ).AsGuid() );
+                        if ( defaultConnectionStatus != null )
+                        {
+                            person.ConnectionStatusValueId = defaultConnectionStatus.Id;
+                        }
+
+                        var defaultRecordStatus = DefinedValueCache.Get( GetAttributeValue( BemaAttributeKey.RecordStatus ).AsGuid() );
+                        if ( defaultRecordStatus != null )
+                        {
+                            person.RecordStatusValueId = defaultRecordStatus.Id;
+                        }
+
+                        var familyGroup = PersonService.SaveNewPerson( person, rockContext );
+                        if ( familyGroup != null && familyGroup.Members.Any() )
+                        {
+                            person = familyGroup.Members.Select( m => m.Person ).First();
+                            personAlias = person.PrimaryAlias;
+                        }
+                    }
+
+                    if ( person != null && personAlias != null )
+                    {
+                        int? groupRoleId = null;
+
+                        if ( !groupRoleId.HasValue && _group != null )
+                        {
+                            // use the group's grouptype's default group role if a group role wasn't specified
+                            groupRoleId = _group.GroupType.DefaultGroupRoleId;
+                        }
+
+                        var status = GroupMemberStatus.Active;
+
+                        var groupMemberService = new GroupMemberService( rockContext );
+                        var groupMember = groupMemberService.GetByGroupIdAndPersonIdAndPreferredGroupRoleId( _group.Id, person.Id, groupRoleId.Value );
+                        bool isNew = false;
+                        if ( groupMember == null )
+                        {
+                            groupMember = new GroupMember();
+                            groupMember.PersonId = person.Id;
+                            groupMember.GroupId = _group.Id;
+                            groupMember.GroupRoleId = groupRoleId.Value;
+                            groupMember.GroupMemberStatus = status;
+                            isNew = true;
+                        }
+
+                        if ( groupMember.IsValidGroupMember( rockContext ) )
+                        {
+                            if ( isNew )
+                            {
+                                groupMemberService.Add( groupMember );
+                            }
+                            rockContext.SaveChanges();
+                        }
+                    }
+
+                    ShowDetails();
+                    mdAddPerson.Hide();
                 }
                 else
                 {
-                    // Add New Person
-                    person = new Person();
-                    person.FirstName = firstName.FixCase();
-                    person.LastName = lastName.FixCase();
-                    person.IsEmailActive = true;
-                    person.Email = email;
-                    person.EmailPreference = EmailPreference.EmailAllowed;
-                    person.RecordTypeValueId = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_TYPE_PERSON.AsGuid() ).Id;
-
-                    var defaultConnectionStatus = DefinedValueCache.Get( GetAttributeValue( BemaAttributeKey.ConnectionStatus ).AsGuid() );
-                    if ( defaultConnectionStatus != null )
-                    {
-                        person.ConnectionStatusValueId = defaultConnectionStatus.Id;
-                    }
-
-                    var defaultRecordStatus = DefinedValueCache.Get( GetAttributeValue( BemaAttributeKey.RecordStatus ).AsGuid() );
-                    if ( defaultRecordStatus != null )
-                    {
-                        person.RecordStatusValueId = defaultRecordStatus.Id;
-                    }
-
-                    var familyGroup = PersonService.SaveNewPerson( person, rockContext );
-                    if ( familyGroup != null && familyGroup.Members.Any() )
-                    {
-                        person = familyGroup.Members.Select( m => m.Person ).First();
-                        personAlias = person.PrimaryAlias;
-                    }
-                }
-
-                if ( person != null && personAlias != null )
-                {
-                    int? groupRoleId = null;
-
-                    if ( !groupRoleId.HasValue && _group != null )
-                    {
-                        // use the group's grouptype's default group role if a group role wasn't specified
-                        groupRoleId = _group.GroupType.DefaultGroupRoleId;
-                    }
-
-                    var status = GroupMemberStatus.Active;
-
-                    var groupMemberService = new GroupMemberService( rockContext );
-                    var groupMember = groupMemberService.GetByGroupIdAndPersonIdAndPreferredGroupRoleId( _group.Id, person.Id, groupRoleId.Value );
-                    bool isNew = false;
-                    if ( groupMember == null )
-                    {
-                        groupMember = new GroupMember();
-                        groupMember.PersonId = person.Id;
-                        groupMember.GroupId = _group.Id;
-                        groupMember.GroupRoleId = groupRoleId.Value;
-                        groupMember.GroupMemberStatus = status;
-                        isNew = true;
-                    }
-
-                    if ( groupMember.IsValidGroupMember( rockContext ) )
-                    {
-                        if ( isNew )
-                        {
-                            groupMemberService.Add( groupMember );
-                        }
-                        rockContext.SaveChanges();
-                    }
+                    nbPerson.Visible = true;
                 }
             }
-
-            ShowDetails();
-            mdAddPerson.Hide();
         }
 
         /// <summary>
@@ -652,7 +670,19 @@ namespace RockWeb.Plugins.com_bemaservices.GroupTools
             tbFirstName.Text = string.Empty;
             tbLastName.Text = string.Empty;
             tbEmail.Text = string.Empty;
+            nbPerson.Visible = false;
             mdAddPerson.Show();
+        }
+
+        /// <summary>
+        /// Handles the SelectDate event of the dpOccurrenceDate control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void dpOccurrenceDate_SelectDate( object sender, EventArgs e )
+        {
+            _occurrence = GetOccurrence();
+            ShowDetails();
         }
 
         #endregion
