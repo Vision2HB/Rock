@@ -3,13 +3,13 @@
 <asp:UpdatePanel ID="pnlContent" runat="server">
     <ContentTemplate>
         <div class="container attendance-header">
-            <div class="d-flex flex-column flex-md-row justify-content-between margin-h-none padding-all-lg">
+            <div class="d-flex flex-column flex-md-row justify-content-between margin-h-none padding-v-lg">
                 <div class="f-col-12 f-col-md-6 d-flex justify-content-center justify-content-md-start">
-                    <h2 class="header-left text-white margin-b-md">
+                    <h2 class="header-left text-white margin-v-md">
                         <asp:Literal ID="lChurchHeading" runat="server" Text="Church Name" />
                     </h2>
                 </div>
-                <div class="f-col-12 f-col-md-6 header-right d-flex align-items-center justify-content-center justify-content-md-end">
+                <div class="f-col-12 f-col-md-6 header-right d-flex align-items-center justify-content-center justify-content-md-end group-name">
                     <h2 class="margin-all-none text-white">
                         <asp:Literal ID="lGroupHeading" runat="server" Text="Group Attendance" />
                     </h2>
@@ -23,20 +23,21 @@
 
         <div class="container attendance-body">
             <div class="panel panel-block">
-                <div class="panel-body padding-all-lg">
+                <div class="panel-body">
 
                     <Rock:NotificationBox ID="nbNotice" runat="server" />
                     <asp:ValidationSummary ID="ValidationSummary1" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" />
                     <asp:CustomValidator ID="cvAttendance" runat="server" Display="None" />
 
                     <asp:Panel ID="pnlDetails" runat="server">
-                        <div class="d-flex flex-column flex-md-row panel-top">
-                            <div class="f-col-12 f-col-md-6">
-                                <Rock:RockTextBox class="searchbar" ID="tbSearch" runat="server" Placeholder="Search" />
+                        <div class="d-flex flex-column flex-md-row align-items-center panel-top">
+                            <div class="f-col-12 f-col-md-6 padding-all-md">
+                                <Rock:RockTextBox class="searchbar" ID="tbSearch" runat="server" placeholder="Search" />
                             </div>
 
-                            <div class="f-col-12 f-col-md-6 btn-sort-wrapper d-flex justify-content-center justify-content-md-end">
-                                <Rock:Toggle ID="tglSort" runat="server" OnText="Last Name" OnCssClass="btn-on" OffCssClass="btn-off" ActiveButtonCssClass="btn-active" ButtonSizeCssClass="btn-xs" OffText="First Name" autopostback="true" OnCheckedChanged="tglSort_CheckedChanged" Checked="true" Label="Sort by" />
+                            <div class="f-col-12 f-col-md-6 btn-sort-wrapper d-flex align-items-center justify-content-center justify-content-md-end padding-v-md padding-r-md padding-l-none">
+                                <p class="margin-b-none margin-r-md text-gray">Sort by</p>
+                                <Rock:Toggle ID="tglSort" runat="server" OnText="Last Name" OnCssClass="btn-on" OffCssClass="btn-off" ActiveButtonCssClass="btn-active" ButtonSizeCssClass="btn" OffText="First Name" autopostback="true" OnCheckedChanged="tglSort_CheckedChanged" Checked="true" />
                             </div>
 
                         </div>
@@ -48,18 +49,19 @@
                             </div>
                             <asp:ListView ID="lvMembers" runat="server" OnItemDataBound="lvMembers_ItemDataBound">
                                 <ItemTemplate>
-                                    <div class="d-flex flex-column flex-md-row member-row padding-v-lg">
-                                        <asp:HiddenField ID="hfMember" runat="server" />
-                                        <asp:HiddenField ID="hfMemberName" runat="server" />
-                                        <div class="f-col-12 f-col-md-6">
-                                            <h4>
-                                                <asp:Literal ID="lMember" runat="server" /></h4>
-                                        </div>
-                                        <div class="f-col-12 f-col-md-6 d-flex flex-row align-items-center">
-                                            <div>
-                                                <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command" CommandArgument='<%# Eval("PersonId") %>'><i class="fas fa-file-medical icon-gray padding-all-md item-border icon-wrap"></i></asp:LinkButton>
+                                    <div class="d-flex flex-column flex-md-row padding-v-md bg-alternate">
+                                        <div class="f-col-12 f-col-md-7 d-flex flex-row justify-content-around justify-content-md-between align-items-center">
+                                            <div class="d-flex align-items-center member-row">
+                                                <asp:HiddenField ID="hfMember" runat="server" />
+                                                <asp:HiddenField ID="hfMemberName" runat="server" />
+                                                <asp:Literal ID="lMember" runat="server" />
                                             </div>
-                                            <div class="padding-all-md item-border border-small margin-h-lg">
+                                            <div>
+                                                <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command" CommandArgument='<%# Eval("PersonId") %>'><i class="fas fa-file-medical icon-gray item-border icon-wrap"></i></asp:LinkButton>
+                                            </div>
+                                        </div>
+                                        <div class="f-col-12 f-col-md-5 d-flex flex-row align-items-center">
+                                            <div class="item-border border-small margin-h-lg">
                                                 <Rock:RockRadioButtonList ID="rblAttendance" runat="server" RepeatDirection="Horizontal" CssClass="radio-btn-list" />
                                                 <Rock:RockCheckBox ID="cbAttendance" runat="server" Text="Attended" CssClass="radio-btn-list" Visible="false" />
                                             </div>
@@ -73,16 +75,11 @@
                 </div>
             </div>
         </div>
-
-        <footer class="container-fluid padding-all-md btn-wrapper" style="position: sticky;">
-            <div class="col-md-12 text-center">
-                <div class="actions">
-                    <asp:LinkButton ID="lbClearSearch" runat="server" Text="Clear Search" CssClass="btn btn-clear margin-all-sm" CausesValidation="false" />
-                    <asp:LinkButton ID="lbAddPerson" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Add Person" CssClass="btn btn-action margin-all-sm btn-add-person" OnClick="lbAddPerson_Click" CausesValidation="false" />
-                    <asp:LinkButton ID="lbSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-action margin-all-sm" OnClick="lbSave_Click" CausesValidation="false" />
-                </div>
-            </div>
-        </footer>
+        <nav class="navbar navbar-fixed-bottom navbar-light text-center padding-all-md">
+            <asp:LinkButton ID="lbClearSearch" runat="server" Text="Clear Search" CssClass="btn btn-clear margin-all-sm" CausesValidation="false" />
+            <asp:LinkButton ID="lbAddPerson" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Add Person" CssClass="btn btn-action margin-all-sm btn-add-person" OnClick="lbAddPerson_Click" CausesValidation="false" />
+            <asp:LinkButton ID="lbSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-action margin-all-sm" OnClick="lbSave_Click" CausesValidation="false" />
+        </nav>
 
         <Rock:ModalDialog ID="mdOccurrenceAttendanceType" runat="server" ValidationGroup="Value" CancelLinkVisible="false" CloseLinkVisible="false" OnSaveClick="mdOccurrenceAttendanceType_SaveClick" SaveButtonCssClass="btn btn-primary" SaveButtonText="Start">
             <Content>

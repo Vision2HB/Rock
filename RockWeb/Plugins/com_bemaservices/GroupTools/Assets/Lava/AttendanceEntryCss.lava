@@ -1,22 +1,46 @@
 {% stylesheet compile:'less' import:'~\Plugins\com_bemaservices\GroupTools\Assets\Styles\_bema-additions.less, ~\Plugins\com_bemaservices\GroupTools\Assets\Styles\bootstrap.less ' %}
+//Variables
+//--------------------------------------
+@gray: #444444;
+@gray-light: #ededed;
+@white: #ffffff;
+@theme: #007acc;
+
+
+body {
+    height: 100%;
+    overflow: auto;
+    background-color: @theme;
+}
+
 
 .attendance-header {
     text-align: center;
 }
 .bg-white {
-    background-color: #ffffff;
+    background-color: @white;
 }
+.bg-alternate:nth-child(odd) {
+    background-color: #ededed;
+}
+
 .date-picker {
     background-color: #0472ba;
-}
-.date-picker {
+
     @media screen and (max-width: 768px) {
         width: 80%;
     }
 }
 h2 {
+    font-size: 30px;
+
     @media screen and (max-width: 768px) {
         font-size: 20px;
+    }
+}
+.group-name {
+    @media screen and (max-width: 768px) {
+        padding: none !important;
     }
 }
 .item-border {
@@ -27,7 +51,7 @@ h2 {
 }
 .btn-action {
     width: auto;
-    background-color: #007acc;
+    background-color: @theme;
     border-radius: 4px;
     border: none;
     color: #ffffff;
@@ -36,9 +60,6 @@ h2 {
     @media screen and (max-width: 768px) {
         display: none;
     }
-}
-.btn-action:hover {
-    background-color: #a2a7ab;
 }
 .btn-clear {
     width: auto;
@@ -50,66 +71,234 @@ h2 {
 .btn-group {
     display: flex;
 }
-.btn-sort {
+.btn-off {
     width: auto;
+    background-color: @gray-light;
     border-radius: 4px;
     border: none;
     text-decoration: none;
-    color: #ffffff;
+    color: @gray;
 }
 .btn-on {
     width: auto;
-    background-color: #007acc;
+    background-color: @theme;
     border-radius: 4px;
     border: none;
     text-decoration: none;
-    color: #ffffff;
+    color: @white;
 }
 .btn-active {
     width: auto;
-    background-color: #cccccc;
+    background-color: @gray-light;
     border-radius: 4px;
     border: none;
     text-decoration: none;
+    color: @white;
+}
+.btn-default:active, .btn-default.active, .open>.dropdown-toggle.btn-default {
+    background-color: @theme;
     color: #ffffff;
 }
-
-.btn-wrapper {
+.navbar-light {
     background-color: #ffffff !important;
+    position: fixed;
 }
 .container-fluid {
-    background-color: #007acc;
+    background-color: @theme;
     padding: 0px;
+}
+.date span {
+    display: none;
+}
+.input-group input {
+    width: 130px !important;
+    height: 40px;
+    background-color: #006fba;
+    border: none;
+    color: #ffffff;
+    border-radius: 6px !important;
+    font-weight: bold;
+    font-size: 20px;
+
+    @media screen and (max-width: 768px) {
+        width: 100px !important;
+        height: auto;
+        font-size: 14px;
+    }
+}
+
+.input-group .input-width-md {
+    max-width: 100px !important;
+    height: 50px;
+}
+.form-control-group.input-width-md input {
+    width: 100px !important;
+}
+.form-control.input-width-md, .input-group.input-width-md, .form-control-group.input-width-md input {
+    width: 100px;
 }
 .form-group {
     display: flex;
     padding: 5px;
+    margin-bottom: 0px;
 }
 .form-group label {
     font-weight: 400;
     margin-right: 5px;
+    margin-bottom: 0px;
+    color: #999999;
 }
 .searchbar {
     background-color: #0284d9;
 }
 .icon-gray {
-    color: #cccccc;
+    color: @gray-light;
     font-size: 20px;
     border: 1px solid #cccccc;
+    padding: 20px;
+
+    @media screen and (max-width: 768px) {
+        padding: 10px;
+        margin-right: 20px;
+    }
 }
 .icon-wrap:hover {
     background-color: #e1e3e6;
 }
+.member-row .photo-round {
+    height: 60px !important;
+    width: 60px !important;
+    margin-right: 20px !important;
+    border-radius: 50px !important;
+
+    @media screen and (max-width: 768px) {
+        margin-right: 10px !important;
+    }
+}
+.member-row {
+    font-size: 24px;
+    font-weight: 400;
+
+    @media screen and (max-width: 768px) {
+        font-size: 16px;
+    }
+}
 .panel {
     border-radius: 6px;
+}
+.panel-body {
+    padding: 30px;
+
+    @media screen and (max-width: 768px) {
+        padding: 10px;
+    }
 }
 .panel-top {
     border-bottom: 1px solid #cccccc;
 }
+.photo-icon {
+    width: 40px;
+}
 .text-white {
-    color: #ffffff;
+    color: @white;
+}
+.text-gray {
+    color: @gray;
 }
 .radio-btn-list label {
+    padding: 20px 20px 20px 40px;
+    border-right: 1px solid #cccccc;
 
+    &:last-child {
+        border-right: none;
+    }
+}
+.radio-btn-list label.radio-inline {
+    margin-left: 0px !important;
+
+    @media screen and (max-width: 768px) {
+        width:100%;
+        border-right: none;
+        margin-left: 0px !important;
+        border-bottom: 1px solid #cccccc;
+
+        &:first-child {
+            padding-left: 40px !important;
+        }
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+}
+
+.modal.container {
+    width: 500px;
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+
+    @media screen and (min-width: 1000px) {
+        width: 500px;
+        margin-left: 0px;
+    }
+}
+.modal {
+    width: 100%;
+}
+.modal-header {
+    background-color: @gray-lighter !important;
+    color: @gray !important;
+}
+.modal-title {
+    font-size: 18px !important;
+    width: 100%;
+    text-align: center !important;
+}
+.modal-body {
+    padding: 0px 40px !important;
+
+    @media screen and (max-width: 768px) {
+        padding: 5px!important;
+    }
+}
+.modal-body .radio {
+    padding: 10px 10px 10px 20px;
+
+    @media screen and (max-width: 768px) {
+        padding: 5px!important;
+    }
+}
+.modal-body .radio .label-text {
+    padding: 20px!important;
+
+    @media screen and (max-width: 768px) {
+        padding: 5px !important;
+    }
+}
+.modal-body .radio .label-text {
+    font-weight: 600;
+    font-size: 16px;
+    color: @gray;
+
+    @media screen and (max-width: 768px) {
+        padding: 5px !important;
+    }
+}
+.modal-footer a {
+    width: 100%;
+}
+.control-wrapper .input-group input {
+    display: flex;
+    justify-content: space-between;
+}
+.control-wrapper .input-group input {
+    background-color: @white;
+    width: 100% !important;
+    height: auto !important;
+    border: 1px solid @gray;
+}
+.control-wrapper .input-group .input-group-addon {
+    display: none;
 }
 {% endstylesheet %}
