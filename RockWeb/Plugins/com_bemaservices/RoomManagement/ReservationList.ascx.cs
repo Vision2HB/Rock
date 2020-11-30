@@ -41,7 +41,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
     [Description( "Block for viewing a list of reservations." )]
 
     [LinkedPage( "Detail Page" )]
-    [TextField("Related Entity Query String Parameter", "The query string parameter that holds id to the related entity.", false )]
+    [TextField( "Related Entity Query String Parameter", "The query string parameter that holds id to the related entity.", false )]
     public partial class ReservationList : Rock.Web.UI.RockBlock
     {
         #region Control Methods
@@ -350,7 +350,7 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
                 if ( entityId != null && RelatedEntities.EventItemOccurrenceId.ToString() == relatedEntity )
                 {
-                    qry = qry.Where( r => r.EventItemOccurrenceId == entityId );
+                    qry = qry.Where( r => r.ReservationLinkages.Any( rl => rl.EventItemOccurrenceId == entityId ) );
                 }
                 else
                 {
@@ -419,10 +419,10 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
             var today = RockDateTime.Today;
             var defaultStartDateTime = today;
             var defaultEndDateTime = today.AddMonths( 1 );
-            if( entityId.HasValue )
+            if ( entityId.HasValue )
             {
-                 defaultStartDateTime = DateTime.MinValue.AddMonths(1);
-                 defaultEndDateTime = DateTime.MaxValue.AddMonths(-1);
+                defaultStartDateTime = DateTime.MinValue.AddMonths( 1 );
+                defaultEndDateTime = DateTime.MaxValue.AddMonths( -1 );
             }
             var filterStartDateTime = dtpStartDateTime.SelectedDateTime ?? defaultStartDateTime;
             var filterEndDateTime = dtpEndDateTime.SelectedDateTime ?? defaultEndDateTime;

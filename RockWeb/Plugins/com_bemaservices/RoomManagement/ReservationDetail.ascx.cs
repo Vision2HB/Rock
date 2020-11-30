@@ -2146,7 +2146,6 @@ namespace RockWeb.Plugins.com_bemaservices.RoomManagement
 
             btnOverride.Visible = isInOverrideGroup;
             btnCancelReservation.Visible = canEditReservation && reservation.ApprovalState != ReservationApprovalState.Cancelled;
-            var test = reservation.IsAuthorized( "EditAfterApproval", CurrentPerson );
             btnEdit.Visible = ( canEditReservation || canApproveReservation )
                              && ( reservation.ApprovalState != ReservationApprovalState.Approved || reservation.IsAuthorized( "EditAfterApproval", CurrentPerson ) )
                              && reservation.ApprovalState != ReservationApprovalState.Cancelled;
