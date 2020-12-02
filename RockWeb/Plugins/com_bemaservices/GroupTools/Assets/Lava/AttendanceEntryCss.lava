@@ -6,14 +6,11 @@
 @white: #ffffff;
 @theme: #007acc;
 
-
 body {
     height: 100%;
     overflow: auto;
     background-color: @theme;
 }
-
-
 .attendance-header {
     text-align: center;
 }
@@ -21,15 +18,11 @@ body {
     background-color: @white;
 }
 .bg-alternate:nth-child(odd) {
-    background-color: #ededed;
+    background-color: #f0f0f0;
 }
 
 .date-picker {
     background-color: #0472ba;
-
-    @media screen and (max-width: 768px) {
-        width: 80%;
-    }
 }
 h2 {
     font-size: 30px;
@@ -44,7 +37,7 @@ h2 {
     }
 }
 .item-border {
-    border-radius: 6px;
+    border-radius: 8px;
 }
 .border-small {
     border: 1px solid #cccccc;
@@ -57,7 +50,7 @@ h2 {
     color: #ffffff;
 }
 .btn-add-person {
-    @media screen and (max-width: 768px) {
+    @media screen and (max-width: 700px) {
         display: none;
     }
 }
@@ -66,7 +59,7 @@ h2 {
     background-color: #a2a7ab;
     border-radius: 4px;
     border: none;
-    color: #ffffff;
+    color: @white;
 }
 .btn-group {
     display: flex;
@@ -74,7 +67,7 @@ h2 {
 .btn-off {
     width: auto;
     background-color: @gray-light;
-    border-radius: 4px;
+    border-radius: 6px;
     border: none;
     text-decoration: none;
     color: @gray;
@@ -82,7 +75,7 @@ h2 {
 .btn-on {
     width: auto;
     background-color: @theme;
-    border-radius: 4px;
+    border-radius: 6px;
     border: none;
     text-decoration: none;
     color: @white;
@@ -90,7 +83,7 @@ h2 {
 .btn-active {
     width: auto;
     background-color: @gray-light;
-    border-radius: 4px;
+    border-radius: 6px;
     border: none;
     text-decoration: none;
     color: @white;
@@ -110,32 +103,33 @@ h2 {
 .date span {
     display: none;
 }
-.input-group input {
-    width: 130px !important;
+#ctl23_ctl01_ctl06_dpOccurrenceDate {
+    width: 100%;
     height: 40px;
     background-color: #006fba;
     border: none;
     color: #ffffff;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
     font-weight: bold;
     font-size: 20px;
 
-    @media screen and (max-width: 768px) {
+    @media screen and (max-width: 700px) {
         width: 100px !important;
         height: auto;
         font-size: 14px;
+        margin-left: 30px !important;
     }
 }
 
 .input-group .input-width-md {
-    max-width: 100px !important;
+    width: 130px !important;
     height: 50px;
 }
 .form-control-group.input-width-md input {
-    width: 100px !important;
+    width: 130px !important;
 }
 .form-control.input-width-md, .input-group.input-width-md, .form-control-group.input-width-md input {
-    width: 100px;
+    width: 130px;
 }
 .form-group {
     display: flex;
@@ -184,7 +178,7 @@ h2 {
     }
 }
 .panel {
-    border-radius: 6px;
+    border-radius: 8px;
 }
 .panel-body {
     padding: 30px;
@@ -192,6 +186,9 @@ h2 {
     @media screen and (max-width: 768px) {
         padding: 10px;
     }
+}
+.panel-body .col-md-12 textarea {
+    display: none;
 }
 .panel-top {
     border-bottom: 1px solid #cccccc;
@@ -216,7 +213,7 @@ h2 {
 .radio-btn-list label.radio-inline {
     margin-left: 0px !important;
 
-    @media screen and (max-width: 768px) {
+    @media screen and (max-width: 1200px) {
         width:100%;
         border-right: none;
         margin-left: 0px !important;
@@ -230,18 +227,81 @@ h2 {
         }
     }
 }
-
-.modal.container {
-    width: 500px;
+.modal-scrollable {
+    background-color: #191919c2;
+}
+//opening modal - attendance type
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_modal_dialog_panel {
+    width: 300px;
     position: absolute;
     left: 50%;
     top: 30%;
     transform: translate(-50%, -50%);
 
     @media screen and (min-width: 1000px) {
-        width: 500px;
+        width: 300px;
         margin-left: 0px;
     }
+
+    @media screen and (max-width: 576px) {
+        width: 300px !important;
+        margin-left: 0px;
+    }
+}
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_modal_dialog_panel .modal-body {
+    padding: 0px 40px !important;
+
+      @media screen and (max-width: 768px) {
+        padding: 5px!important;
+    }
+}
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_modal_dialog_panel .modal-footer {
+    margin-top: 0px !important;
+    padding: 0px 20px 10px;
+}
+//change radio button size on opening modal
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_rblOccurrenceAttendanceType_0 {
+    transform: scale(1.5);
+}
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_rblOccurrenceAttendanceType_1 {
+    transform: scale(1.5);
+}
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_rblOccurrenceAttendanceType_2{
+    transform: scale(1.5);
+}
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_rblOccurrenceAttendanceType_3 {
+    transform: scale(1.5);
+}
+
+//add person modal
+#ctl23_ctl01_ctl06_mdAddPerson_modal_dialog_panel {
+    width: 600px;
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+
+    @media screen and (min-width: 1000px) {
+        width: 600px;
+        margin-left: 0px;
+    }
+
+    @media screen and (max-width: 576px) {
+        width: 300px !important;
+        margin-left: 0px;
+    }
+}
+//Opening modal save button
+#ctl23_ctl01_ctl06_mdOccurrenceAttendanceType_serverSaveLink {
+    width: 100%;
+}
+//Add person modal save button
+#ctl23_ctl01_ctl06_mdAddPerson_cancelLink {
+    float: left !important;
+}
+//Add person modal save button
+#ctl23_ctl01_ctl06_mdAddPerson_serverSaveLink {
+    float: left !important;
 }
 .modal {
     width: 100%;
@@ -249,18 +309,32 @@ h2 {
 .modal-header {
     background-color: @gray-lighter !important;
     color: @gray !important;
+    display: flex;
+    align-items: center;
+}
+.modal-footer {
+    background-color: @white !important;
+    color: @gray;
+    border: none;
 }
 .modal-title {
-    font-size: 18px !important;
+    font-size: 14px !important;
+    font-weight: 400;
     width: 100%;
     text-align: center !important;
 }
 .modal-body {
-    padding: 0px 40px !important;
+    padding: 0px 20px !important;
 
     @media screen and (max-width: 768px) {
-        padding: 5px!important;
+        padding: 10px!important;
     }
+}
+
+.modal-body .col-md-6 {
+    padding: 20px 0px;
+    justify-content: start;
+    flex: 1;
 }
 .modal-body .radio {
     padding: 10px 10px 10px 20px;
@@ -279,26 +353,98 @@ h2 {
 .modal-body .radio .label-text {
     font-weight: 600;
     font-size: 16px;
-    color: @gray;
+    color: @gray-light;
 
     @media screen and (max-width: 768px) {
         padding: 5px !important;
     }
 }
-.modal-footer a {
+.modal-body .form-group {
+    display: flex;
+    justify-content: start;
+    align-items: center !important;
+}
+.modal-body .form-group .email-box {
+    display: flex;
+    justify-content: start;
+    align-items: center !important;
     width: 100%;
 }
-.control-wrapper .input-group input {
-    display: flex;
-    justify-content: space-between;
+.modal-open {
+    padding: 0px !important;
 }
-.control-wrapper .input-group input {
+//email box in add person modal
+#ctl23_ctl01_ctl06_mdAddPerson_tbEmail {
+    margin-left: 14px;
+    margin-right: -14px;
+    background-color: @white;
+    width: 98% !important;
+    height: 34px !important;
+    border: 1px solid #cccccc;
+    border-radius: 4px !important;
+    color: #000000;
+    flex: 1;
+}
+// close button in add person modal
+#ctl23_ctl01_ctl06_mdAddPerson_closeLink {
+    color: @gray;
+}
+.modal-body .form-group .control-label {
+    margin-right: 10px;
+}
+.modal-body .row {
+    margin: 0px !important;
+}
+.control-wrapper {
+    width: 100%;
+    display: flex;
+}
+.control-wrapper .input-group {
     background-color: @white;
     width: 100% !important;
-    height: auto !important;
-    border: 1px solid @gray;
+    height: 34px !important;
+    flex: 1;
+}
+.control-wrapper .input-group input {
+    margin-left: 14px;
+    background-color: @white;
+    width: 100% !important;
+    height: 34px !important;
+    border: 1px solid #cccccc;
+    flex: 1;
 }
 .control-wrapper .input-group .input-group-addon {
     display: none;
+}
+//Member note modal
+#ctl23_ctl01_ctl06_mdMemberNote_modal_dialog_panel {
+    width: 600px;
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+
+    @media screen and (min-width: 1000px) {
+        width: 600px;
+        margin-left: 0px;
+    }
+
+    @media screen and (max-width: 576px) {
+        width: 300px !important;
+        margin-left: 0px;
+    }
+}
+//Member note text area
+#ctl23_ctl01_ctl06_mdMemberNote_tbNote {
+    margin: 18px 0px 0px 0px;
+    border: none !important;
+    border-radius: 8px;
+    background-color: #fafafa !important;
+}
+#ctl23_ctl01_ctl06_mdMemberNote_cancelLink {
+    float: left !important;
+}
+#ctl23_ctl01_ctl06_mdMemberNote_serverSaveLink {
+    float: left !important;
 }
 {% endstylesheet %}

@@ -49,8 +49,8 @@
                             </div>
                             <asp:ListView ID="lvMembers" runat="server" OnItemDataBound="lvMembers_ItemDataBound">
                                 <ItemTemplate>
-                                    <div class="d-flex flex-column flex-md-row padding-v-md bg-alternate">
-                                        <div class="f-col-12 f-col-md-7 d-flex flex-row justify-content-around justify-content-md-between align-items-center">
+                                    <div class="d-flex flex-column flex-md-row padding-all-md bg-alternate">
+                                        <div class="f-col-12 f-col-md-7 d-flex flex-row justify-content-around justify-content-md-between align-items-center padding-all-sm">
                                             <div class="d-flex align-items-center member-row">
                                                 <asp:HiddenField ID="hfMember" runat="server" />
                                                 <asp:HiddenField ID="hfMemberName" runat="server" />
@@ -60,7 +60,7 @@
                                                 <asp:LinkButton ID="lbMemberNote" runat="server" OnCommand="lbMemberNote_Command" CommandArgument='<%# Eval("PersonId") %>'><i class="fas fa-file-medical icon-gray item-border icon-wrap"></i></asp:LinkButton>
                                             </div>
                                         </div>
-                                        <div class="f-col-12 f-col-md-5 d-flex flex-row align-items-center">
+                                        <div class="f-col-12 f-col-md-5 d-flex flex-row align-items-center padding-all-sm">
                                             <div class="item-border border-small margin-h-lg">
                                                 <Rock:RockRadioButtonList ID="rblAttendance" runat="server" RepeatDirection="Horizontal" CssClass="radio-btn-list" />
                                                 <Rock:RockCheckBox ID="cbAttendance" runat="server" Text="Attended" CssClass="radio-btn-list" Visible="false" />
