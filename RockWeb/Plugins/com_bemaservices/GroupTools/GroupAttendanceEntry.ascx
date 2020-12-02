@@ -151,7 +151,7 @@
                 $("[id$='tbSearch']").on('keyup', function (e) {
                     var searchTerm = $(this).val().toLowerCase();
                     $("[id$='hfMemberName']").each(function (index) {
-                        var container = $(this).parent();
+                        var container = $(this).parent().parent().parent();
                         var fullName = $(this).val().toLowerCase();
                         var matchExists = fullName.includes(searchTerm);
                         if (matchExists || searchTerm.length <= 0) {
@@ -166,7 +166,7 @@
                 $("[id$='lbClearSearch']").on('click', function (e) {
                     $("[id$='tbSearch']").val("")
                     $("[id$='hfMemberName']").each(function (index) {
-                        var container = $(this).parent();
+                        var container = $(this).parent().parent().parent();
                         container.attr("style", "display: flex !important");
                     });
                 });
