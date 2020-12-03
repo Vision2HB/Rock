@@ -300,7 +300,8 @@ Where Guid = '{{finalApprovalGroupGuid}}'
 			INNER JOIN [FieldType] [ft] ON [ft].[Id] = [a].[FieldTypeId]
 			INNER JOIN [DefinedType] [dt] ON CAST([dt].[guid] AS varchar(50) ) = [aq].[value]
 			WHERE [ft].[class] = 'Rock.Field.Types.DefinedValueFieldType'
-			AND [aq].[key] = 'definedtypeguid'
+			AND [aq].[key] = 'definedtypeguid'         
+            And ( Select top 1 Id from AttributeQualifier aq1 Where aq1.[Key] = 'definedtype' and aq1.AttributeId = aq.AttributeId ) is null
 		" );
 
                 #endregion
