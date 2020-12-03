@@ -176,7 +176,7 @@ namespace com.bemaservices.RoomManagement.Migrations
             // Attrib Value for Block:Reservation Tabs, Attribute:Document Root Folder Page: New Reservation, Site: Rock RMS
             RockMigrationHelper.AddBlockAttributeValue( "5859D1E7-A1CA-452F-BF40-6E0F5E9011E0", "3BDB8AED-32C5-4879-B1CB-8FC7C8336534", @"~/Content" );
             // Attrib Value for Block:Reservation Tabs, Attribute:Is Secondary Block Page: New Reservation, Site: Rock RMS
-            RockMigrationHelper.AddBlockAttributeValue( "5859D1E7-A1CA-452F-BF40-6E0F5E9011E0", "04C15DC1-DFB6-4D63-A7BC-0507D0E33EF4", @"False" );
+            RockMigrationHelper.AddBlockAttributeValue( "5859D1E7-A1CA-452F-BF40-6E0F5E9011E0", "04C15DC1-DFB6-4D63-A7BC-0507D0E33EF4", @"True" );
             // Attrib Value for Block:Reservation Tabs, Attribute:Enabled Lava Commands Page: New Reservation, Site: Rock RMS
             RockMigrationHelper.AddBlockAttributeValue( "5859D1E7-A1CA-452F-BF40-6E0F5E9011E0", "7146AC24-9250-4FC4-9DF2-9803B9A84299", @"RockEntity" );
             // Attrib Value for Block:Notes, Attribute:Note Types Page: New Reservation, Site: Rock RMS
@@ -281,6 +281,40 @@ namespace com.bemaservices.RoomManagement.Migrations
             // Add/Update PageContext for Page:History, Entity: com.bemaservices.RoomManagement.Model.Reservation, Parameter: ReservationId
             RockMigrationHelper.UpdatePageContext( "FF1AA1C0-4142-45C8-9F3B-00632CB10E89", "com.bemaservices.RoomManagement.Model.Reservation", "ReservationId", "74CC7218-20E3-4ACA-8235-799FCC2E11B7" );
 
+            // Page: Linkage Detail
+            RockMigrationHelper.AddPage( "6F74FD8C-2478-46A2-B26F-5D0D052B4BC2", "D65F783D-87A9-4CC9-8110-E83466A0EADB", "Linkage Detail", "", "2D25F333-4F47-462B-94C0-6771ABF426D6", "" ); // Site:Rock RMS
+            RockMigrationHelper.UpdateBlockType( "Reservation Linkage Detail", "Block for creating a Reservation Linkage", "~/Plugins/com_bemaservices/RoomManagement/ReservationLinkageDetail.ascx", "BEMA Services > Room Management", "B25263A0-F51B-4F62-A402-973707528572" );
+            // Add Block to Page: Linkage Detail, Site: Rock RMS
+            RockMigrationHelper.AddBlock( true, "2D25F333-4F47-462B-94C0-6771ABF426D6", "", "B25263A0-F51B-4F62-A402-973707528572", "Reservation Linkage Detail", "Main", "", "", 0, "95B727BB-3ADC-4106-8CE0-41B522FC030E" );
+            // Attrib for BlockType: Reservation Linkage Detail:Default Calendar
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "EC0D9528-1A22-404E-A776-566404987363", "Default Calendar", "DefaultCalendar", "Default Calendar", @"The default calendar which will be pre-selected if the staff person is permitted to create new calendar events.", 0, @"", "CE976B3C-EBAD-4A7E-8E31-CCF23B6B694E" );
+            // Attrib for BlockType: Reservation Linkage Detail:Default Calendar
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "EC0D9528-1A22-404E-A776-566404987363", "Default Calendar", "DefaultCalendar", "Default Calendar", @"The default calendar which will be pre-selected if the staff person is permitted to create new calendar events.", 0, @"", "1A5649D4-EE00-46AE-B16C-3A49077D7354" );
+            // Attrib for BlockType: Reservation Linkage Detail:Allow Creating New Calendar Events
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Allow Creating New Calendar Events", "AllowCreatingNewCalendarEvents", "Allow Creating New Calendar Events", @"If set to ""Yes"", the staff person will be offered the ""New Event"" tab to create a new event and a new occurrence of that event, rather than only picking from existing events.", 1, @"true", "55AABE18-39B3-4DFD-BF0B-057714CFCE5B" );
+            // Attrib for BlockType: Reservation Linkage Detail:Include Inactive Calendar Items
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Include Inactive Calendar Items", "IncludeInactiveCalendarItems", "Include Inactive Calendar Items", @"Check this box to hide inactive calendar items.", 2, @"true", "226AFC08-CB47-46E8-A9F2-C51475EFA69E" );
+            // Attrib for BlockType: Reservation Linkage Detail:Completion Workflow
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "46A03F59-55D3-4ACE-ADD5-B4642225DD20", "Completion Workflow", "CompletionWorkflow", "Completion Workflow", @"A workflow that will be launched when the wizard is complete.  The following attributes will be passed to the workflow:
+ + Reservation
+ + EventItemOccurrenceGuid", 3, @"", "FDB1410F-1D7F-4B86-87DC-F445154CD44C" );
+            // Attrib for BlockType: Reservation Linkage Detail:Event Instructions Lava Template
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Event Instructions Lava Template", "LavaInstruction_Event", "Event Instructions Lava Template", @"Instructions here will show up on the fourth panel of the wizard.", 4, @"", "6AD8EB95-A5DB-4302-B85D-BABA0C59E088" );
+            // Attrib for BlockType: Reservation Linkage Detail:Display Link to Event Details Page on Confirmation Screen
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Display Link to Event Details Page on Confirmation Screen", "DisplayEventDetailsLink", "Display Link to Event Details Page on Confirmation Screen", @"Check this box to show the link to the event details page in the wizard confirmation screen.", 4, @"true", "93D9EAAB-5672-485A-A9FC-77E73D5EB6CF" );
+            // Attrib for BlockType: Reservation Linkage Detail:External Event Details Page
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "External Event Details Page", "EventDetailsPage", "External Event Details Page", @"Determines which page the link in the final confirmation screen will take you to (if ""Display Link to Event Details ... "" is selected).", 5, @"8A477CC6-4A12-4FBE-8037-E666476DD413", "4768E7F8-3BC5-46DF-9AFF-38244FEDA336" );
+            // Attrib for BlockType: Reservation Linkage Detail:External Event Details Page
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "External Event Details Page", "EventDetailsPage", "External Event Details Page", @"Determines which page the link in the final confirmation screen will take you to (if ""Display Link to Event Details ... "" is selected).", 5, @"8A477CC6-4A12-4FBE-8037-E666476DD413", "420A1979-A875-4248-838B-25E040FBBE3A" );
+            // Attrib for BlockType: Reservation Linkage Detail:Event Occurrence Instructions Lava Template
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Event Occurrence Instructions Lava Template", "LavaInstruction_EventOccurrence", "Event Occurrence Instructions Lava Template", @"Instructions here will show up on the fifth panel of the wizard.", 5, @"", "D7EE02D0-C8C7-451F-925B-9C2BF0FD3F2E" );
+            // Attrib for BlockType: Reservation Linkage Detail:Summary Instructions Lava Template
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Summary Instructions Lava Template", "LavaInstruction_Summary", "Summary Instructions Lava Template", @"Instructions here will show up on the sixth panel of the wizard.", 6, @"", "74024AF7-EEF0-4C9B-A90F-19DAF2DAD453" );
+            // Attrib for BlockType: Reservation Linkage Detail:Summary Instructions Lava Template
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Summary Instructions Lava Template", "LavaInstruction_Summary", "Summary Instructions Lava Template", @"Instructions here will show up on the sixth panel of the wizard.", 6, @"", "772FFED2-C8C5-4F40-87A9-BFC23E9CA08B" );
+            // Attrib for BlockType: Reservation Linkage Detail:Wizard Finished Instructions Lava Template
+            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Wizard Finished Instructions Lava Template", "LavaInstruction_Finished", "Wizard Finished Instructions Lava Template", @"Instructions here will show up on the final panel of the wizard.", 7, @"", "93654146-7156-4A9F-A88A-62C501836A17" );
+
             // Page: Events
             RockMigrationHelper.AddPage( "4CBD2B96-E076-46DF-A576-356BCA5E577F", "D65F783D-87A9-4CC9-8110-E83466A0EADB", "Events", "", "6F74FD8C-2478-46A2-B26F-5D0D052B4BC2", "" ); // Site:Rock RMS
             RockMigrationHelper.UpdateBlockType( "HTML Content", "Adds an editable HTML fragment to the page.", "~/Blocks/Cms/HtmlContentDetail.ascx", "CMS", "19B61D65-37E3-459F-A44F-DEF0089118A3" );
@@ -300,8 +334,6 @@ namespace com.bemaservices.RoomManagement.Migrations
             RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "19B61D65-37E3-459F-A44F-DEF0089118A3", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Start in Code Editor mode", "UseCodeEditor", "", @"Start the editor in code editor mode instead of WYSIWYG editor mode.", 1, @"True", "0673E015-F8DD-4A52-B380-C758011331B2" );
             // Attrib for BlockType: Reservation Linkage List:Linkage Page
             RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "106C896B-B3AA-42ED-91E8-5F5A1ED6B42C", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "Linkage Page", "LinkagePage", "Linkage Page", @"The page for creating a reservation linkage", 1, @"DE4B12F0-C3E6-451C-9E35-7E9E66A01F4E", "95759D3F-5E2C-44B7-9C13-C53D78916A56" );
-            // Attrib for BlockType: Reservation Linkage List:Linkage Page
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "106C896B-B3AA-42ED-91E8-5F5A1ED6B42C", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "Linkage Page", "LinkagePage", "Linkage Page", @"The page for creating a reservation linkage", 1, @"DE4B12F0-C3E6-451C-9E35-7E9E66A01F4E", "97F12733-48A1-42CF-9CAD-254609D25D13" );
             // Attrib for BlockType: Reservation Linkage List:Calendar Item Page
             RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "106C896B-B3AA-42ED-91E8-5F5A1ED6B42C", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "Calendar Item Page", "CalendarItemDetailPage", "Calendar Item Page", @"The page to view calendar item details", 2, @"7FB33834-F40A-4221-8849-BB8C06903B04", "28863235-DE8C-402E-B227-A91D3827AD54" );
             // Attrib for BlockType: HTML Content:Document Root Folder
@@ -345,46 +377,11 @@ namespace com.bemaservices.RoomManagement.Migrations
             // Attrib Value for Block:Reservation Tabs, Attribute:Is Secondary Block Page: Events, Site: Rock RMS
             RockMigrationHelper.AddBlockAttributeValue( "8EB8B82E-5BD9-41F8-AC1F-2756A83DB306", "04C15DC1-DFB6-4D63-A7BC-0507D0E33EF4", @"False" );
             // Attrib Value for Block:Reservation Linkage List, Attribute:Linkage Page Page: Events, Site: Rock RMS
-            RockMigrationHelper.AddBlockAttributeValue( "4F6E7570-FD87-4991-8C6F-8E2568B1377E", "95759D3F-5E2C-44B7-9C13-C53D78916A56", @"2d25f333-4f47-462b-94c0-6771abf426d6" );
+            RockMigrationHelper.AddBlockAttributeValue( "4F6E7570-FD87-4991-8C6F-8E2568B1377E", "95759D3F-5E2C-44B7-9C13-C53D78916A56", @"2D25F333-4F47-462B-94C0-6771ABF426D6" );
             // Attrib Value for Block:Reservation Linkage List, Attribute:Content Item Page Page: Events, Site: Rock RMS
             RockMigrationHelper.AddBlockAttributeValue( "4F6E7570-FD87-4991-8C6F-8E2568B1377E", "0E06771C-3522-466E-BBE6-5578ED22C3FF", @"d18e837c-9e65-4a38-8647-dff04a595d97" );
             // Attrib Value for Block:Reservation Linkage List, Attribute:Calendar Item Page Page: Events, Site: Rock RMS
             RockMigrationHelper.AddBlockAttributeValue( "4F6E7570-FD87-4991-8C6F-8E2568B1377E", "28863235-DE8C-402E-B227-A91D3827AD54", @"7fb33834-f40a-4221-8849-bb8c06903b04" );
-
-            // Page: Linkage Detail
-            RockMigrationHelper.AddPage( "6F74FD8C-2478-46A2-B26F-5D0D052B4BC2", "D65F783D-87A9-4CC9-8110-E83466A0EADB", "Linkage Detail", "", "2D25F333-4F47-462B-94C0-6771ABF426D6", "" ); // Site:Rock RMS
-            RockMigrationHelper.UpdateBlockType( "Reservation Linkage Detail", "Block for creating a Reservation Linkage", "~/Plugins/com_bemaservices/RoomManagement/ReservationLinkageDetail.ascx", "BEMA Services > Room Management", "B25263A0-F51B-4F62-A402-973707528572" );
-            // Add Block to Page: Linkage Detail, Site: Rock RMS
-            RockMigrationHelper.AddBlock( true, "2D25F333-4F47-462B-94C0-6771ABF426D6", "", "B25263A0-F51B-4F62-A402-973707528572", "Reservation Linkage Detail", "Main", "", "", 0, "95B727BB-3ADC-4106-8CE0-41B522FC030E" );
-            // Attrib for BlockType: Reservation Linkage Detail:Default Calendar
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "EC0D9528-1A22-404E-A776-566404987363", "Default Calendar", "DefaultCalendar", "Default Calendar", @"The default calendar which will be pre-selected if the staff person is permitted to create new calendar events.", 0, @"", "CE976B3C-EBAD-4A7E-8E31-CCF23B6B694E" );
-            // Attrib for BlockType: Reservation Linkage Detail:Default Calendar
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "EC0D9528-1A22-404E-A776-566404987363", "Default Calendar", "DefaultCalendar", "Default Calendar", @"The default calendar which will be pre-selected if the staff person is permitted to create new calendar events.", 0, @"", "1A5649D4-EE00-46AE-B16C-3A49077D7354" );
-            // Attrib for BlockType: Reservation Linkage Detail:Allow Creating New Calendar Events
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Allow Creating New Calendar Events", "AllowCreatingNewCalendarEvents", "Allow Creating New Calendar Events", @"If set to ""Yes"", the staff person will be offered the ""New Event"" tab to create a new event and a new occurrence of that event, rather than only picking from existing events.", 1, @"true", "55AABE18-39B3-4DFD-BF0B-057714CFCE5B" );
-            // Attrib for BlockType: Reservation Linkage Detail:Include Inactive Calendar Items
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Include Inactive Calendar Items", "IncludeInactiveCalendarItems", "Include Inactive Calendar Items", @"Check this box to hide inactive calendar items.", 2, @"true", "226AFC08-CB47-46E8-A9F2-C51475EFA69E" );
-            // Attrib for BlockType: Reservation Linkage Detail:Completion Workflow
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "46A03F59-55D3-4ACE-ADD5-B4642225DD20", "Completion Workflow", "CompletionWorkflow", "Completion Workflow", @"A workflow that will be launched when the wizard is complete.  The following attributes will be passed to the workflow:
- + Reservation
- + EventItemOccurrenceGuid", 3, @"", "FDB1410F-1D7F-4B86-87DC-F445154CD44C" );
-            // Attrib for BlockType: Reservation Linkage Detail:Event Instructions Lava Template
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Event Instructions Lava Template", "LavaInstruction_Event", "Event Instructions Lava Template", @"Instructions here will show up on the fourth panel of the wizard.", 4, @"", "6AD8EB95-A5DB-4302-B85D-BABA0C59E088" );
-            // Attrib for BlockType: Reservation Linkage Detail:Display Link to Event Details Page on Confirmation Screen
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Display Link to Event Details Page on Confirmation Screen", "DisplayEventDetailsLink", "Display Link to Event Details Page on Confirmation Screen", @"Check this box to show the link to the event details page in the wizard confirmation screen.", 4, @"true", "93D9EAAB-5672-485A-A9FC-77E73D5EB6CF" );
-            // Attrib for BlockType: Reservation Linkage Detail:External Event Details Page
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "External Event Details Page", "EventDetailsPage", "External Event Details Page", @"Determines which page the link in the final confirmation screen will take you to (if ""Display Link to Event Details ... "" is selected).", 5, @"8A477CC6-4A12-4FBE-8037-E666476DD413", "4768E7F8-3BC5-46DF-9AFF-38244FEDA336" );
-            // Attrib for BlockType: Reservation Linkage Detail:External Event Details Page
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "External Event Details Page", "EventDetailsPage", "External Event Details Page", @"Determines which page the link in the final confirmation screen will take you to (if ""Display Link to Event Details ... "" is selected).", 5, @"8A477CC6-4A12-4FBE-8037-E666476DD413", "420A1979-A875-4248-838B-25E040FBBE3A" );
-            // Attrib for BlockType: Reservation Linkage Detail:Event Occurrence Instructions Lava Template
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Event Occurrence Instructions Lava Template", "LavaInstruction_EventOccurrence", "Event Occurrence Instructions Lava Template", @"Instructions here will show up on the fifth panel of the wizard.", 5, @"", "D7EE02D0-C8C7-451F-925B-9C2BF0FD3F2E" );
-            // Attrib for BlockType: Reservation Linkage Detail:Summary Instructions Lava Template
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Summary Instructions Lava Template", "LavaInstruction_Summary", "Summary Instructions Lava Template", @"Instructions here will show up on the sixth panel of the wizard.", 6, @"", "74024AF7-EEF0-4C9B-A90F-19DAF2DAD453" );
-            // Attrib for BlockType: Reservation Linkage Detail:Summary Instructions Lava Template
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Summary Instructions Lava Template", "LavaInstruction_Summary", "Summary Instructions Lava Template", @"Instructions here will show up on the sixth panel of the wizard.", 6, @"", "772FFED2-C8C5-4F40-87A9-BFC23E9CA08B" );
-            // Attrib for BlockType: Reservation Linkage Detail:Wizard Finished Instructions Lava Template
-            RockMigrationHelper.AddOrUpdateBlockTypeAttribute( "B25263A0-F51B-4F62-A402-973707528572", "C28C7BF3-A552-4D77-9408-DEDCF760CED0", "Wizard Finished Instructions Lava Template", "LavaInstruction_Finished", "Wizard Finished Instructions Lava Template", @"Instructions here will show up on the final panel of the wizard.", 7, @"", "93654146-7156-4A9F-A88A-62C501836A17" );
-
 
             RockMigrationHelper.UpdateHtmlContentBlock( "5859D1E7-A1CA-452F-BF40-6E0F5E9011E0", "{% include '~/Plugins/com_bemaservices/RoomManagement/Assets/Lava/ReservationTabs.lava' %}", "4D5B4438-D3A3-468F-BCAD-F7A0DC36F2F3" );
             RockMigrationHelper.UpdateHtmlContentBlock( "8EB8B82E-5BD9-41F8-AC1F-2756A83DB306", "{% include '~/Plugins/com_bemaservices/RoomManagement/Assets/Lava/ReservationTabs.lava' %}", "E1A199D7-AA1F-4F8E-94EC-C3EE8386E2B6" );
@@ -558,6 +555,10 @@ Notes: {{ reservation.Note }}<br/>
             ALTER TABLE [_com_bemaservices_RoomManagement_Resource] Alter COLUMN Quantity [int] NULL;
             ALTER TABLE [_com_bemaservices_RoomManagement_ReservationResource] Alter COLUMN Quantity [int] NULL;
                 " );
+
+            // Attrib Value for Block:Calendar Item Campus List, Attribute:core.CustomGridColumnsConfig Page: Event Detail, Site: Rock RMS
+            RockMigrationHelper.AddBlockAttributeValue( "828C8FE3-D5F8-4C22-BA81-844D704842EA", "46647F7B-2DC3-43FF-88F7-962F516FA969", @"{""ColumnsConfig"":[{""HeaderText"":""Reservations"",""HeaderClass"":"""",""ItemClass"":"""",""LavaTemplate"":""{% reservationlinkage where:'EventItemOccurrenceId == {{Row.Id}}' %}\n    {% for reservationLinkage in reservationlinkageItems %}\n        {% reservation id:'{{reservationLinkage.ReservationId}}' %}\n                <small><a href='/ReservationDetail?ReservationId={{reservation.Id}}'>{{reservation.Name}}</a></small></br>\n        {% endreservation %}\n    {% endfor %}\n{% endreservationlinkage %}"",""PositionOffsetType"":1,""PositionOffset"":2}]}" );
+
         }
 
         private void AddReservationCreationWorkflowActions()
@@ -1219,6 +1220,9 @@ Notes: {{ reservation.Note }}<br/>
 		" );
 
             #endregion
+
+            AddSecurityAuthForReservationType( "E443F926-0882-41D5-91EF-480EA366F660", 0, "EditAfterApproval", true, "", SpecialRole.AllAuthenticatedUsers, "87b6aa45-e4aa-4691-9350-bf2e030c2889" );
+
         }
 
         /// <summary>
@@ -1226,6 +1230,68 @@ Notes: {{ reservation.Note }}<br/>
         /// </summary>
         public override void Down()
         {
+        }
+
+        private void AddSecurityAuthForReservationType( string reservationTypeGuid, int order, string action, bool allow, string groupGuid, Rock.Model.SpecialRole specialRole, string authGuid )
+        {
+            if ( string.IsNullOrWhiteSpace( groupGuid ) )
+            {
+                groupGuid = Guid.Empty.ToString();
+            }
+
+            string entityTypeName = "com.bemaservices.RoomManagement.Model.ReservationType";
+
+            string sql = @"
+    DECLARE @EntityTypeId int = ( SELECT TOP 1 [Id] FROM [EntityType] WHERE [name] = '{0}')
+    DECLARE @ReservationTypeId int = (SELECT TOP 1 [Id] FROM [_com_bemaservices_RoomManagement_ReservationType] WHERE [Guid] = '{1}')
+
+    IF @EntityTypeId IS NOT NULL AND @ReservationTypeId IS NOT NULL
+    BEGIN
+
+        DECLARE @GroupId int = ( SELECT TOP 1 [Id] FROM [Group] WHERE [Guid] = '{2}')
+
+        IF NOT EXISTS (
+            SELECT [Id] FROM [dbo].[Auth]
+            WHERE [EntityTypeId] = @EntityTypeId
+            AND [EntityId] = @ReservationTypeId
+            AND [Action] = '{4}'
+            AND [AllowOrDeny] = '{5}'
+            AND [SpecialRole] = {6}
+            AND [GroupId] = @GroupId
+        )
+        BEGIN
+            INSERT INTO [dbo].[Auth]
+                   ([EntityTypeId]
+                   ,[EntityId]
+                   ,[Order]
+                   ,[Action]
+                   ,[AllowOrDeny]
+                   ,[SpecialRole]
+                   ,[GroupId]
+                   ,[Guid])
+             VALUES
+                   (@EntityTypeId
+                   ,@ReservationTypeId
+                   ,{3}
+                   ,'{4}'
+                   ,'{5}'
+                   ,{6}
+                   ,@GroupId
+                   ,'{7}')
+        END
+    END
+";
+
+            Sql( string.Format( sql,
+                entityTypeName,                 // 0
+                reservationTypeGuid,                   // 1
+                groupGuid,                      // 2
+                order,                          // 3
+                action,                         // 4
+                ( allow ? "A" : "D" ),          // 5
+                specialRole.ConvertToInt(),     // 6
+                authGuid ) );                   // 7
+
         }
     }
 }
