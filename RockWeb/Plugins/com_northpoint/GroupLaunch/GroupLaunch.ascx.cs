@@ -57,7 +57,7 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
             {
                 CheckBlockAppliesToGroup();
                 SetBlockVisibility();
-                CheckForExistingConnection();
+                CheckForExistingConnection( currentRockGroupId  );
                 
                 if (!IsConnected())
                 {
@@ -120,19 +120,19 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
             }
         }
 
-        private void CheckForExistingConnection()
+        private void CheckForExistingConnection( int rockId )
         {
             if ( isGroupLaunchGroup )
             {
                 Group groupResponse = null;
                 try
                 {
-                    groupResponse = groupLaunchService.FindGroupByRockId( currentRockGroupId );
+                    groupResponse = groupLaunchService.FindGroupByRockId( rockId );
                 }
                 catch ( KeyNotFoundException e )
                 {
                     // If groupLaunch can't find a group, then make sure to unfreeze the permissions
-                    UnFreezeRockGroup( currentRockGroupId );
+                    UnFreezeRockGroup( rockId );
                     DisplayUnconnected();
                 }
                 catch ( Exception e )
@@ -140,6 +140,7 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
                     // Something is wrong with Group Launch; update interface and dont change permissions
                     UnconnectedHighlight.Text = "There Was An Issue Connecting to Group Launch. " + e.Message;
                     UnconnectedHighlight.Visible = true;
+                    return;
                 }
 
 
@@ -152,16 +153,17 @@ namespace RockWeb.Plugins.com_northpoint.GroupLaunch
                     // Check if group was finalized in GroupLaunch, allowing Rock to unfreeze group security
                     if ( group.Finalized )
                     {
-                        UnFreezeRockGroup( currentRockGroupId );
+                        UnFreezeRockGroup( rockId );
                     }
                     else
                     {
                         // Else, lock down this Rock group
-                        FreezeRockGroup( currentRockGroupId );
+                        FreezeRockGroup( rockId );
                     }
                 } else
                 {
-                    SetGroup(null);
+                    UnFreezeRockGroup( rockId );
+                    SetGroup( null );
                 }
             }
             else
