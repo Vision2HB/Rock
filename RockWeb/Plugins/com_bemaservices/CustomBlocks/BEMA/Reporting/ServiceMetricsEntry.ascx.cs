@@ -559,7 +559,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Reporting
         private static DateTime? GetFirstScheduledDate( DateTime? weekend, Schedule schedule )
         {
             var date = schedule.GetNextStartDateTime( weekend.Value );
-            if ( date.Value.Date > weekend.Value )
+            if ( date.HasValue && date.Value.Date > weekend.Value )
             {
                 date = schedule.GetNextStartDateTime( weekend.Value.AddDays( -7 ) );
             }
