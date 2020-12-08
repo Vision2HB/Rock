@@ -628,7 +628,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Reporting
                 }
             }
 
-            if ( !options.Any() && !_selectedServiceId.HasValue )
+            if ( !options.Any() && !_selectedServiceId.HasValue && !GetAttributeValue( BemaAttributeKey.AreServiceTimesShownAsRows ).AsBoolean() )
             {
                 lSelection.Text = "Select Service Time:";
                 foreach ( var service in GetServices() )
@@ -976,7 +976,7 @@ namespace RockWeb.Plugins.com_bemaservices.CustomBlocks.BEMA.Reporting
                 var metricGuids = metricCategories.Select( a => a.MetricGuid ).ToList();
                 using ( var rockContext = new RockContext() )
                 {
-                    foreach ( var service in GetServices().OrderBy( s => s.GetNextStartDateTime( weekend.Value ) ) )
+                    foreach ( var service in GetServices().Where( s => s.GetOccurrences( weekend.Value.Date, weekend.Value.AddDays( 1 ) ).Any() ).OrderBy( s => s.GetNextStartDateTime( weekend.Value ) ) )
                     {
                         weekend = GetWeekendDate( service.Id, weekend, rockContext );
 
