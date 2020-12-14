@@ -249,7 +249,7 @@ namespace com.bemaservices.Security.SSO.Authenticators
             
             string username = string.Empty;
             string email = vision2Profile?.PrimaryEmail.EmailAddress;
-            string office365Id = userId;
+           
 
             string userName = "vision2_" + userId;
             UserLogin user = null;
